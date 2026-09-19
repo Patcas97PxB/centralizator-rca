@@ -14,6 +14,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;700;800&family=Space+Grotesk:wght@600;700&display=swap" rel="stylesheet">
@@ -3049,29 +3050,24 @@ function fileToBase64(file) {
   });
 }
 
-// ---------- OCR (poze) — foloseste capacitatea "sample" a paginii publicate ----------
-// api.anthropic.com e blocat pe pagina publicata, asa ca citirea din poza trece prin sample():
-// Claude transcrie textul din imagine, apoi textul e procesat de acelasi extractFromText/analizaDeviz
-// ca la PDF-uri cu text — nu inventam un pipeline nou, doar sursa textului difera.
+// ---------- OCR (poze) — Tesseract.js, ruleaza gratuit direct in browser (fara server, fara cont) ----------
+// Textul citit e procesat de acelasi extractFromText/analizaDeviz ca la PDF-urile cu text —
+// nu inventam un pipeline nou, doar sursa textului difera.
 function mesajEroareOCR(e) {
   const cod = e && e.code;
-  if (['not_granted','sampling_disabled','not_declared','capability_disabled','capability_removed'].includes(cod))
-    return 'Citirea automată din poze nu e disponibilă în acest mediu. Încarcă un PDF sau completează manual.';
-  if (['images_unavailable','image_rejected'].includes(cod))
-    return 'Acest fișier nu poate fi trimis pentru citire automată (verifică formatul: JPEG, PNG, WEBP sau GIF).';
-  if (cod === 'rate_limited') return 'Prea multe citiri automate deodată — încearcă din nou peste puțin timp.';
-  if (cod === 'cancelled') return 'Citire anulată.';
+  if (cod === 'not_declared') return 'Citirea automată din poze nu s-a putut încărca (verifică internetul) — încearcă din nou sau completează manual.';
+  if (cod === 'image_rejected') return 'Acest fișier nu poate fi citit automat (verifică formatul: JPEG, PNG, WEBP sau GIF).';
   return 'Nu am putut citi automat această poză. Completează manual câmpurile.';
 }
 async function ocrImageToText(blobOrFile) {
-  if (!window.claude || !window.claude.use) throw { code: 'not_declared' };
-  const sample = await window.claude.use('sample');
-  if (!sample) throw { code: 'not_granted' };
-  const limits = await sample.limits().catch(() => null);
-  if (!limits || !limits.images) throw { code: 'images_unavailable' };
-  const prompt = 'Acestea sunt paginile unui document RCA din România (notă de constatare, deviz de reparație Audatex — posibil mai multe pagini, sau contract de închiriere), fotografiate sau scanate. Transcrie EXACT tot textul vizibil din fiecare imagine, în ordine, așa cum apare pe document — etichete, cifre, coduri, unități (UL, UT, ore, zile, RON, EUR) — linie cu linie, fără traducere, fără rezumat, fără explicații suplimentare. Doar transcrierea brută a textului, pagină după pagină.';
-  const { text } = await sample(prompt, { images: blobOrFile, modelTier: 'default' });
-  return text || '';
+  if (typeof Tesseract === 'undefined') throw { code: 'not_declared' };
+  const items = Array.isArray(blobOrFile) ? blobOrFile : [blobOrFile];
+  let combined = '';
+  for (const item of items) {
+    const { data } = await Tesseract.recognize(item, 'ron+eng');
+    combined += (data && data.text ? data.text : '') + '\n';
+  }
+  return combined;
 }
 // Randeaza paginile unui PDF scanat (fara text) ca imagini, pentru OCR. Devizele Audatex au uneori
 // mai multe pagini (totalul de ore poate fi pe alta pagina decat prima) — trimitem toate, in limita platformei.
@@ -3092,12 +3088,7 @@ async function pdfToImageBlobs(file, maxPages) {
   return blobs;
 }
 async function getImageLimits() {
-  try {
-    if (!window.claude || !window.claude.use) return null;
-    const sample = await window.claude.use('sample');
-    if (!sample) return null;
-    return await sample.limits().catch(() => null);
-  } catch (e) { return null; }
+  return { images: { maxCount: 8 } };
 }
 function extractFromText(text) {
   const norm = text.replace(/\s+/g, ' ');
