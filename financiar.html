@@ -3,6 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#0a0e17">
 <title>Financiar — CENTRALIZATOR RCA</title>
 <link rel="icon" type="image/x-icon" href="icons/favicon.ico">
 <link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32x32.png">
@@ -39,16 +40,25 @@
   * { box-sizing: border-box; }
   * { scrollbar-width: none; }
   *::-webkit-scrollbar { display: none; width: 0; height: 0; }
-  html { scroll-behavior: smooth; }
+  html {
+    scroll-behavior: smooth;
+    background: #04050a;
+    min-height: 100%;
+    overflow-x: hidden;
+  }
   body {
-    margin: 0;
+    margin: 0 auto;
+    width: 100%;
+    max-width: 100vw;
+    overflow-x: hidden;
+    min-height: 100vh;
+    min-height: 100dvh;
     font-family: "Manrope", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
     background:
       radial-gradient(1100px 700px at 12% -8%, rgba(79,140,255,0.10), transparent 58%),
       radial-gradient(900px 650px at 105% 0%, rgba(133,56,194,0.08), transparent 55%),
       radial-gradient(800px 600px at 50% 115%, rgba(61,220,151,0.05), transparent 60%),
       linear-gradient(165deg, #04050a 0%, #0c1119 40%, #0f1420 70%, #0a0e17 100%);
-    background-attachment: fixed;
     color: var(--text);
     padding: 16px;
     padding-bottom: 60px;
