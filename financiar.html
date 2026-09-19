@@ -125,6 +125,8 @@
   button.success { background: var(--ok); color: #08301f; font-weight: 700; }
   button.small { padding: 6px 10px; font-size: 12px; border-radius: 8px; }
   button.upload { background: var(--accent-soft); color: var(--accent); border: 1px dashed var(--accent); width: 100%; margin-bottom: 14px; }
+  .spinner { display: inline-block; width: 13px; height: 13px; border: 2px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin .7s linear infinite; vertical-align: middle; margin-right: 6px; }
+  @keyframes spin { to { transform: rotate(360deg); } }
   .fab { position: fixed; bottom: 20px; right: 20px; width: 56px; height: 56px; border-radius: 50%; font-size: 26px; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 14px rgba(79,140,255,0.4); z-index: 50; }
   .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(6,9,16,0.72); backdrop-filter: blur(7px); -webkit-backdrop-filter: blur(7px); z-index: 100; align-items: flex-end; justify-content: center; }
   .modal-overlay.open { display: flex; animation: overlayIn .18s ease; }
@@ -623,8 +625,8 @@
     <h2 id="modalTitle">Dosar nou</h2>
     <input type="hidden" id="editId">
 
-    <button class="upload" onclick="document.getElementById('pdfInput').click()">📄 PRELUARE DATE (PDF — notă constatare / deviz)</button>
-    <input type="file" id="pdfInput" accept="application/pdf" style="display:none" onchange="handleFileUpload(event)">
+    <button class="upload" onclick="document.getElementById('pdfInput').click()">📄 PRELUARE DATE</button>
+    <input type="file" id="pdfInput" accept="application/pdf,image/*" style="display:none" onchange="handleFileUpload(event)">
     <div class="pdf-status" id="pdfStatus"></div>
     <div class="chips" id="pdfChips"></div>
 
@@ -2378,7 +2380,7 @@ async function handleFileUpload(evt) {
         return;
       }
       // PDF scanat (fără text) — îl transcriem cu OCR (toate paginile, limita platformei)
-      statusEl.textContent = 'PDF scanat — se citește cu OCR, poate dura puțin...';
+      statusEl.innerHTML = '<span class="spinner"></span>Se scanează imaginea...';
       try {
         const limits = await getImageLimits();
         const imgBlobs = await pdfToImageBlobs(file, limits?.images?.maxCount || 8);
@@ -2395,11 +2397,11 @@ async function handleFileUpload(evt) {
               updateRcaPreview();
             }
             renderAnalizaBox(an);
-            statusEl.textContent = 'Deviz citit cu OCR — zilele de reparație au fost calculate automat.';
+            statusEl.textContent = 'Deviz citit din scanare — zilele de reparație au fost calculate automat.';
             marcheazaDevizPrimit(file);
           } else {
             renderAnalizaBox(null);
-            statusEl.textContent = 'Date citite cu OCR — verifică și completează câmpurile de mai jos.';
+            statusEl.textContent = 'Date citite din scanare — verifică și completează câmpurile de mai jos.';
           }
           if (found.extraPlates.length || found.extraDates.length || found.extraPhones.length) renderChips(found);
         } else {
@@ -2410,7 +2412,7 @@ async function handleFileUpload(evt) {
         statusEl.textContent = mesajEroareOCR(eOcr);
       }
     } else {
-      statusEl.textContent = 'Se citește poza cu OCR, poate dura puțin...';
+      statusEl.innerHTML = '<span class="spinner"></span>Se scanează imaginea...';
       try {
         const ocrText = await ocrImageToText(file);
         if (ocrText.trim().length > 20) {
@@ -2425,11 +2427,11 @@ async function handleFileUpload(evt) {
               updateRcaPreview();
             }
             renderAnalizaBox(an);
-            statusEl.textContent = 'Deviz citit cu OCR — zilele de reparație au fost calculate automat.';
+            statusEl.textContent = 'Deviz citit din scanare — zilele de reparație au fost calculate automat.';
             marcheazaDevizPrimit(file);
           } else {
             renderAnalizaBox(null);
-            statusEl.textContent = 'Date citite din poză (OCR) — verifică și completează câmpurile de mai jos.';
+            statusEl.textContent = 'Date citite din poză — verifică și completează câmpurile de mai jos.';
           }
           if (found.extraPlates.length || found.extraDates.length || found.extraPhones.length) renderChips(found);
         } else {
@@ -2471,7 +2473,7 @@ async function handleDevizOnly(evt) {
   const isPdf = file.type === 'application/pdf' || /\.pdf$/i.test(file.name);
 
   if (!isPdf) {
-    statusEl.textContent = 'Se citește poza cu OCR, poate dura puțin...';
+    statusEl.innerHTML = '<span class="spinner"></span>Se scanează imaginea...';
     try {
       const ocrText = await ocrImageToText(file);
       const an = ocrText.trim().length > 20 ? analizaDeviz(ocrText) : null;
@@ -2481,7 +2483,7 @@ async function handleDevizOnly(evt) {
         document.getElementById('fZileDevizFormula').value = an.formulaCalcul || '';
         updateRcaPreview();
         renderAnalizaBox(an);
-        statusEl.textContent = 'Zile recalculate din poza devizului (OCR). Restul câmpurilor nu au fost modificate.';
+        statusEl.textContent = 'Zile recalculate din poza devizului. Restul câmpurilor nu au fost modificate.';
         marcheazaDevizPrimit(file);
       } else {
         renderAnalizaBox(null);
@@ -2513,7 +2515,7 @@ async function handleDevizOnly(evt) {
     let an = analizaDeviz(fullText);
     if (!an && fullText.trim().length < 40) {
       // PDF scanat, fara text — incercam OCR pe toate paginile (limita platformei)
-      statusEl.textContent = 'PDF scanat — se citește cu OCR, poate dura puțin...';
+      statusEl.innerHTML = '<span class="spinner"></span>Se scanează imaginea...';
       const limits = await getImageLimits();
       const imgBlobs = await pdfToImageBlobs(file, limits?.images?.maxCount || 8);
       const ocrText = await ocrImageToText(imgBlobs);
