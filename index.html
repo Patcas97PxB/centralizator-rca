@@ -42,12 +42,21 @@
   body {
     margin: 0;
     font-family: "Manrope", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-    background: var(--bg);
+    background:
+      radial-gradient(1100px 700px at 12% -8%, rgba(79,140,255,0.10), transparent 58%),
+      radial-gradient(900px 650px at 105% 0%, rgba(133,56,194,0.08), transparent 55%),
+      radial-gradient(800px 600px at 50% 115%, rgba(61,220,151,0.05), transparent 60%),
+      linear-gradient(165deg, #04050a 0%, #0c1119 40%, #0f1420 70%, #0a0e17 100%);
+    background-attachment: fixed;
     color: var(--text);
     padding: 16px;
     padding-bottom: 60px;
   }
   h1 { font-family: "Space Grotesk", "Manrope", sans-serif; font-size: 23px; font-weight: 700; letter-spacing: .01em; margin: 4px 0 2px; }
+  .brand-logo {
+    width: 98px; height: 98px; object-fit: contain; flex-shrink: 0;
+    filter: drop-shadow(0 0 3px rgba(255,255,255,.9)) drop-shadow(0 0 12px rgba(255,255,255,.55)) drop-shadow(0 0 26px rgba(160,190,255,.35));
+  }
   .subtitle { color: var(--text-dim); font-size: 13px; margin-bottom: 18px; }
   .header-row { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; }
   .header-row { margin-bottom: 16px; }
@@ -228,22 +237,22 @@
   }
   .status-picker-trigger:hover { filter: brightness(1.2); }
   .status-picker-trigger .chev { width: 12px; height: 12px; flex-shrink: 0; transition: transform .18s ease; }
-  .status-picker.open .status-picker-trigger .chev { transform: rotate(180deg); }
+  .status-picker-trigger.open .chev { transform: rotate(180deg); }
   .status-picker-menu {
-    position: absolute; top: calc(100% + 6px); right: 0; z-index: 25;
-    background: #182034; border: 1px solid var(--border); border-radius: 12px;
-    padding: 5px; min-width: 185px; box-shadow: 0 14px 34px -10px rgba(0,0,0,.65);
-    display: none; flex-direction: column; gap: 1px;
+    position: absolute; z-index: 500;
+    background: #10151f; border: 1px solid #2f3c5c; border-radius: 12px;
+    padding: 5px; min-width: 195px; box-shadow: 0 18px 40px -8px rgba(0,0,0,.75), 0 0 0 1px rgba(0,0,0,.4);
+    display: flex; flex-direction: column; gap: 1px;
+    animation: menuIn .14s ease;
   }
-  .status-picker.open .status-picker-menu { display: flex; animation: menuIn .15s ease; }
   @keyframes menuIn { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: translateY(0); } }
   .status-picker-option {
-    font-size: 12.5px; font-weight: 700; padding: 8px 10px; border-radius: 8px; cursor: pointer;
-    color: var(--opt-color); display: flex; align-items: center; gap: 8px; transition: background .12s ease;
+    font-size: 12.5px; font-weight: 700; padding: 9px 10px; border-radius: 8px; cursor: pointer;
+    color: var(--text); display: flex; align-items: center; gap: 9px; transition: background .12s ease;
   }
-  .status-picker-option::before { content: ''; width: 8px; height: 8px; border-radius: 50%; background: var(--opt-color); flex-shrink: 0; }
+  .status-picker-option::before { content: ''; width: 9px; height: 9px; border-radius: 50%; background: var(--opt-color); flex-shrink: 0; box-shadow: 0 0 6px var(--opt-color); }
   .status-picker-option:hover { background: #26314f; }
-  .status-picker-option.selected { background: #2c3a5e; }
+  .status-picker-option.selected { background: #2c3a5e; color: #fff; }
   #list.compact .status-picker-trigger { font-size: 10px; padding: 4px 8px; }
   .dte-tag { display: inline-block; background: var(--danger-soft); color: var(--danger); font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 999px; margin-left: 6px; vertical-align: middle; }
   .dte-banner { background: var(--danger-soft); border: 1px solid var(--danger); border-radius: 12px; padding: 12px; margin-bottom: 14px; }
@@ -509,8 +518,8 @@
 
 
 <div class="header-row">
-  <div style="display:flex; align-items:center; gap:10px;">
-    <img src="icons/logo.png" alt="PB LAB" style="width:60px; height:60px; object-fit:contain; flex-shrink:0;">
+  <div style="display:flex; align-items:center; gap:14px;">
+    <img src="icons/logo-black.png" alt="PB LAB" class="brand-logo">
     <div>
       <h1>CENTRALIZATOR RCA</h1>
     </div>
@@ -2180,17 +2189,54 @@ async function updateStatus(id, status) {
   render();
 }
 
-// ---------- Selector de status (meniu propriu, nu <select> nativ) ----------
-function toggleStatusPicker(btn, evt) {
-  if (evt) evt.stopPropagation();
-  const picker = btn.closest('.status-picker');
-  const wasOpen = picker.classList.contains('open');
-  document.querySelectorAll('.status-picker.open').forEach(p => p.classList.remove('open'));
-  if (!wasOpen) picker.classList.add('open');
+// ---------- Selector de status (meniu propriu, atasat la <body> — nu mai e taiat de cardul care il contine) ----------
+let _statusPickerMenu = null;
+let _statusPickerBtn = null;
+function closeStatusPicker() {
+  if (_statusPickerMenu) { _statusPickerMenu.remove(); _statusPickerMenu = null; }
+  if (_statusPickerBtn) { _statusPickerBtn.classList.remove('open'); _statusPickerBtn = null; }
 }
-document.addEventListener('click', () => {
-  document.querySelectorAll('.status-picker.open').forEach(p => p.classList.remove('open'));
+function toggleStatusPicker(btn, evt, id) {
+  if (evt) evt.stopPropagation();
+  const reopening = _statusPickerBtn === btn;
+  closeStatusPicker();
+  if (reopening) return;
+
+  const d = dosare.find(x => x.id === id);
+  const status = (d && d.status) || 'in_asteptare';
+  const options = Object.entries(STATUS_META).filter(([val]) => val !== 'finalizat' || status === 'finalizat');
+
+  const menu = document.createElement('div');
+  menu.className = 'status-picker-menu';
+  menu.innerHTML = options.map(([val, m]) => `<div class="status-picker-option${val === status ? ' selected' : ''}" style="--opt-color:${m.color}" data-value="${val}">${m.label}</div>`).join('');
+  document.body.appendChild(menu);
+
+  const rect = btn.getBoundingClientRect();
+  const menuRect = menu.getBoundingClientRect();
+  const margin = 20;
+  let left = rect.right - menuRect.width;
+  if (left < margin) left = margin;
+  if (left + menuRect.width > document.documentElement.clientWidth - margin) left = document.documentElement.clientWidth - margin - menuRect.width;
+  let top = rect.bottom + 6;
+  if (top + menuRect.height > window.innerHeight - margin) top = rect.top - menuRect.height - 6;
+  menu.style.left = (left + window.scrollX) + 'px';
+  menu.style.top = (top + window.scrollY) + 'px';
+
+  menu.querySelectorAll('.status-picker-option').forEach(opt => {
+    opt.onclick = (e) => { e.stopPropagation(); pickStatus(id, opt.dataset.value); closeStatusPicker(); };
+  });
+
+  btn.classList.add('open');
+  _statusPickerMenu = menu;
+  _statusPickerBtn = btn;
+}
+document.addEventListener('click', (e) => {
+  if (_statusPickerMenu && !e.target.closest('.status-picker-menu')) closeStatusPicker();
 });
+window.addEventListener('resize', closeStatusPicker);
+document.addEventListener('scroll', (e) => {
+  if (_statusPickerMenu && !e.target.closest('.status-picker-menu')) closeStatusPicker();
+}, true);
 async function pickStatus(id, value) {
   await updateStatus(id, value);
 }
@@ -3323,7 +3369,6 @@ function render() {
     }
     const status = d.status || 'in_asteptare';
     const meta = STATUS_META[status] || STATUS_META.in_asteptare;
-    const statusOptions = Object.entries(STATUS_META).filter(([val]) => val !== 'finalizat' || status === 'finalizat').map(([val, m]) => `<div class="status-picker-option${val === status ? ' selected' : ''}" style="--opt-color:${m.color}" onclick="pickStatus('${d.id}','${val}')">${m.label}</div>`).join('');
     const rca = calculRCA(d);
     const dst = docStatus(d);
     const docBadge = `<span class="card-doc-badge ${dst.complete ? 'complete' : 'incomplete'}" title="${dst.complete ? 'Toate documentele prezente' : 'Documente lipsă: ' + dst.missing.map(docLabelText).join(', ')}">${dst.have}/${dst.total} doc</span>`;
@@ -3335,11 +3380,10 @@ function render() {
             <div class="card-sub">${escapeHtml(d.nrDosar || '–')}${d.asigurator ? ' · ' + escapeHtml(d.asigurator) : ''}${d.nrRezervare ? ' · ' + escapeHtml(d.nrRezervare) : ''} ${docBadge}</div>
           </div>
           <div class="status-picker">
-            <button type="button" class="status-picker-trigger" style="background:${meta.color}22; color:${meta.color}; border:1px solid ${meta.color};" onclick="toggleStatusPicker(this, event)">
+            <button type="button" class="status-picker-trigger" style="background:${meta.color}22; color:${meta.color}; border:1px solid ${meta.color};" onclick="toggleStatusPicker(this, event, '${d.id}')">
               ${meta.label}
               <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>
             </button>
-            <div class="status-picker-menu">${statusOptions}</div>
           </div>
         </div>
         ${rca.alerta ? `<div class="alerta-compact-only" title="${escapeHtml((rca.alertaTitle || 'DOCUMENTE JUSTIFICATIVE') + ': ' + rca.alerta)}"><span class="tri">\u26A0\uFE0F</span> ${escapeHtml(rca.alertaTitle || 'DOCUMENTE JUSTIFICATIVE')}</div>` : ''}
