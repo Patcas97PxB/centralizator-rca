@@ -52,15 +52,17 @@
     padding: 16px;
     padding-bottom: 60px;
   }
+  .brand-logo-wrap { flex: 1; display: flex; align-items: center; justify-content: center; min-width: 0; padding: 4px 10px; }
   .brand-logo {
-    height: 58px; width: auto; max-width: 100%; object-fit: contain; flex-shrink: 0; display: block;
+    width: 100%; max-width: 720px; height: auto; object-fit: contain; display: block;
     filter: drop-shadow(0 3px 10px rgba(0,0,0,.45));
   }
   @media (max-width: 620px) {
-    .brand-logo { height: 44px; }
+    .brand-logo-wrap { padding: 2px 4px; }
+    .brand-logo { max-width: 340px; }
   }
   .subtitle { color: var(--text-dim); font-size: 13px; margin-bottom: 18px; }
-  .header-row { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; }
+  .header-row { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
   .header-row { margin-bottom: 16px; }
   .clock-corner { display: flex; align-items: center; gap: 10px; background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 6px 10px; flex-shrink: 0; }
   .clock-corner .clock-texts { text-align: right; }
@@ -520,7 +522,7 @@
 
 
 <div class="header-row">
-  <div style="display:flex; align-items:center;">
+  <div class="brand-logo-wrap">
     <img src="icons/logo.svg" alt="Centralizator RCA" class="brand-logo">
   </div>
   <div class="clock-corner">
