@@ -1,2 +1,4 @@
 .supabase_db_password.txt
 supabase/.temp/
+File/
+__pycache__/
