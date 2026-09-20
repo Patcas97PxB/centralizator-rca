@@ -30,17 +30,31 @@ function extractFromText(text) {
   // Nr. dosar — pentru Hellas Direct, formatul canonic e "HDR 121588" (fara "HELLAS" si fara
   // eventualul sufix de dupa liniuta, ex: "HELLAS HDR 121588-8d4a" -> "HDR 121588").
   const mHDR = norm.match(/\bHDR\s*\d+/i);
+  // \w in JS e doar ASCII — "daună"/"daune" nu se potrivesc integral cu \w* (se opreste inainte de ă/â/î/ș/ț).
+  // RO_WORD extinde clasa de caractere ca sufixele romanesti (daună, daune, dauna) sa fie consumate complet.
+  const RO_WORD = 'a-zA-ZăâîșțşţĂÂÎȘȚŞŢ0-9';
   if (mHDR) {
     result.nrDosar = mHDR[0].trim();
   } else {
+    // Unele formulare au spatii in jurul lui "/" sau "-" chiar in interiorul valorii
+    // (Allianz: "BU / ZB422640", Grawe: "BH- 10-00-026490-2025") — le lipim doar pentru
+    // acest match, ca sa incapa in clasa de caractere a grupului de captura.
+    const compact = norm
+      .replace(/([A-Za-z0-9])\s*\/\s*([A-Za-z0-9])/g, '$1/$2')
+      .replace(/([A-Za-z0-9])\s*-\s*([A-Za-z0-9])/g, '$1-$2');
     // Acoperă "nr. dosar", "dosar nr.", "dosar daune:" / "dosar daună nr." (Groupama și alții, fără "nr" explicit)
     // (?!daun) previne capturarea cuvântului "daună/daune" ca valoare, atunci când eticheta nu îl consumă
-    let m = norm.match(/(?:nr\.?\s*dosar(?:\s*(?:de\s*)?daun\w*)?|dosar\s*(?:de\s*)?daun\w*(?:\s*nr\.?)?|dosar\s*nr\.?|num[ăa]r\s*dosar(?:\s*(?:de\s*)?daun\w*)?)\s*[:\-]?\s*(?!daun)([A-Z0-9][A-Z0-9\/\-\.]{2,24})/i);
+    let m = compact.match(new RegExp('(?:nr\\.?\\s*dosar(?:\\s*(?:de\\s*)?daun[' + RO_WORD + ']*)?|dosar\\s*(?:de\\s*)?daun[' + RO_WORD + ']*(?:\\s*nr\\.?)?|dosar\\s*nr\\.?|num[ăa]r\\s*dosar(?:\\s*(?:de\\s*)?daun[' + RO_WORD + ']*)?)\\s*[:\\-]?\\s*(?!daun)([A-Z0-9][A-Z0-9\\/\\-\\.]{2,24})', 'i'));
     if (m) result.nrDosar = m[1].trim();
     else {
       // Fallback pt. formulare tip "SERIE: BH NR: U21201994394" (proces-verbal Groupama)
-      const mSerieNr = norm.match(/SERIE:?\s*[A-Z]{1,3}\s*NR:?\s*([A-Z0-9][A-Z0-9\/\-\.]{2,24})/i);
+      const mSerieNr = compact.match(/SERIE:?\s*[A-Z]{1,3}\s*NR:?\s*([A-Z0-9][A-Z0-9\/\-\.]{2,24})/i);
       if (mSerieNr) result.nrDosar = mSerieNr[1].trim();
+      else {
+        // Fallback pt. formulare Grawe: eticheta vine DUPA valoare — "Seria: BH-...-2025 (nr. dosar)"
+        const mSeriaDupa = compact.match(/Seria:?\s*([A-Z0-9][A-Z0-9\/\-\.]{2,24})\s*\(\s*nr\.?\s*dosar/i);
+        if (mSeriaDupa) result.nrDosar = mSeriaDupa[1].trim();
+      }
     }
   }
 
@@ -85,8 +99,12 @@ function extractFromText(text) {
   const brandAlt = BRANDS.map(b => b.replace(/\s/g,'\\s+')).join('|');
   const modelAlt = MODELS.map(m => m.replace(/[-]/g,'[-\\s]?')).join('|');
 
+  // Separator intre marca si model: de obicei spatiu, dar unii asiguratori/service-uri scriu
+  // "VOLVO/XC40" (fara spatii) sau "VOLKSWAGEN, PASSAT" (cu virgula) — acceptam pe toate.
+  const SEP = '[\\s,\\/]+';
+
   // 1) marcă urmată direct de un model cunoscut (accepta si conectorul "Clasa"/"Class", ex: Mercedes-Benz Clasa GLS)
-  m = norm.match(new RegExp('\\b(' + brandAlt + ')\\s+(?:Clasa\\s+|Class\\s+)?(' + modelAlt + ')\\b', 'i'));
+  m = norm.match(new RegExp('\\b(' + brandAlt + ')' + SEP + '(?:Clasa' + SEP + '|Class' + SEP + ')?(' + modelAlt + ')\\b', 'i'));
   if (m) {
     result.marcaModel = `${m[1]} ${m[2]}`.replace(/\s+/g, ' ').trim();
   } else {
@@ -96,13 +114,24 @@ function extractFromText(text) {
       result.marcaModel = `${m[1]} ${m[2]}`.trim();
     } else {
       // 3) marcă urmată de un cuvânt oarecare (probabil modelul) — ignorăm etichetele de câmp, nu valori reale
-      const ETICHETE = ['model','tip','marca','marcă','serie','seria','versiune','caroserie','tara','țara','an','fabricatie','fabricație','culoare','vin','nr','numar','număr','clasa','clasă','class'];
-      const modelRe = new RegExp('\\b(' + brandAlt + ')\\s+([A-Za-zĂÂÎȘȚăâîșț0-9][A-Za-zĂÂÎȘȚăâîșț0-9\\-]{1,14})\\b(?:\\s+([A-Za-zĂÂÎȘȚăâîșț0-9][A-Za-zĂÂÎȘȚăâîșț0-9\\-]{1,14})\\b)?', 'gi');
+      // Cuvinte de etichetă (nu valori reale de model) — inclusiv continuări de etichete pe 2 cuvinte
+      // gasite in formulare reale ("Numar inmatriculare", "Numar identificare", "Numar polita" etc.),
+      // ca sa nu se capteze un fragment din eticheta URMATORULUI camp cand marca nu are model listat alaturi.
+      const ETICHETE = ['model','tip','marca','marcă','serie','seria','versiune','caroserie','tara','țara','an',
+        'fabricatie','fabricație','culoare','vin','nr','numar','număr','clasa','clasă','class',
+        'inmatriculare','înmatriculare','identificare','polita','poliță','producerii','avizarii','avizării',
+        'constatarii','constatării','evenimentului','cilindrica','cilindrică','intretinere','întreținere','suplimentar'];
+      const modelRe = new RegExp('\\b(' + brandAlt + ')' + SEP + '([A-Za-zĂÂÎȘȚăâîșț0-9][A-Za-zĂÂÎȘȚăâîșț0-9\\-]{1,14})\\b(?:' + SEP + '([A-Za-zĂÂÎȘȚăâîșț0-9][A-Za-zĂÂÎȘȚăâîșț0-9\\-]{1,14})\\b)?', 'gi');
+      // Un cuvant e acceptat ca posibil model doar daca incepe cu majuscula/cifra si are cel putin
+      // 3 caractere — modelele si etichetele reale din aceste formulare sunt mereu scrise asa;
+      // zgomotul OCR (litere ramase din alte elemente ale paginii) apare de regula ca fragmente
+      // scurte sau cu litera mica la inceput.
+      const araLaMajuscula = w => /^[A-ZĂÂÎȘȚ0-9]/.test(w) && w.length >= 3;
       let candidat = null;
       let mm;
       while ((mm = modelRe.exec(norm)) !== null) {
-        if (!ETICHETE.includes(mm[2].toLowerCase())) { candidat = `${mm[1]} ${mm[2]}`.trim(); break; }
-        if (mm[3] && !ETICHETE.includes(mm[3].toLowerCase())) { candidat = `${mm[1]} ${mm[3]}`.trim(); break; }
+        if (araLaMajuscula(mm[2]) && !ETICHETE.includes(mm[2].toLowerCase())) { candidat = `${mm[1]} ${mm[2]}`.trim(); break; }
+        if (mm[3] && araLaMajuscula(mm[3]) && !ETICHETE.includes(mm[3].toLowerCase())) { candidat = `${mm[1]} ${mm[3]}`.trim(); break; }
       }
       if (candidat) result.marcaModel = candidat;
       else {
@@ -111,6 +140,12 @@ function extractFromText(text) {
         if (m) result.marcaModel = m[1];
       }
     }
+  }
+  // Siguranta finala: marca/model nu trebuie sa contina "/" ramas dintr-un separator neprins mai sus —
+  // altfel potrivirea clasei auto (suggestClasaFromModel) esueaza. Cratimele raman (fac parte din
+  // modele reale: T-Roc, X-Trail, G-Class etc.), doar "/" e mereu artefact de format, niciodata literă reală.
+  if (result.marcaModel) {
+    result.marcaModel = result.marcaModel.replace(/\s*\/\s*/g, ' ').replace(/\s+/g, ' ').trim();
   }
 
   // Dates dd.mm.yyyy or dd/mm/yyyy

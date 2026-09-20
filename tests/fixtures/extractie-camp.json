@@ -85,5 +85,70 @@
     "expected": {
       "nrDosar": "A99887766"
     }
+  },
+  {
+    "id": "asirom-accept-plata",
+    "descriere": "Asirom - Accept de plata (nu contine camp marca/model, e normal sa lipseasca)",
+    "text": "ACCEPT DE PLATĂ\nCătre: SC ATP MOTORS RO SRL\nNr. dosar de daună: 33220739\nNr. auto: B181DRV\nProprietar / Utilizator: RCI LEASING ROMANIA IFN SA\nVă transmitem Acceptul de plată\n- în legătură cu devizul de reparație transmis, în valoare de: 15754.11 RON\nASIROM VIG va achita suma de 19062.47 RON, în favoarea SC ATP MOTORS RO SRL pentru reparație\nInspector daune Liviu Greabu",
+    "expected": {
+      "nrDosar": "33220739",
+      "nrAuto": "B181DRV",
+      "marcaModel": "",
+      "asigurator": "Asirom"
+    }
+  },
+  {
+    "id": "axeria-pv-suplimentar",
+    "descriere": "Axeria - Proces-verbal suplimentar, marca cu generatie si cod caroserie in paranteza",
+    "text": "Axeria Iard SA Lyon - Sucursala Bucuresti\nLOCUL CONSTATĂRII: ORADEA Bihor DOSAR DE DAUNĂ NR: BH26R04017 DATA AVIZĂRII: 31.07.2026\nPROCES-VERBAL SUPLIMENTAR DE CONSTATARE A AVARIILOR Nr. [1]\nNr. auto: BH77MFE Marcă/Model: Dacia Logan III (3K) An fabricație: 2020 Culoarea: ALBASTRU\nSerie șasiu: UU1DLF00672764918 Proprietar/Utilizator: CARMEN ELISABETA MODOG\nSpecialist constatări daune: PAUL IONUT MARTIN",
+    "expected": {
+      "nrDosar": "BH26R04017",
+      "nrAuto": "BH77MFE",
+      "marcaModel": "Dacia Logan",
+      "asigurator": "Axeria"
+    }
+  },
+  {
+    "id": "grawe-2-poze-combinate",
+    "descriere": "Grawe - dosarul e trimis pe 2 poze; nr. dosar apare pe ambele, dar marca/model si nr. auto DOAR pe pagina 1. Textul combinat trebuie sa gaseasca toate campurile.",
+    "text": "GRAWE\nSeria: BH- 10-00-026490-2025\n(nr. dosar)\nData: 22/Iul/2025\nPROCES VERBAL DE CONSTATARE DAUNE\nInspector Daune: BORZA MIRCEA Locul constatării: BIHOR\nDate privind identificarea autovehiculului:\nProprietar/ Utilizator MONA DIANA BARNA\nTip vehicul AUTOTURISME\nMarcă, model VOLVO/XC40\nNr. înmatriculare BH18JVH\nSerie șasiu - Cod VIN YV1XZBBVFM2471762\nVopsea caroserie: culoare ALB\n\nGRAWE\nSeria: BH- 10-00-026490-2025\n(nr. dosar)\nData: 22/Iul/2025\nNr. crt Avarii constatate Soluția tehnică\n1. STOP STANGA Inlocuit\n2. LAMPA CEATA STANGA Inlocuit\n3. SPOILER BARA SPATE Inlocuit\n4. BARA SPATE Revopsit\nProprietar / Imputernicit: MONA DIANA BARNA\nInspector Daune: BORZA MIRCEA",
+    "expected": {
+      "nrDosar": "BH-10-00-026490-2025",
+      "nrAuto": "BH18JVH",
+      "marcaModel": "VOLVO XC40",
+      "asigurator": "Grawe"
+    }
+  },
+  {
+    "id": "eazy-pvc-volkswagen-passat",
+    "descriere": "EazyInsure - marca/model separate prin virgula (VOLKSWAGEN, PASSAT), nu spatiu",
+    "text": " \n   PROCES VERBAL DE CONSTATARE DAUNE\nNr. dosar:\nEZ-RCA-B-9323-2026\nData:\n03/09/2026\nInspector Daune:\nAlexandru Golosneanu\nLocul constatării:\nBUCURESTI\n_________________________\nData avizării: 02/09/2026\nData constatării: 03/09/2026\nData producerii accidentului: 30/08/2026 ora 14:00\nLocul producerii accidentului: ROMANIA , ILFOV , IN AFARA LOCALITATII\nCulpa comuna: Da ☐ Nu ☑\n   Date privind identificarea autovehiculului:\nPăgubit\nMUNTEAN ALEXANDRU\nAdresă / Telefon\nSTRADA PADURII, NR.6, ORADEA, BIHOR, / 0741673592\nMarcă, model\nVOLKSWAGEN, PASSAT\nNr. înmatriculare\nBH32WAV\nSerie Sașiu\nWVWZZZ3CZBE371035\nNumăr Km. (înregistrați la data constatării,\ncitiți sau estimați)\n326586\nStare de întreținere (foarte proastă,\nproastă, satisfăcătoare, medie, bună,\nfoarte bună)\nEchipament suplimentar\n   Au fost constatate următoarele repere avariate:\nNr.\nCrt.\nAvarii constatate\nSoluția\ntehnologică\nUnit\nOre/Buc\n1\nCAPOTA SPATE\nINL\n1\nbuc\n2\nBARA SPATE GRUNDUITA\nINL\n1\nbuc\n3\nBANDOU M BARA SPATE\nINL\n1\nbuc\n4\nSENZ PARC INT SP ST\nINL\n1\nbuc\n5\nPANOU INCHIDERE SP\nREP\n2\nore\n6\nSUPORT FIXARE BARA S\nINL\n1\nbuc\nLegendă: INL = de înlocuit | IP = de inlocuit partial | REP = de reparat | RP = de reparat partial | VER = de verificat |\nC = de centrat | RV = de vopsit | RV1 = de vopsit 1 | RG = de reglat | UNI = de uniformizat | RETUS = de retusat\nAvarii preexistente:\nSunt/Nu sunt de acord cu avariile consemnate si cu soluțiile tehnologice stabilite in prezentul proces\nverbal\nObservații: nu sunt\nActe necesare ce urmează a fi depuse de asigurat/păgubit: Cererea de despăgubire, Factura fiscală, Deviz\nde reparație, \n\n \nAccesati harta cu service-urile partenere eazy si faceti click pe link: https://eazyinsure.ro/daune-auto#service-map\nRepararea și/sau înlocuirea oricăror alte repere în afara celor mai sus specificate va fi efectuată numai după\nconstatarea suplimentară a acestora efectuată de către inspectorul de daune, însoțită de fotografii sugestive de\ndetaliu și proces verbal suplimentar de constatare.\nÎn conformitate cu prevederile art. 6 alin.(8) din Legea nr.132/2017, persoana prejudiciată, în cazul producerii unui\nprejudiciu, se poate adresa pentru efectuarea reparației oricărei unități reparatoare auto, în condițiile legii, fără\nnicio restricție sau constrângere din partea asigurătorului RCA sau a unității reparatoare auto, care ar putea să-i\ninfluențeze opțiunea.\nAsigurătorul poate desfășura investigații privind producerea accidentului în termenul prevăzut din legislația în\nvigoare.\nSubsemnatul, declar că am luat la cunoștință că Eazy Asigurari S.A. precum și furnizorii săi de servicii vor\nprelucra datele cu caracter personal furnizate, în scopul gestionării daunelor și am fost informat că datele furnizate\nvor fi tratate confidenţial, în conformitate cu prevederile Regulamentului (UE) 2016/679 în ceea ce privește\nprelucrarea datelor cu caracter personal și privind libera circulație a acestor date. Detalii referitoare la prelucrarea\ndatelor cu caracter personal se regăsesc pe site-ul EAZY Asigurari S.A., accesand pagina\nhttps://eazyinsure.ro/politica-de-confidentialitate\nInspector Daune: Alexandru\nGolosneanu\nTel. Insp. Daune:\nE-mail:\nalexandru.golosneanu@eazyinsure.ro\nSemnătura:\nPrezentul proces verbal de constatare înlocuieşte documentul de intrare în reparaţie, dar nu reprezintă nota\ntehnică finală de constatare a daunelor şi nici obligaţie de plată a emitentului. Pentru transmiterea de documente,\nreconstatări și devize în vederea obținerii acceptului de plată, vă rugăm să folosiți adresa:\nreconstatare@eazyinsure.ro sau accepteplata@eazyinsure.ro . \nProprietar / Imputernicit: MUNTEAN ALEXANDRU\nDate identificare (CI): Seria: ________ nr. _________________\nTel. 0741673592\nAdresă e-mail: mirceaborza5@gmail.com\nAm primit un exemplar al prezentului formular.\nSemnătura:\nBorza Mircea\nPowered by TCPDF (www.tcpdf.org)\n",
+    "expected": {
+      "nrDosar": "EZ-RCA-B-9323-2026",
+      "nrAuto": "BH32WAV",
+      "marcaModel": "VOLKSWAGEN PASSAT",
+      "asigurator": "EazyInsure"
+    }
+  },
+  {
+    "id": "allianz-jpeg-bu-zb",
+    "descriere": "Allianz - nota de constatare clasica, nr. dosar cu prefix regiune si spatii in jurul lui / (BU / ZB422640)",
+    "text": "Allianz Țiriac NOTĂ DE CONSTATARE RCA\nCall Center 021 20 19 180, 021 20 19 181\nDosar de dauna Nr: BU / ZB422640\nPagubit Mihoc Sorinel Cristian\nAuto marcă/model Dacia Logan Ii (11.2012->)\nNumărul de inmatriculare BH05MRC\nNumărul de identificare UU14SDE3455872513\nData producerii evenimentului 17.apr.2026 16:30",
+    "expected": {
+      "nrDosar": "BU/ZB422640",
+      "nrAuto": "BH05MRC",
+      "marcaModel": "Dacia Logan",
+      "asigurator": "Allianz"
+    }
+  },
+  {
+    "id": "allianz-pdf-scanat-caseta-dosar",
+    "descriere": "Allianz - PDF scanat (fara strat de text, trece prin OCR). Text real produs de Tesseract.js la 300 DPI pe imaginea randata. Nr. dosar e scris cifra-cu-cifra in casete individuale si NU poate fi citit fiabil automat — cazul e documentat aici ca limita cunoscuta, nu se asteapta nrDosar corect. nr. auto si marca ies corect la 300 DPI (la 150 DPI ieseau garbled).",
+    "text": "Nota de constatare |\nAllianz @) Tiriac @ Dosar de dauna Nr. CU O RI ANA\nPagubit AUTONOM SERVICES SA\nCall Center fix 021.20.19.18.0 Auto marca/model DACIA sia Os\nmobil * 21.20.19.18 Orange Numar inmatriculare B126UTI 55 SE\nNr. identificare UU1DJFO0172363738 |\nData producerii evenimentului 31.08.2026 10:17:00",
+    "expected": {
+      "nrAuto": "B126UTI",
+      "marcaModel": "DACIA",
+      "asigurator": "Allianz"
+    }
   }
 ]
