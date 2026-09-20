@@ -2,7 +2,7 @@
 <html lang="ro">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <meta name="theme-color" content="#0a0e17">
 <title>CENTRALIZATOR RCA</title>
 <link rel="icon" type="image/x-icon" href="icons/favicon.ico">
@@ -65,8 +65,10 @@
     font-family: "Manrope", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
     background: transparent;
     color: var(--text);
-    padding: 16px;
-    padding-bottom: 60px;
+    /* viewport-fit=cover lasa fundalul sa se intinda sub insula/notch-ul telefonului —
+       padding-ul de mai jos evita ca CONTINUTUL (nu fundalul) sa fie acoperit de ea. */
+    padding: max(16px, env(safe-area-inset-top)) max(16px, env(safe-area-inset-right)) 16px max(16px, env(safe-area-inset-left));
+    padding-bottom: calc(60px + env(safe-area-inset-bottom));
   }
   h1 { font-family: "Space Grotesk", "Manrope", sans-serif; font-size: 23px; font-weight: 700; letter-spacing: .01em; margin: 4px 0 2px; }
   .subtitle { color: var(--text-dim); font-size: 13px; margin-bottom: 18px; }
@@ -111,7 +113,10 @@
   }
   /* ---------- Adaptare mobil (telefon, ecran ingust) ---------- */
   @media (max-width: 620px) {
-    body { padding: 10px; padding-bottom: 60px; }
+    body {
+      padding: max(10px, env(safe-area-inset-top)) max(10px, env(safe-area-inset-right)) 10px max(10px, env(safe-area-inset-left));
+      padding-bottom: calc(60px + env(safe-area-inset-bottom));
+    }
     h1 { font-size: 17px; }
     .header-row { flex-wrap: wrap; }
     .site-logo { height: 72px; }
@@ -367,7 +372,16 @@
   /* Pagina Financiar (financiar.html): antetul (logo+ceas+bara de butoane) ramane fix sus,
      iar continutul financiar curge normal dedesubt, ca pagina intreaga sa se scroleze o
      singura data, nu intr-un panou separat peste antet. Vezi .pagina-financiar pe <body>. */
-  .pagina-financiar .antet-fix { position: sticky; top: 0; z-index: 80; background: var(--bg); }
+  /* Fundal translucent + blur (nu culoare plata) — pagina foloseste un gradient care isi
+     schimba usor nuanta pe masura ce cobori; o culoare plata aici ar crea o dunga vizibil
+     diferita de restul paginii. Un panou translucent arata intentionat (ca o bara nativa),
+     nu ca o nepotrivire de fundal. */
+  .pagina-financiar .antet-fix {
+    position: sticky; top: 0; z-index: 80;
+    background: rgba(8, 11, 18, 0.85);
+    backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+    border-bottom: 1px solid var(--border);
+  }
   .pagina-financiar .stats,
   .pagina-financiar .legend,
   .pagina-financiar .share-note,
