@@ -1,6 +1,6 @@
 ---
 name: extractie-camp-deviz
-description: Adauga sau corecteaza detectia automata a campurilor (nr. dosar, nr. auto pagubit, marca/model, asigurator) cand utilizatorul incarca un document exemplu (deviz, proces-verbal, poza) si indica valorile corecte. Foloseste acest skill de fiecare data cand utilizatorul spune ca "PRELUARE DATE" nu a completat corect un camp, sau cand aduce un document nou ca exemplu pentru a "invata" siteul.
+description: Adauga sau corecteaza detectia automata a campurilor (nr. dosar, nr. auto pagubit, marca/model, asigurator, clasa auto) cand utilizatorul incarca un document exemplu (deviz, proces-verbal, poza) si indica valorile corecte, sau cand un marca/model cunoscut nu se potriveste cu clasa lui din grila. Foloseste acest skill de fiecare data cand utilizatorul spune ca "PRELUARE DATE" nu a completat corect un camp, cand clasa auto sugerata automat e gresita/lipsa, sau cand aduce un document nou ca exemplu pentru a "invata" siteul.
 ---
 
 # Rafinare extractie campuri (Centralizator RCA)
@@ -17,17 +17,30 @@ de teste dupa.
 
 ## Arhitectura
 
-- **`js/extractie.js`** — singura sursa a functiei `extractFromText(text)`.
-  Incarcata atat in `index.html` cat si in `financiar.html` via
-  `<script src="js/extractie.js">` — se modifica o singura data, in acest
-  fisier, niciodata direct in HTML.
-- **`tests/fixtures/extractie-camp.json`** — corpusul permanent de exemple
-  "invatate" (text brut + valori asteptate). Fiecare document nou adus de
+- **`js/extractie.js`** — singura sursa a functiei `extractFromText(text)`,
+  care citeste campurile (nr. dosar, nr. auto, marca/model, asigurator)
+  dintr-un text de document.
+- **`js/clase-auto.js`** — singura sursa a functiei `suggestClasaFromModel(text)`
+  si a listei `VEHICLE_CLASSES` (marca/model -> clasa din grila de tarife).
+  Face potrivirea in 3 pasi (exact normalizat -> doar numele modelului, fara
+  marca -> potrivire aproximativa/Levenshtein pentru greseli mici de scriere),
+  ca sa recunoasca acelasi model indiferent cum scrie fiecare asigurator marca
+  (ex: grila are "VW Passat", un document da "Volkswagen Passat" — trebuie sa
+  iasa aceeasi clasa).
+  Amandoua fisierele sunt incarcate atat in `index.html` cat si in
+  `financiar.html` via `<script src="js/...">` — se modifica o singura data,
+  in fisierul respectiv, niciodata direct in HTML.
+- **`tests/fixtures/extractie-camp.json`** + **`tests/fixtures/clase-auto.json`**
+  — corpusurile permanente de exemple "invatate" (text brut + valori
+  asteptate, respectiv marca/model + clasa asteptata). Fiecare document nou adus de
   utilizator ca exemplu trebuie sa ramana aici ca fixture, pentru totdeauna —
   asta e memoria pe termen lung a sistemului (in git, nu in Supabase — vezi
   sectiunea "De ce git si nu Supabase" mai jos).
-- **`tests/run-extractie.js`** — ruleaza toate fixture-urile impotriva
-  `js/extractie.js` si raporteaza ce campuri nu se potrivesc.
+- **`tests/run-extractie.js`** — ruleaza toate fixture-urile din
+  `extractie-camp.json` impotriva `js/extractie.js`.
+- **`tests/run-clase-auto.js`** — ruleaza toate fixture-urile din
+  `clase-auto.json` impotriva `js/clase-auto.js`.
+  Ruleaza-le pe amandoua dupa orice modificare: `node tests/run-extractie.js && node tests/run-clase-auto.js`.
 
 ## Workflow: utilizatorul aduce un document exemplu
 

@@ -1,0 +1,13 @@
+[
+  { "id": "vw-passat-nume-complet-din-extractie", "descriere": "Grila scrie 'VW Passat', extragerea automata da numele complet de marca", "marcaModel": "Volkswagen Passat", "clasaAsteptata": "F1" },
+  { "id": "vw-passat-abreviat-ca-in-grila", "descriere": "Exact cum e scris in grila", "marcaModel": "VW Passat", "clasaAsteptata": "F1" },
+  { "id": "doar-passat-fara-marca", "descriere": "Doar numele modelului, fara marca deloc", "marcaModel": "Passat", "clasaAsteptata": "F1" },
+  { "id": "pasat-gresit-scris", "descriere": "Model scris gresit (lipseste un 's') — trebuie recunoscut prin potrivire aproximativa", "marcaModel": "Pasat", "clasaAsteptata": "F1" },
+  { "id": "mercedes-cratima-vs-grila-fara-benz", "descriere": "Extractia da 'Mercedes-Benz GLA' (cu cratima si Benz), grila are doar 'Mercedes GLA'", "marcaModel": "Mercedes-Benz GLA", "clasaAsteptata": "G1" },
+  { "id": "mercedes-benz-spatiu-vs-grila-cu-benz", "descriere": "Grila are chiar 'Mercedes Benz EQA' (cu Benz, spatiu nu cratima)", "marcaModel": "Mercedes-Benz EQA", "clasaAsteptata": "eG1" },
+  { "id": "vw-tiguan-abreviat", "descriere": "Alt model VW, ca sa confirmam ca fix-ul de alias e general, nu doar pentru Passat", "marcaModel": "Volkswagen Tiguan", "clasaAsteptata": "G1" },
+  { "id": "t-roc-cratima-vs-fara", "descriere": "VW T-Roc — cratima in grila, extractia poate da varianta cu sau fara spatiu", "marcaModel": "Volkswagen T-Roc", "clasaAsteptata": "D" },
+  { "id": "bmw-seria-3-cu-spatiu", "descriere": "Model pe 2 cuvinte (Seria 3) — trebuie sa mearga potrivirea directa, nu doar fallback-ul de un cuvant", "marcaModel": "BMW Seria 3", "clasaAsteptata": "P" },
+  { "id": "model-necunoscut", "descriere": "Marca/model care nu exista deloc in grila — trebuie sa returneze gol, nu o potrivire gresita", "marcaModel": "Lada Niva", "clasaAsteptata": "" },
+  { "id": "gol", "descriere": "Text gol", "marcaModel": "", "clasaAsteptata": "" }
+]
