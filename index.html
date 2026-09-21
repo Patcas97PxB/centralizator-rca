@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-<meta name="theme-color" content="#0a0e17">
+<meta name="theme-color" content="#04050a">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <title>CENTRALIZATOR RCA</title>
@@ -45,15 +45,16 @@
   * { scrollbar-width: none; }
   *::-webkit-scrollbar { display: none; width: 0; height: 0; }
   html {
+    color-scheme: dark;
     scroll-behavior: smooth;
-    background:
-      radial-gradient(1100px 700px at 12% -8%, rgba(79,140,255,0.10), transparent 58%),
-      radial-gradient(900px 650px at 105% 0%, rgba(133,56,194,0.08), transparent 55%),
-      radial-gradient(800px 600px at 50% 115%, rgba(61,220,151,0.05), transparent 60%),
-      linear-gradient(165deg, #04050a 0%, #0c1119 40%, #0f1420 70%, #0a0e17 100%);
+    background: #0a0e17;
+    background-image:
+      radial-gradient(ellipse 900px 600px at 10% 0%, rgba(79,140,255,0.09) 0%, transparent 60%),
+      radial-gradient(ellipse 700px 500px at 95% 5%, rgba(133,56,194,0.07) 0%, transparent 55%);
+    background-attachment: fixed;
     min-height: 100%;
     overflow-x: hidden;
-    overscroll-behavior: none; /* previne bounce-ul de pe iOS care expune fundalul alb din spatele paginii */
+    overscroll-behavior: none;
   }
   body {
     margin: 0 auto;
@@ -78,7 +79,7 @@
   .subtitle { color: var(--text-dim); font-size: 13px; margin-bottom: 18px; }
   .header-row { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
   .header-row { margin-bottom: 16px; }
-  .site-logo { height: 104px; width: auto; flex-shrink: 0; display: block; }
+  .site-logo { height: 72px; width: auto; flex-shrink: 0; display: block; }
   .clock-corner { display: flex; align-items: center; gap: 10px; background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 6px 10px; flex-shrink: 0; }
   .clock-corner .clock-texts { text-align: right; }
   .service-icon-row { display: flex; justify-content: flex-end; gap: 4px; margin-bottom: 10px; }
@@ -123,7 +124,7 @@
     }
     h1 { font-size: 17px; }
     .header-row { flex-wrap: wrap; }
-    .site-logo { height: 72px; }
+    .site-logo { height: 52px; }
     .clock-corner { padding: 4px 8px; }
     .clock-time { font-size: 14px; }
     .service-icon-row { flex-wrap: wrap; justify-content: flex-start; }
@@ -373,18 +374,16 @@
   .modal-overlay.fullscreen { align-items: stretch; justify-content: stretch; padding: 0; }
   .modal-overlay.fullscreen .modal { max-width: 100%; width: 100%; height: 100%; max-height: 100%; border-radius: 0; display: flex; flex-direction: column; overflow: hidden; padding: 0; }
   .fin-scroll-body { overflow-y: auto; overflow-x: hidden; flex: 1; padding: 18px; }
-  /* Pagina Financiar (financiar.html): antetul (logo+ceas+bara de butoane) ramane fix sus,
-     iar continutul financiar curge normal dedesubt, ca pagina intreaga sa se scroleze o
-     singura data, nu intr-un panou separat peste antet. Vezi .pagina-financiar pe <body>. */
-  /* Fundal translucent + blur (nu culoare plata) — pagina foloseste un gradient care isi
-     schimba usor nuanta pe masura ce cobori; o culoare plata aici ar crea o dunga vizibil
-     diferita de restul paginii. Un panou translucent arata intentionat (ca o bara nativa),
-     nu ca o nepotrivire de fundal. */
+  /* ─── Antet fix — identic pe ambele pagini ─── */
+  .antet-fix {
+    position: sticky; top: 0; z-index: 80;
+    background: #0a0e17;
+    border-bottom: 1px solid rgba(42,53,80,0.8);
+  }
   .pagina-financiar .antet-fix {
     position: sticky; top: 0; z-index: 80;
-    background: rgba(8, 11, 18, 0.85);
-    backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
-    border-bottom: 1px solid var(--border);
+    background: #0a0e17;
+    border-bottom: 1px solid rgba(42,53,80,0.8);
   }
   .pagina-financiar .stats,
   .pagina-financiar .legend,
@@ -419,6 +418,7 @@
   .fin-grand-total { background: var(--card); border: 1px solid var(--accent); border-radius: 12px; padding: 14px; font-size: 15px; font-weight: 700; text-align: right; margin-top: 10px; }
   .assign-options { display: flex; flex-direction: column; gap: 8px; margin: 10px 0 16px; }
   .assign-options button { width: 100%; }
+
 </style>
 </head>
 <body>
@@ -560,6 +560,7 @@
   </div>
 </div>
 
+
 <div class="service-icon-row">
   <button class="service-icon-btn" onclick="exportData()" title="Export backup">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="21" height="21"><path d="M12 3v11"/><path d="M8 10l4 4 4-4"/><path d="M4 16v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg>
@@ -567,11 +568,10 @@
   <button class="service-icon-btn" onclick="importBackup()" title="Import backup">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="21" height="21"><path d="M12 14V3"/><path d="M8 7l4-4 4 4"/><path d="M4 16v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg>
   </button>
-  <input type="file" id="importInput" accept="application/json,.json,.txt" style="display:none" onchange="importData(event)">
-  <a class="service-icon-btn" href="financiar.html" title="Financiar — centralizator lunar pe service" style="text-decoration:none;">
+  <a class="service-icon-btn" href="financiar.html" title="Financiar" style="text-decoration:none;">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="21" height="21"><path d="M4 20V11"/><path d="M12 20V4"/><path d="M20 20v-6"/><path d="M2 20h20"/></svg>
   </a>
-  <button class="service-icon-btn" onclick="openServiceModal()" title="Adaugă / gestionează service-uri">
+  <button class="service-icon-btn" onclick="openServiceModal()" title="Service-uri">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" width="21" height="21"><path d="M3 10.5L12 4l9 6.5"/><path d="M4.5 10v9a1 1 0 0 0 1 1h13a1 1 0 0 0 1-1v-9"/><rect x="7" y="12.5" width="10" height="5.5" rx="1"/><path d="M7 15.2h10"/></svg>
   </button>
   <button class="service-icon-btn" onclick="doLogout()" title="Ieși din cont" id="logoutBtn" style="display:none;">
@@ -579,6 +579,7 @@
   </button>
 </div>
 </div>
+<input type="file" id="importInput" accept="application/json,.json,.txt" style="display:none" onchange="importData(event)">
 
 <div class="modal-overlay" id="financiarModalOverlay" style="z-index:110;">
   <div class="modal">
@@ -3321,6 +3322,9 @@ updateClock();
 setInterval(updateClock, 1000);
 
 checkAuthAndInit();
+
+
 </script>
+
 </body>
 </html>
