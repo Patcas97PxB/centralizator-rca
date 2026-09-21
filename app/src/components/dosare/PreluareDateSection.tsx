@@ -1,5 +1,5 @@
 import { useRef, useState } from 'react'
-import { FileScan, Sparkles } from 'lucide-react'
+import { Calculator, FileScan, Sparkles } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
   Popover,
@@ -57,6 +57,10 @@ export function PreluareDateSection({
   const [chips, setChips] = useState<Chip[]>([])
   const [seIncarca, setSeIncarca] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
+
+  const [statusDeviz, setStatusDeviz] = useState('')
+  const [seIncarcaDeviz, setSeIncarcaDeviz] = useState(false)
+  const inputDevizRef = useRef<HTMLInputElement>(null)
 
   function aplicaExtractie(found: RezultatExtractie) {
     const patch: Partial<Dosar> = {}
@@ -131,6 +135,50 @@ export function PreluareDateSection({
     }
   }
 
+  // Portat din handleDevizOnly() (index.html) — buton separat care recalculeaza DOAR zilele
+  // de reparatie dintr-un deviz, suprascriind explicit valoarea existenta (spre deosebire de
+  // "PRELUARE DATE" de mai sus, care nu atinge campul daca e deja completat). Util cand vrei
+  // sa reactualizezi zilele dintr-un deviz nou/corectat, fara sa umbli la restul campurilor.
+  async function handleDevizOnlyFile(file: File) {
+    setSeIncarcaDeviz(true)
+    setStatusDeviz('')
+    const isPdf = file.type === 'application/pdf' || /\.pdf$/i.test(file.name)
+    try {
+      let an: AnalizaDeviz | null = null
+      if (!isPdf) {
+        setStatusDeviz('Se scanează imaginea…')
+        const ocrText = await ocrImageToText(file)
+        an = ocrText.trim().length > 20 ? analizaDeviz(ocrText) : null
+      } else {
+        if (!pdfLibDisponibil()) {
+          setStatusDeviz('Biblioteca de citire PDF nu s-a încărcat. Verifică internetul și reîncarcă pagina.')
+          return
+        }
+        setStatusDeviz('Se citește devizul…')
+        const fullText = await readPdfText(file)
+        an = analizaDeviz(fullText)
+        if (!an && fullText.trim().length < 40) {
+          setStatusDeviz('Se scanează imaginea…')
+          const imgBlobs = await pdfToImageBlobs(file, 8)
+          const ocrText = await ocrImageToText(imgBlobs)
+          an = ocrText.trim().length > 20 ? analizaDeviz(ocrText) : null
+        }
+      }
+      if (an) {
+        onPatch({ zileDeviz: String(an.total), zileDevizExplicatie: an.explicatie, zileDevizFormula: an.formulaCalcul })
+        setAnaliza(an)
+        setStatusDeviz(isPdf ? 'Zile recalculate din deviz. Restul câmpurilor nu au fost modificate.' : 'Zile recalculate din poza devizului. Restul câmpurilor nu au fost modificate.')
+      } else {
+        setStatusDeviz('Nu am găsit manopera în acest document — verifică claritatea sau introdu zilele manual.')
+      }
+    } catch (e) {
+      console.error(e)
+      setStatusDeviz(mesajEroareOCR(e))
+    } finally {
+      setSeIncarcaDeviz(false)
+    }
+  }
+
   return (
     <div className="space-y-2 rounded-xl border border-border bg-muted/30 p-3">
       <div className="flex items-center justify-between gap-2">
@@ -165,6 +213,32 @@ export function PreluareDateSection({
       </p>
 
       {status && <p className="text-xs text-foreground">{status}</p>}
+
+      <div className="flex items-center gap-2 border-t border-border pt-2">
+        <Button
+          type="button"
+          size="sm"
+          variant="outline"
+          disabled={seIncarcaDeviz}
+          onClick={() => inputDevizRef.current?.click()}
+        >
+          <Calculator className="size-3.5" aria-hidden="true" />
+          {seIncarcaDeviz ? 'Se calculează…' : 'Recalculează zile din deviz'}
+        </Button>
+        <span className="text-xs text-muted-foreground">Suprascrie doar zilele — restul câmpurilor rămân neatinse.</span>
+        <input
+          ref={inputDevizRef}
+          type="file"
+          accept="application/pdf,image/*"
+          className="hidden"
+          onChange={(e) => {
+            const f = e.target.files?.[0]
+            if (f) handleDevizOnlyFile(f)
+            e.target.value = ''
+          }}
+        />
+      </div>
+      {statusDeviz && <p className="text-xs text-foreground">{statusDeviz}</p>}
 
       {analiza && (
         <div className="rounded-lg border border-primary/30 bg-primary/10 p-2.5">
