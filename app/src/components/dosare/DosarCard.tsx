@@ -34,7 +34,7 @@ export function DosarCard({
 
   return (
     <div
-      className="flex flex-col gap-3 rounded-2xl border border-l-4 border-border bg-card p-4"
+      className="flex min-w-0 flex-col gap-3 rounded-2xl border border-l-4 border-border bg-card p-4"
       style={{ borderLeftColor: meta.color }}
     >
       <div className="flex items-start justify-between gap-2">
@@ -112,10 +112,10 @@ export function DosarCard({
       <EtapeBar dosar={dosar} />
 
       <div className="flex items-center justify-between gap-2">
-        <div className={cn('text-xs font-semibold', URGENTA_TEXT_CLASSES[urgenta.cls])}>
+        <div className={cn('min-w-0 truncate text-xs font-semibold', URGENTA_TEXT_CLASSES[urgenta.cls])}>
           {urgenta.bigNum} {urgenta.bigLabel}
         </div>
-        <Button size="sm" variant="secondary" onClick={() => onDeschide(dosar.id)}>
+        <Button size="sm" variant="secondary" className="shrink-0" onClick={() => onDeschide(dosar.id)}>
           Vezi detalii
         </Button>
       </div>
