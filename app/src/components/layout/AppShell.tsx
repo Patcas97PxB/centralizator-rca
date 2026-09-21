@@ -1,0 +1,40 @@
+import type { ReactNode } from 'react'
+import { SidebarInset, SidebarProvider } from '@/components/ui/sidebar'
+import { AppSidebar } from './AppSidebar'
+import { Header } from './Header'
+import { MobileBottomNav } from './MobileBottomNav'
+import type { SectionKey } from './nav-items'
+
+export function AppShell({
+  active,
+  onSelect,
+  headerTitle,
+  headerSubtitle,
+  notificari,
+  onNotificariClick,
+  children,
+}: {
+  active: SectionKey
+  onSelect: (key: SectionKey) => void
+  headerTitle: string
+  headerSubtitle?: string
+  notificari: number
+  onNotificariClick: () => void
+  children: ReactNode
+}) {
+  return (
+    <SidebarProvider>
+      <AppSidebar active={active} onSelect={onSelect} />
+      <SidebarInset>
+        <Header
+          title={headerTitle}
+          subtitle={headerSubtitle}
+          notificari={notificari}
+          onNotificariClick={onNotificariClick}
+        />
+        <main className="flex-1 pb-20 md:pb-0">{children}</main>
+        <MobileBottomNav active={active} onSelect={onSelect} />
+      </SidebarInset>
+    </SidebarProvider>
+  )
+}
