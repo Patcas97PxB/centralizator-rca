@@ -34,6 +34,7 @@ import { suggestClasaFromModel, vehicleClasses } from '@/lib/clase-auto'
 import { calculRCA, todayStr } from '@/lib/rca-calc'
 import { STATUS_META, dosarGol, type Dosar, type StatusDosar, type Vehicul } from '@/lib/types'
 import { PreluareDateSection } from './PreluareDateSection'
+import { DevizRecalculeazaButton } from './DevizRecalculeazaButton'
 import { ContractFinalSection } from './ContractFinalSection'
 import { DocumenteSection } from './DocumenteSection'
 
@@ -228,6 +229,7 @@ export function DosarFormModal({
               </SelectContent>
             </Select>
           </div>
+          <DevizRecalculeazaButton onPatch={patch} />
           <div className="space-y-1.5">
             <Label htmlFor="fZileDeviz">Zile lucrătoare din deviz</Label>
             <Input id="fZileDeviz" type="number" min={0} value={draft.zileDeviz} onChange={(e) => set('zileDeviz', e.target.value)} />
