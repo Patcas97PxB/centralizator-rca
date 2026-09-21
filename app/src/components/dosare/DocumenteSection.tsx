@@ -30,6 +30,11 @@ export function DocumenteSection({
   const [seIncarca, setSeIncarca] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
   const st = docStatus(draft)
+  // Plasa de siguranta suplimentara — sursa de date normalizeaza deja (vezi
+  // normalizeazaDosar in types.ts), dar pastram asta si aici ca sectiunea sa nu pice daca
+  // vreodata `draft` ajunge aici pe alta cale, cu un dosar mai vechi/incomplet.
+  const documente = Array.isArray(draft.documente) ? draft.documente : []
+  const etichetaOptionale = Array.isArray(draft.etichetaOptionale) ? draft.etichetaOptionale : []
 
   async function handleFiles(files: FileList) {
     setSeIncarca(true)
@@ -48,28 +53,28 @@ export function DocumenteSection({
         console.error(e)
         setStatus('Eroare la „' + file.name + '": ' + mesajEroareAsset(e))
         setSeIncarca(false)
-        if (documenteNoi.length) onPatch({ documente: [...draft.documente, ...documenteNoi] })
+        if (documenteNoi.length) onPatch({ documente: [...documente, ...documenteNoi] })
         return
       }
     }
-    onPatch({ documente: [...draft.documente, ...documenteNoi] })
+    onPatch({ documente: [...documente, ...documenteNoi] })
     setStatus(rezumat.length ? 'Un fișier a acoperit mai multe documente: ' + rezumat.join(' · ') : (files.length > 1 ? files.length + ' fișiere încărcate.' : 'Fișier încărcat.'))
     setSeIncarca(false)
   }
 
   async function elimina(docId: string) {
-    const doc = draft.documente.find((x) => x.id === docId)
-    onPatch({ documente: draft.documente.filter((x) => x.id !== docId) })
+    const doc = documente.find((x) => x.id === docId)
+    onPatch({ documente: documente.filter((x) => x.id !== docId) })
     if (doc?.assetId) stergeDocumentStocare(doc.assetId).catch(() => {})
   }
 
   function schimbaEticheta(docId: string, eticheta: string) {
-    onPatch({ documente: draft.documente.map((d) => (d.id === docId ? { ...d, eticheta } : d)) })
+    onPatch({ documente: documente.map((d) => (d.id === docId ? { ...d, eticheta } : d)) })
   }
 
   function toggleOptional(key: string) {
-    const are = draft.etichetaOptionale.includes(key)
-    onPatch({ etichetaOptionale: are ? draft.etichetaOptionale.filter((k) => k !== key) : [...draft.etichetaOptionale, key] })
+    const are = etichetaOptionale.includes(key)
+    onPatch({ etichetaOptionale: are ? etichetaOptionale.filter((k) => k !== key) : [...etichetaOptionale, key] })
   }
 
   async function deschide(assetId?: string) {
@@ -110,11 +115,11 @@ export function DocumenteSection({
 
       {status && <p className="text-xs text-muted-foreground">{status}</p>}
 
-      {draft.documente.length === 0 ? (
+      {documente.length === 0 ? (
         <p className="text-xs text-muted-foreground">Niciun fișier încărcat încă.</p>
       ) : (
         <div className="space-y-1.5">
-          {draft.documente.map((doc) => (
+          {documente.map((doc) => (
             <div key={doc.id} className="flex items-center gap-2 rounded-lg border border-border bg-card px-2 py-1.5">
               <button
                 type="button"
@@ -151,7 +156,7 @@ export function DocumenteSection({
           <div className="mt-2 space-y-1.5 pl-1">
             {st.missing.map((key) => (
               <div key={key} className="flex items-center gap-2">
-                <Checkbox id={'opt-' + key} checked={draft.etichetaOptionale.includes(key)} onCheckedChange={() => toggleOptional(key)} />
+                <Checkbox id={'opt-' + key} checked={etichetaOptionale.includes(key)} onCheckedChange={() => toggleOptional(key)} />
                 <Label htmlFor={'opt-' + key} className="font-normal">
                   {docLabelText(key)}
                 </Label>

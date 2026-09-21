@@ -71,6 +71,22 @@ export const STATUS_META: Record<StatusDosar, { label: string; color: string }> 
   finalizat: { label: 'FINALIZAT', color: '#3ddc97' },
 }
 
+// Dosarele mai vechi (migrate din blob-ul app_storage sau salvate inainte sa existe un
+// camp anume) pot avea in Supabase un obiect caruia ii lipsesc campuri intregi — de exemplu
+// `documente`/`etichetaOptionale` pur si simplu absente, nu `[]`. Codul din aplicatie (ex.
+// DocumenteSection) presupune ca sunt mereu array-uri; fara normalizare, un asemenea dosar
+// arunca o eroare la deschidere si utilizatorul vede "nu se intampla nimic". Se aplica o
+// singura data, la citirea din Supabase (dosare-storage.ts), ca tot codul din aval sa
+// primeasca mereu un obiect complet.
+export function normalizeazaDosar(raw: Partial<Dosar> & { id: string }): Dosar {
+  return {
+    ...dosarGol(),
+    ...raw,
+    documente: Array.isArray(raw.documente) ? raw.documente : [],
+    etichetaOptionale: Array.isArray(raw.etichetaOptionale) ? raw.etichetaOptionale : [],
+  }
+}
+
 export function dosarGol(): Dosar {
   return {
     id: '',

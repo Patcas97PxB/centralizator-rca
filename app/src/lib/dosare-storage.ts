@@ -1,5 +1,5 @@
 import { supabase } from './supabase'
-import type { Dosar } from './types'
+import { normalizeazaDosar, type Dosar } from './types'
 
 // Tabelul `dosare` (un rand per dosar, coloana `data` jsonb + `updated_at`) a fost creat
 // la pasul anterior (supabase/migrations/20260921120000_dosare_servicii_per_row.sql).
@@ -19,7 +19,7 @@ interface DosarRow {
 export async function fetchDosare(): Promise<Dosar[]> {
   const { data, error } = await supabase.from('dosare').select('id, data, updated_at')
   if (error) throw error
-  return (data as DosarRow[]).map((r) => ({ ...r.data, id: r.id, updatedAt: r.updated_at }))
+  return (data as DosarRow[]).map((r) => normalizeazaDosar({ ...r.data, id: r.id, updatedAt: r.updated_at }))
 }
 
 export async function saveDosarRemote(d: Dosar): Promise<string> {
