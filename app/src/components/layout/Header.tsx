@@ -1,6 +1,7 @@
 import { Bell, ChevronDown, Clock3, LogOut } from 'lucide-react'
 import { useAuth } from '@/hooks/useAuth'
 import { useClock } from '@/hooks/useClock'
+import { assetUrl } from '@/lib/asset-url'
 import { SidebarTrigger } from '@/components/ui/sidebar'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import {
@@ -34,7 +35,7 @@ export function Header({
   return (
     <header className="sticky top-0 z-30 flex items-center gap-3 border-b border-border bg-background/95 px-4 py-3 backdrop-blur supports-[backdrop-filter]:bg-background/80 md:px-6 md:py-4">
       <SidebarTrigger className="md:hidden" />
-      <img src="/icons/logo.png" alt="Centralizator RCA" className="h-8 w-auto md:hidden" />
+      <img src={assetUrl('/icons/logo.png')} alt="Centralizator RCA" className="h-8 w-auto md:hidden" />
 
       <div className="hidden min-w-0 md:block">
         <h1 className="truncate text-lg font-bold text-foreground">{title}</h1>

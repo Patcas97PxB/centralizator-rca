@@ -8,6 +8,7 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from '@/components/ui/sidebar'
+import { assetUrl } from '@/lib/asset-url'
 import { NAV_ITEMS, type SectionKey } from './nav-items'
 
 export function AppSidebar({
@@ -21,7 +22,7 @@ export function AppSidebar({
     <Sidebar collapsible="offcanvas" className="border-sidebar-border">
       <SidebarHeader className="px-3 py-4">
         <div className="flex items-center gap-2 px-1">
-          <img src="/icons/logo.png" alt="" className="h-9 w-auto" />
+          <img src={assetUrl('/icons/logo.png')} alt="" className="h-9 w-auto" />
           <div className="min-w-0">
             <div className="truncate text-sm font-bold leading-tight text-sidebar-foreground">
               Centralizator

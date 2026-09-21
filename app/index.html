@@ -6,10 +6,10 @@
     <meta name="theme-color" content="#0a0e17" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-    <link rel="icon" type="image/x-icon" href="/icons/favicon.ico" />
-    <link rel="icon" type="image/png" sizes="32x32" href="/icons/favicon-32x32.png" />
-    <link rel="icon" type="image/png" sizes="16x16" href="/icons/favicon-16x16.png" />
-    <link rel="apple-touch-icon" sizes="180x180" href="/icons/apple-touch-icon.png" />
+    <link rel="icon" type="image/x-icon" href="%BASE_URL%icons/favicon.ico" />
+    <link rel="icon" type="image/png" sizes="32x32" href="%BASE_URL%icons/favicon-32x32.png" />
+    <link rel="icon" type="image/png" sizes="16x16" href="%BASE_URL%icons/favicon-16x16.png" />
+    <link rel="apple-touch-icon" sizes="180x180" href="%BASE_URL%icons/apple-touch-icon.png" />
     <title>Centralizator RCA</title>
     <!-- xlsx: incarcat din CDN (ca in site-ul actual), nu din npm — pachetul npm "xlsx" are
          vulnerabilitati fara fix disponibil; varianta CDN e cea recomandata de SheetJS. -->
@@ -21,8 +21,8 @@
     <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
     <!-- extractie.js / clase-auto.js: copiate din ../js (sursa unica, vezi vite.config.ts),
          incarcate ca scripturi globale, la fel ca in site-ul actual. -->
-    <script src="/shared/extractie.js"></script>
-    <script src="/shared/clase-auto.js"></script>
+    <script src="%BASE_URL%shared/extractie.js"></script>
+    <script src="%BASE_URL%shared/clase-auto.js"></script>
     <script>
       if (typeof pdfjsLib !== 'undefined') pdfjsLib.GlobalWorkerOptions.workerSrc = '';
     </script>

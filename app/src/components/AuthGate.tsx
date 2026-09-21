@@ -1,6 +1,7 @@
 import { type FormEvent, type ReactNode, useState } from 'react'
 import { Lock } from 'lucide-react'
 import { useAuth } from '@/hooks/useAuth'
+import { assetUrl } from '@/lib/asset-url'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 
@@ -39,7 +40,7 @@ export function AuthGate({ children }: { children: ReactNode }) {
         className="w-full max-w-sm rounded-2xl border border-border bg-card p-8 shadow-xl"
       >
         <div className="mb-6 flex flex-col items-center gap-3 text-center">
-          <img src="/icons/logo.png" alt="Centralizator RCA" className="h-14 w-auto" />
+          <img src={assetUrl('/icons/logo.png')} alt="Centralizator RCA" className="h-14 w-auto" />
           <div className="flex items-center gap-2 text-lg font-semibold text-foreground">
             <Lock className="size-4 text-muted-foreground" aria-hidden="true" />
             Centralizator RCA

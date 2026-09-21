@@ -58,11 +58,17 @@ function servesteResurseExterne(): Plugin[] {
 }
 
 // https://vite.dev/config/
-export default defineConfig({
+export default defineConfig(({ mode }) => ({
+  // Site-ul e o "project page" GitHub Pages (patcas97pxb.github.io/centralizator-rca/),
+  // nu la radacina domeniului — build-ul trebuie sa stie sub-calea asta ca sa refere corect
+  // JS/CSS/iconițele. In dev raman la radacina (localhost:5180/), acolo nu exista sub-cale.
+  // Cheia e `mode`, nu `command`: `vite preview` raporteaza command:'serve' la fel ca
+  // dev-serverul, dar mode ramane 'production' (ca la build) — asta chiar distinge intre ele.
+  base: mode === 'production' ? '/centralizator-rca/' : '/',
   plugins: [react(), tailwindcss(), ...servesteResurseExterne()],
   resolve: {
     alias: {
       '@': path.resolve(dirname, './src'),
     },
   },
-})
+}))
