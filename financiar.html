@@ -861,6 +861,8 @@ let dosare = [];
 let servicii = [];
 const STORAGE_KEY = 'rca-dosare-v2';
 const STORAGE_KEY_SERVICII = 'rca-servicii-v1';
+const STORAGE_KEY_MIGRAT = 'rca-dosare-v2-migrat-randuri';
+const STORAGE_KEY_SERVICII_MIGRAT = 'rca-servicii-v1-migrat-randuri';
 const KNOWN_INSURERS = ['Allianz','Asirom','Axeria','EazyInsure','Generali','Gothaer','Grawe','Groupama','Hellas','Omniasig','Uniqa'];
 // Asiguratori de la care nu se mai accepta dosare (conform grilei) — se afiseaza alerta daca sunt selectati.
 const BANNED_INSURERS = ['AVUS','AFES','CAROM','VIG MANAGEMENT','IMPERIAL CLAIMS','INTERFIDES','DALLBOGG'];
@@ -1167,15 +1169,15 @@ async function doLogout() {
 async function loadData() {
   document.getElementById('loadingMsg').style.display = 'block';
   try {
-    const raw = await storageGet(STORAGE_KEY);
-    dosare = raw ? JSON.parse(raw) : [];
+    dosare = await loadDosareRows();
   } catch (e) {
+    console.error('Eroare la incarcare dosare', e);
     dosare = [];
   }
   try {
-    const rawS = await storageGet(STORAGE_KEY_SERVICII);
-    servicii = rawS ? JSON.parse(rawS) : [];
+    servicii = await loadServiciiRows();
   } catch (e) {
+    console.error('Eroare la incarcare servicii', e);
     servicii = [];
   }
   document.getElementById('loadingMsg').style.display = 'none';
@@ -1184,21 +1186,123 @@ async function loadData() {
   await loadViewMode();
   render();
 }
+
+// ---------- Dosare/servicii: cate un rand per inregistrare (tabelele `dosare`/`servicii`),
+// nu un blob JSON unic ca inainte. Blob-ul vechi rescria TOT array-ul la fiecare salvare —
+// daca doua sesiuni salvau aproape simultan, ultima scriere stergea silentios modificarile
+// celeilalte, pe toate dosarele deodata. Cu un rand per dosar, doua sesiuni care editeaza
+// dosare diferite nu se mai calca una pe alta; ramane risc doar daca ambele editeaza EXACT
+// acelasi dosar simultan. Blob-ul vechi din app_storage nu se sterge, ramane plasa de siguranta.
+async function loadDosareRows() {
+  if (hasClaudeStorage) {
+    const raw = await storageGet(STORAGE_KEY);
+    return raw ? JSON.parse(raw) : [];
+  }
+  if (!supabaseClient) {
+    try { const raw = localStorage.getItem(STORAGE_KEY); return raw ? JSON.parse(raw) : []; } catch (e) { return []; }
+  }
+  const { data, error } = await supabaseClient.from('dosare').select('data');
+  if (error) { console.error('Eroare Supabase la citire dosare', error); return []; }
+  if (data && data.length) return data.map(r => r.data);
+  return await migreazaDosareDinBlobVechi();
+}
+async function migreazaDosareDinBlobVechi() {
+  const migrat = await storageGet(STORAGE_KEY_MIGRAT);
+  if (migrat) return [];
+  const legacyRaw = await storageGet(STORAGE_KEY);
+  const legacy = legacyRaw ? (JSON.parse(legacyRaw) || []) : [];
+  for (const d of legacy) {
+    const { error } = await supabaseClient.from('dosare').upsert({ id: String(d.id), data: d, updated_at: new Date().toISOString() });
+    if (error) console.error('Eroare migrare dosar', d.id, error);
+  }
+  await storageSet(STORAGE_KEY_MIGRAT, '1');
+  return legacy;
+}
+async function loadServiciiRows() {
+  if (hasClaudeStorage) {
+    const raw = await storageGet(STORAGE_KEY_SERVICII);
+    return raw ? JSON.parse(raw) : [];
+  }
+  if (!supabaseClient) {
+    try { const raw = localStorage.getItem(STORAGE_KEY_SERVICII); return raw ? JSON.parse(raw) : []; } catch (e) { return []; }
+  }
+  const { data, error } = await supabaseClient.from('servicii').select('data');
+  if (error) { console.error('Eroare Supabase la citire servicii', error); return []; }
+  if (data && data.length) return data.map(r => r.data);
+  return await migreazaServiciiDinBlobVechi();
+}
+async function migreazaServiciiDinBlobVechi() {
+  const migrat = await storageGet(STORAGE_KEY_SERVICII_MIGRAT);
+  if (migrat) return [];
+  const legacyRaw = await storageGet(STORAGE_KEY_SERVICII);
+  const legacy = legacyRaw ? (JSON.parse(legacyRaw) || []) : [];
+  for (const s of legacy) {
+    const { error } = await supabaseClient.from('servicii').upsert({ id: String(s.id), data: s, updated_at: new Date().toISOString() });
+    if (error) console.error('Eroare migrare serviciu', s.id, error);
+  }
+  await storageSet(STORAGE_KEY_SERVICII_MIGRAT, '1');
+  return legacy;
+}
+
 async function persist() {
-  try {
-    await storageSet(STORAGE_KEY, JSON.stringify(dosare));
-  } catch (e) {
-    console.error('Eroare la salvare', e);
-    showToast('Eroare la salvare. Fa un export de siguranta.');
+  if (hasClaudeStorage) {
+    try { await storageSet(STORAGE_KEY, JSON.stringify(dosare)); }
+    catch (e) { console.error('Eroare la salvare', e); showToast('Eroare la salvare. Fa un export de siguranta.'); }
+    return;
+  }
+  if (!supabaseClient) {
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(dosare)); }
+    catch (e) { console.error('Eroare la salvare', e); showToast('Eroare la salvare. Fa un export de siguranta.'); }
+    return;
+  }
+  for (const d of dosare) {
+    const { error } = await supabaseClient.from('dosare').upsert({ id: String(d.id), data: d, updated_at: new Date().toISOString() });
+    if (error) { console.error('Eroare Supabase la scriere dosar', d.id, error); showToast('Eroare la salvare online. Fa un export de siguranta.'); }
   }
 }
 async function persistServicii() {
-  try {
-    await storageSet(STORAGE_KEY_SERVICII, JSON.stringify(servicii));
-  } catch (e) {
-    console.error('Eroare la salvare servicii', e);
-    showToast('Eroare la salvarea service-urilor.');
+  if (hasClaudeStorage) {
+    try { await storageSet(STORAGE_KEY_SERVICII, JSON.stringify(servicii)); }
+    catch (e) { console.error('Eroare la salvare servicii', e); showToast('Eroare la salvarea service-urilor.'); }
+    return;
   }
+  if (!supabaseClient) {
+    try { localStorage.setItem(STORAGE_KEY_SERVICII, JSON.stringify(servicii)); }
+    catch (e) { console.error('Eroare la salvare servicii', e); showToast('Eroare la salvarea service-urilor.'); }
+    return;
+  }
+  for (const s of servicii) {
+    const { error } = await supabaseClient.from('servicii').upsert({ id: String(s.id), data: s, updated_at: new Date().toISOString() });
+    if (error) { console.error('Eroare Supabase la scriere serviciu', s.id, error); showToast('Eroare la salvarea service-urilor.'); }
+  }
+}
+
+// Sterge explicit un rand — persist()/persistServicii() de mai sus NU mai sterg randuri (scriu
+// doar ce exista local), ca o sesiune cu date locale invechite sa nu stearga din greseala un
+// dosar adaugat between timp de altcineva. Stergerea trebuie deci ceruta explicit, la id-ul stiut.
+async function stergeDosarRemote(id) {
+  if (!supabaseClient) return;
+  const { error } = await supabaseClient.from('dosare').delete().eq('id', String(id));
+  if (error) console.error('Eroare Supabase la stergere dosar', id, error);
+}
+async function stergeServiciuRemote(id) {
+  if (!supabaseClient) return;
+  const { error } = await supabaseClient.from('servicii').delete().eq('id', String(id));
+  if (error) console.error('Eroare Supabase la stergere serviciu', id, error);
+}
+// Import backup: utilizatorul confirma explicit ca vrea sa inlocuiasca TOT ce e salvat, deci
+// aici (doar aici) e corect sa stergem si randurile ramase care nu mai apar in setul importat.
+async function curataDosareLipsaRemote(listaNoua) {
+  if (!supabaseClient) return;
+  const { data } = await supabaseClient.from('dosare').select('id');
+  const idNoi = new Set(listaNoua.map(d => String(d.id)));
+  for (const r of (data || [])) if (!idNoi.has(r.id)) await stergeDosarRemote(r.id);
+}
+async function curataServiciiLipsaRemote(listaNoua) {
+  if (!supabaseClient) return;
+  const { data } = await supabaseClient.from('servicii').select('id');
+  const idNoi = new Set(listaNoua.map(s => String(s.id)));
+  for (const r of (data || [])) if (!idNoi.has(r.id)) await stergeServiciuRemote(r.id);
 }
 
 function updateStorageNote() {
@@ -1321,6 +1425,8 @@ function importaDinText() {
   showConfirm('Import ' + payload.dosare.length + ' dosare si ' + ((payload.servicii || []).length) + ' service-uri? Datele actuale vor fi inlocuite.', async () => {
     dosare = payload.dosare;
     servicii = Array.isArray(payload.servicii) ? payload.servicii : [];
+    await curataDosareLipsaRemote(dosare);
+    await curataServiciiLipsaRemote(servicii);
     await persist();
     await persistServicii();
     populateFilterServiceSelect();
@@ -1356,6 +1462,8 @@ async function importData(evt) {
     showConfirm('Import ' + payload.dosare.length + ' dosare si ' + ((payload.servicii || []).length) + ' service-uri? Datele actuale vor fi inlocuite.', async () => {
       dosare = payload.dosare;
       servicii = Array.isArray(payload.servicii) ? payload.servicii : [];
+      await curataDosareLipsaRemote(dosare);
+      await curataServiciiLipsaRemote(servicii);
       await persist();
       await persistServicii();
       populateFilterServiceSelect();
@@ -1584,6 +1692,7 @@ async function addService() {
 async function deleteService(id) {
   showConfirm('Ștergi acest service din listă?', async () => {
     servicii = servicii.filter(s => s.id !== id);
+    await stergeServiciuRemote(id);
     await persistServicii();
     renderServiceList();
     populateServiceSelect();
@@ -2280,6 +2389,7 @@ async function handleLipsaContractUpload(evt) {
 function deleteDosar(id) {
   showConfirm('Ștergi acest dosar?', async () => {
     dosare = dosare.filter(x => x.id !== id);
+    await stergeDosarRemote(id);
     await persist();
     render();
     showToast('Dosar șters.');
