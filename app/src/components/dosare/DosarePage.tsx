@@ -127,9 +127,12 @@ export function DosarePage() {
         </div>
       )}
 
+      <div className="mb-4">
+        <LegendaCulori />
+      </div>
+
       <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_250px]">
         <div className="min-w-0 space-y-4">
-          <LegendaCulori />
 
           <div className="rounded-[20px] border border-[#253150] bg-[#10172a] p-3">
             <FilterBar filtre={filtre} onChange={setFiltre} servicii={servicii} onExport={() => exportDosareXlsx(filtrate)} />
