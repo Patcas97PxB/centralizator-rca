@@ -36,7 +36,6 @@ import { STATUS_META, dosarGol, type Dosar, type StatusDosar, type Vehicul } fro
 import { PreluareDateSection } from './PreluareDateSection'
 import { DevizRecalculeazaButton } from './DevizRecalculeazaButton'
 import { ContractFinalSection } from './ContractFinalSection'
-import { DocumenteSection } from './DocumenteSection'
 
 export function DosarFormModal({
   open,
@@ -345,7 +344,6 @@ export function DosarFormModal({
         </div>
 
         <ContractFinalSection draft={draft} onPatch={patch} />
-        <DocumenteSection draft={draft} onPatch={patch} />
 
         {eroare && <p className="text-sm text-destructive">{eroare}</p>}
 

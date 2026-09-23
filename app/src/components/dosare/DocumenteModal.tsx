@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, type DragEvent } from 'react'
-import { AlertTriangle, Check, Eye, FolderPlus, Trash2, Upload, X } from 'lucide-react'
+import { AlertTriangle, Check, FolderPlus, Trash2, Upload, X } from 'lucide-react'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import {
   DOCUMENT_LABELS,
@@ -9,7 +9,8 @@ import {
   docStatus,
   lipsuriFinalizare,
 } from '@/lib/documente'
-import { deschideDocument, incarcaDocument, mesajEroareAsset, stergeDocumentStocare } from '@/lib/documente-storage'
+import { citesteContractFinal } from '@/lib/contract-final-import'
+import { incarcaDocument, mesajEroareAsset, stergeDocumentStocare } from '@/lib/documente-storage'
 import type { Dosar, DocumentDosar } from '@/lib/types'
 import { cn } from '@/lib/utils'
 
@@ -29,7 +30,12 @@ export function DocumenteModal({
 }) {
   const [draft, setDraft] = useState<Dosar | null>(dosar)
   const latest = useRef<Dosar | null>(dosar)
-  const [status, setStatus] = useState('')
+  const [status, setStatusText] = useState('')
+  const [statusEroare, setStatusEroare] = useState(false)
+  const setStatus = (t: string, eroare = false) => {
+    setStatusText(t)
+    setStatusEroare(eroare)
+  }
   const [seIncarca, setSeIncarca] = useState(false)
   const [dragOver, setDragOver] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
@@ -64,31 +70,54 @@ export function DocumenteModal({
     setSeIncarca(true)
     const noi: DocumentDosar[] = []
     const rezumat: string[] = []
+    const mesaje: string[] = []
+    let dePatch: Partial<Dosar> = {}
+    let esecuri = 0
     for (const file of Array.from(files)) {
       setStatus('Se încarcă ' + file.name + '…')
+      let labels = eticheta ? [eticheta] : detectAllDocLabels(file.name)
+
+      // Contractul final: se citeste (zile, valoare, clasa) si se verifica sa fie al acestui dosar.
+      if (labels.includes('contract')) {
+        setStatus('Se citește contractul final ' + file.name + '…')
+        const r = await citesteContractFinal(file, { ...(latest.current as Dosar), ...dePatch })
+        if (r.valid) {
+          dePatch = { ...dePatch, ...r.patch, contractFinalIncarcat: true }
+          mesaje.push(r.mesaj)
+        } else {
+          labels = labels.filter((l) => l !== 'contract')
+          mesaje.push(file.name + ': ' + r.mesaj)
+          esecuri++
+          if (labels.length === 0) continue
+        }
+      }
+
       try {
         const res = await incarcaDocument(file)
-        const labels = eticheta ? [eticheta] : detectAllDocLabels(file.name)
         labels.forEach((lbl) => {
           noi.push({ id: 'doc' + Date.now() + Math.random().toString(36).slice(2, 6), nume: file.name, eticheta: lbl, assetId: res.id })
         })
         if (!eticheta && labels.length > 1) rezumat.push(file.name + ' → ' + labels.map(docLabelText).join(', '))
       } catch (e) {
         console.error(e)
-        setStatus('Eroare la „' + file.name + '”: ' + mesajEroareAsset(e))
+        setStatus('Eroare la „' + file.name + '”: ' + mesajEroareAsset(e), true)
         setSeIncarca(false)
-        if (noi.length) patch({ documente: [...((latest.current?.documente as DocumentDosar[]) ?? []), ...noi] })
+        if (noi.length || Object.keys(dePatch).length) patch({ documente: [...((latest.current?.documente as DocumentDosar[]) ?? []), ...noi], ...dePatch })
         return
       }
     }
-    patch({ documente: [...((latest.current?.documente as DocumentDosar[]) ?? []), ...noi] })
-    setStatus(
-      rezumat.length
-        ? 'Un fișier a acoperit mai multe documente: ' + rezumat.join(' · ')
-        : Array.from(files).length > 1
-          ? Array.from(files).length + ' fișiere încărcate.'
-          : 'Fișier încărcat.',
-    )
+    if (noi.length || Object.keys(dePatch).length) {
+      patch({ documente: [...((latest.current?.documente as DocumentDosar[]) ?? []), ...noi], ...dePatch })
+    }
+    const total = Array.from(files).length
+    const baza = rezumat.length
+      ? 'Un fișier a acoperit mai multe documente: ' + rezumat.join(' · ')
+      : noi.length === 0
+        ? ''
+        : total > 1
+          ? total + ' fișiere încărcate.'
+          : 'Fișier încărcat.'
+    setStatus([baza, ...mesaje].filter(Boolean).join(' '), esecuri > 0 && noi.length === 0)
     setSeIncarca(false)
   }
 
@@ -101,15 +130,6 @@ export function DocumenteModal({
   function elimina(doc: DocumentDosar) {
     patch({ documente: documente.filter((x) => x.id !== doc.id) })
     if (doc.assetId) stergeDocumentStocare(doc.assetId).catch(() => {})
-  }
-
-  async function deschide(assetId?: string) {
-    if (!assetId) return
-    try {
-      await deschideDocument(assetId)
-    } catch {
-      setStatus('Nu am putut deschide fișierul.')
-    }
   }
 
   function toggleOptional(key: string) {
@@ -205,7 +225,7 @@ export function DocumenteModal({
             }}
           />
 
-          {status && <p className="text-xs text-[#aab8d0]">{status}</p>}
+          {status && <p className={cn('text-xs leading-snug', statusEroare ? 'font-semibold text-[#ff8a9f]' : 'text-[#aab8d0]')}>{status}</p>}
 
           <div className="flex flex-col gap-2">
             {chei.map((key) => {
@@ -247,15 +267,6 @@ export function DocumenteModal({
                             <span className="min-w-0 flex-1 truncate">{f.nume}</span>
                             <button
                               type="button"
-                              onClick={() => deschide(f.assetId)}
-                              aria-label={'Deschide ' + f.nume}
-                              title="Deschide"
-                              className="flex size-6 shrink-0 items-center justify-center rounded-md text-[#93c5fd] transition-colors hover:bg-white/5"
-                            >
-                              <Eye className="size-3.5" aria-hidden="true" />
-                            </button>
-                            <button
-                              type="button"
                               onClick={() => elimina(f)}
                               aria-label={'Șterge ' + f.nume}
                               title="Șterge"
@@ -267,7 +278,9 @@ export function DocumenteModal({
                         ))}
                       </div>
                     ) : (
-                      <div className="truncate text-[11.5px] text-[#7b8aa6]">{optional ? 'nu se aplică' : 'lipsește'}</div>
+                      <div className="truncate text-[11.5px] text-[#7b8aa6]">
+                        {optional ? 'nu se aplică' : key === 'contract' ? 'lipsește — PDF winMentor, completează zilele, valoarea și clasa' : 'lipsește'}
+                      </div>
                     )}
                   </div>
                   {are ? null : (
