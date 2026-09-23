@@ -4,6 +4,7 @@ import { AppSidebar } from './AppSidebar'
 import { Header } from './Header'
 import { LightRay } from './LightRay'
 import { MobileBottomNav } from './MobileBottomNav'
+import type { DeSunat } from '@/lib/rca-calc'
 import type { SectionKey } from './nav-items'
 
 export function AppShell({
@@ -11,31 +12,31 @@ export function AppShell({
   onSelect,
   headerTitle,
   headerSubtitle,
-  notificari,
-  onNotificariClick,
+  deSunat,
+  onAlegeDosar,
   children,
 }: {
   active: SectionKey
   onSelect: (key: SectionKey) => void
   headerTitle: string
   headerSubtitle?: string
-  notificari: number
-  onNotificariClick: () => void
+  deSunat: DeSunat[]
+  onAlegeDosar: (id: string) => void
   children: ReactNode
 }) {
   return (
     <SidebarProvider style={{ '--sidebar-width': '245px' } as CSSProperties}>
       <LightRay />
-      <AppSidebar active={active} onSelect={onSelect} badgeDosare={notificari} />
+      <AppSidebar active={active} onSelect={onSelect} badgeDosare={deSunat.length} />
       <SidebarInset>
         <Header
           title={headerTitle}
           subtitle={headerSubtitle}
-          notificari={notificari}
-          onNotificariClick={onNotificariClick}
+          deSunat={deSunat}
+          onAlegeDosar={onAlegeDosar}
         />
         <main className="flex-1 pb-[84px] md:pb-0">{children}</main>
-        <MobileBottomNav active={active} onSelect={onSelect} badgeDosare={notificari} />
+        <MobileBottomNav active={active} onSelect={onSelect} badgeDosare={deSunat.length} />
       </SidebarInset>
     </SidebarProvider>
   )

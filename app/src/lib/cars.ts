@@ -6,30 +6,36 @@ const FISIERE = import.meta.glob('../assets/cars/*.{png,jpg,jpeg,webp}', {
   import: 'default',
 }) as Record<string, string>
 
-function tokeni(text: string): string[] {
+function curata(text: string): string {
   return text
     .normalize('NFD')
     .replace(/[̀-ͯ]/g, '')
     .toLowerCase()
-    .replace(/-/g, '')
-    .replace(/[^a-z0-9]+/g, ' ')
-    .split(' ')
-    .filter(Boolean)
-    .map((t) => (t === 'clasa' ? 'class' : t))
+    .replace(/\bclasa\b/g, 'class')
+}
+
+// Doua variante pentru cratime: "C-Class" -> [c, class] sau [cclass]; "C-HR" -> [c, hr] sau [chr].
+function variante(text: string): string[][] {
+  const t = curata(text)
+  const impartit = t.replace(/[^a-z0-9]+/g, ' ').split(' ').filter(Boolean)
+  const lipit = t.replace(/-/g, '').replace(/[^a-z0-9]+/g, ' ').split(' ').filter(Boolean)
+  return [impartit, lipit]
 }
 
 const CATALOG = Object.entries(FISIERE).map(([cale, url]) => {
   const nume = cale.split('/').pop()!.replace(/\.[^.]+$/, '')
-  return { tokeni: tokeni(nume), url }
+  return { variante: variante(nume), url }
 })
 
 export function imagineMasina(marcaModel: string): string | null {
-  const t = new Set(tokeni(marcaModel || ''))
-  if (t.size === 0) return null
+  const model = new Set(variante(marcaModel || '').flat())
+  if (model.size === 0) return null
   let best: { n: number; url: string } | null = null
   for (const c of CATALOG) {
-    if (c.tokeni.length > 0 && c.tokeni.every((x) => t.has(x)) && (!best || c.tokeni.length > best.n)) {
-      best = { n: c.tokeni.length, url: c.url }
+    for (const v of c.variante) {
+      if (v.length > 0 && v.every((x) => model.has(x)) && (!best || v.length > best.n)) {
+        best = { n: v.length, url: c.url }
+      }
     }
   }
   return best?.url ?? null

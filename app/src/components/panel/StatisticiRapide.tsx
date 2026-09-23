@@ -1,112 +1,128 @@
-import { useMemo, useState } from 'react'
-import { BarChart3 } from 'lucide-react'
+import { useMemo } from 'react'
+import { BarChart3, CarFront, ImageIcon } from 'lucide-react'
 import { useCountUp } from '@/hooks/useCountUp'
-import { urgentaDosar } from '@/lib/rca-calc'
+import { imagineMasina } from '@/lib/cars'
 import type { Dosar } from '@/lib/types'
 
-type PerioadaKey = '7' | '30' | 'toate'
-type Categorie = 'Finalizate' | 'În derulare' | 'Așteptare' | 'Întârziate'
-
-// Cele 4 categorii agregă statusurile reale intr-un grup mai mic, ca in mockup:
-// "Finalizate"=finalizat, "Întârziate"=depasit (urgentaDosar), "Așteptare"=in_asteptare/astept_docum.
-function categorie(d: Dosar): Categorie {
-  if (d.status === 'finalizat') return 'Finalizate'
-  if (urgentaDosar(d).depasit) return 'Întârziate'
-  if (d.status === 'in_asteptare' || d.status === 'astept_docum') return 'Așteptare'
-  return 'În derulare'
+interface Top {
+  nume: string
+  count: number
 }
 
-const CULOARE: Record<Categorie, string> = {
-  Finalizate: '#00f5a0',
-  'În derulare': '#3d8bff',
-  Așteptare: '#b26bff',
-  Întârziate: '#ff4d6d',
+// Grupeaza dupa valoare normalizata (fara diferente de majuscule/spatii) si intoarce cel mai frecvent.
+function topDupa(dosare: Dosar[], valoare: (d: Dosar) => string | undefined): Top | null {
+  const grupuri = new Map<string, Top>()
+  for (const d of dosare) {
+    const brut = (valoare(d) ?? '').trim().replace(/\s+/g, ' ')
+    if (!brut || brut === '—' || brut === '-') continue
+    const cheie = brut.toLowerCase()
+    const g = grupuri.get(cheie)
+    if (g) g.count++
+    else grupuri.set(cheie, { nume: brut, count: 1 })
+  }
+  let best: Top | null = null
+  for (const g of grupuri.values()) if (!best || g.count > best.count) best = g
+  return best
 }
-const ORDINE: Categorie[] = ['Finalizate', 'În derulare', 'Așteptare', 'Întârziate']
 
-function inPerioada(d: Dosar, p: PerioadaKey): boolean {
-  if (p === 'toate' || !d.updatedAt) return true
-  const zile = p === '7' ? 7 : 30
-  return new Date(d.updatedAt).getTime() >= Date.now() - zile * 86400000
+function Cifra({ label, value, color }: { label: string; value: number; color: string }) {
+  const afisat = useCountUp(value)
+  return (
+    <div className="flex items-center justify-between gap-2 text-[12.5px]">
+      <span className="flex min-w-0 items-center gap-2 whitespace-nowrap text-[#aab8d0]">
+        <span className="size-2 shrink-0 rounded-[2px]" style={{ background: color, boxShadow: `0 0 8px -1px ${color}` }} />
+        {label}
+      </span>
+      <span className="text-[17px] font-extrabold tabular-nums text-[#f8fafc]">{afisat}</span>
+    </div>
+  )
 }
+
+function Sursa({ top }: { top: Top | null }) {
+  return (
+    <div className="flex flex-col gap-0.5">
+      {top ? (
+        <div className="flex items-baseline justify-between gap-2">
+          <span className="min-w-0 truncate text-[13px] font-bold text-[#e2e8f5]" title={top.nume}>
+            {top.nume}
+          </span>
+          <span className="shrink-0 text-[11px] font-semibold tabular-nums text-[#8b9ab5]">
+            {top.count} {top.count === 1 ? 'dosar' : 'dosare'}
+          </span>
+        </div>
+      ) : (
+        <span className="text-[12px] text-[#64748b]">—</span>
+      )}
+    </div>
+  )
+}
+
+const TITLU = 'mb-2 text-[10px] font-extrabold tracking-[.1em] text-[#5d6b86]'
 
 export function StatisticiRapide({ dosare }: { dosare: Dosar[] }) {
-  const [perioada, setPerioada] = useState<PerioadaKey>('7')
+  const { finalizate, inCurs, topService, topAsigurator, topVI } = useMemo(() => {
+    const fin = dosare.filter((d) => d.status === 'finalizat').length
+    return {
+      finalizate: fin,
+      inCurs: dosare.length - fin,
+      topService: topDupa(dosare, (d) => d.service),
+      topAsigurator: topDupa(dosare, (d) => d.asigurator),
+      topVI: topDupa(dosare, (d) => d.marcaModelInlocuire),
+    }
+  }, [dosare])
 
-  const { counts, total } = useMemo(() => {
-    const relevante = dosare.filter((d) => inPerioada(d, perioada))
-    const c: Record<Categorie, number> = { Finalizate: 0, 'În derulare': 0, Așteptare: 0, Întârziate: 0 }
-    relevante.forEach((d) => {
-      c[categorie(d)]++
-    })
-    return { counts: c, total: relevante.length }
-  }, [dosare, perioada])
-  const afisat = useCountUp(total)
+  const pozaVI = topVI ? imagineMasina(topVI.nume) : null
 
   return (
     <div className="w-full rounded-[20px] border border-[#253150] bg-[#10172a] p-4">
-      <div className="mb-[13px] flex items-center justify-between gap-2.5">
-        <div className="flex items-center gap-2 text-[13.5px] font-bold text-[#f1f5f9]">
-          <BarChart3 className="size-4 text-[#94a3b8]" aria-hidden="true" />
-          Statistici
-        </div>
-        <select
-          value={perioada}
-          onChange={(e) => setPerioada(e.target.value as PerioadaKey)}
-          aria-label="Perioadă statistici"
-          className="h-7 cursor-pointer rounded-[9px] border border-[#253150] bg-[#253150]/[.24] px-1.5 text-[11.5px] text-[#e2e8f5] outline-none"
-        >
-          <option value="7">7 zile</option>
-          <option value="30">30 zile</option>
-          <option value="toate">Toate</option>
-        </select>
+      <div className="mb-[13px] flex items-center gap-2 text-[13.5px] font-bold text-[#f1f5f9]">
+        <BarChart3 className="size-4 text-[#94a3b8]" aria-hidden="true" />
+        Statistici
       </div>
 
-      <div className="mb-2.5 flex items-baseline gap-1.5">
-        <span className="text-[28px] font-extrabold leading-none tracking-[-.02em] tabular-nums text-[#f8fafc]">{afisat}</span>
-        <span className="text-[11px] font-semibold text-[#8b9ab5]">dosare în perioadă</span>
+      <div className="flex flex-col gap-2.5">
+        <Cifra label="Total dosare" value={dosare.length} color="#60a5fa" />
+        <Cifra label="Finalizate" value={finalizate} color="#94a3b8" />
+        <Cifra label="În curs" value={inCurs} color="#00f5a0" />
       </div>
 
-      <div className="mb-3.5 flex h-2.5 gap-[3px]" aria-hidden="true">
-        {ORDINE.map((k) => (
-          <span
-            key={k}
-            className="origin-left animate-[barGrow_.7s_cubic-bezier(.2,.8,.2,1)_both] rounded"
-            style={{
-              flex: `${counts[k]} 1 0px`,
-              minWidth: counts[k] ? 6 : 0,
-              background: CULOARE[k],
-              boxShadow: `0 0 10px -2px ${CULOARE[k]}`,
-            }}
-          />
-        ))}
-      </div>
+      <div className="my-3.5 h-px bg-[#1e2a45]" />
 
-      <div className="flex flex-col gap-[9px]">
-        {ORDINE.map((k) => {
-          const pct = total ? Math.round((counts[k] / total) * 100) : 0
-          return (
-            <div key={k} className="flex flex-col gap-1">
-              <div className="flex items-center justify-between gap-2 text-[11.5px]">
-                <span className="flex min-w-0 items-center gap-[7px] whitespace-nowrap text-[#aab8d0]">
-                  <span className="size-2 shrink-0 rounded-[2px]" style={{ background: CULOARE[k] }} />
-                  {k}
-                </span>
-                <span className="flex items-baseline gap-[5px] whitespace-nowrap">
-                  <span className="font-extrabold tabular-nums text-[#f1f5f9]">{counts[k]}</span>
-                  <span className="text-[10px] tabular-nums text-[#64748b]">{pct}%</span>
-                </span>
-              </div>
-              <div className="h-1 overflow-hidden rounded-full bg-[#253150]/55">
-                <span
-                  className="block h-full origin-left animate-[barGrow_.8s_cubic-bezier(.2,.8,.2,1)_both] rounded-full"
-                  style={{ width: `${pct}%`, background: CULOARE[k] }}
-                />
-              </div>
+      <div className={TITLU}>CINE DĂ CELE MAI MULTE LEAD-URI</div>
+      <Sursa top={topService} />
+
+      <div className="my-3.5 h-px bg-[#1e2a45]" />
+
+      <div className={TITLU}>ASIGURATORUL CEL MAI DES ÎNTÂLNIT</div>
+      <Sursa top={topAsigurator} />
+
+      <div className="my-3.5 h-px bg-[#1e2a45]" />
+
+      <div className={TITLU}>VEHICUL ÎNLOCUIRE CEL MAI OFERIT</div>
+      {topVI ? (
+        <div className="flex items-center gap-3">
+          <div className="flex h-[52px] w-[76px] shrink-0 items-center justify-center overflow-hidden rounded-lg border border-[#253150] bg-[#0b1220]">
+            {pozaVI ? (
+              <img src={pozaVI} alt={topVI.nume} loading="lazy" className="size-full object-contain drop-shadow-[0_6px_10px_rgba(0,0,0,.6)]" />
+            ) : (
+              <ImageIcon className="size-5 text-[#3d8bff]/60" aria-hidden="true" />
+            )}
+          </div>
+          <div className="min-w-0">
+            <div className="truncate text-[13px] font-bold text-[#e2e8f5]" title={topVI.nume}>
+              {topVI.nume}
             </div>
-          )
-        })}
-      </div>
+            <div className="text-[11px] text-[#8b9ab5]">
+              oferit de {topVI.count} {topVI.count === 1 ? 'dată' : 'ori'}
+            </div>
+          </div>
+        </div>
+      ) : (
+        <div className="flex items-center gap-2.5 text-[11.5px] leading-snug text-[#64748b]">
+          <CarFront className="size-5 shrink-0" aria-hidden="true" />
+          Încă nu există date. Completează „Marcă / model înlocuire” pe dosare.
+        </div>
+      )}
     </div>
   )
 }

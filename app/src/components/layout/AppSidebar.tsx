@@ -102,47 +102,7 @@ function SidebarDecor({ reduced }: { reduced: boolean }) {
   )
 }
 
-const LEGENDA_CULOARE = [
-  { color: '#3d8bff', nume: 'Programare', detaliu: 'de predat', titlu: 'Programare: De predat / în așteptare' },
-  { color: '#00f5a0', nume: 'În grafic', detaliu: '3+ zile', titlu: 'În grafic: 3+ zile rămase' },
-  { color: '#fbbf24', nume: 'Atenție', detaliu: '1–2 zile', titlu: 'Atenție: 1–2 zile rămase' },
-  { color: '#ff4d6d', nume: 'Urgență', detaliu: 'expirat', titlu: 'Urgență: Zile expirate' },
-  { color: '#94a3b8', nume: 'Finalizat', detaliu: 'arhivă', titlu: 'Finalizat: Arhivat / inactiv' },
-]
-const LEGENDA_ETICHETE = [
-  { color: '#e879f9', nume: 'Blochaj documente', detaliu: 'acte / deviz', titlu: 'Blocaj documente: Lipsesc acte / deviz' },
-  { color: '#fb923c', nume: 'De sunat', detaliu: 'mașină gata', titlu: 'De sunat: Mașina e gata' },
-]
-
 const SECTION_LABEL = 'px-2 pb-1.5 pt-2 text-[10px] font-extrabold tracking-[.1em] text-[#5d6b86]'
-
-function Legenda() {
-  return (
-    <div className="rounded-2xl border border-[#1c273f] bg-[#101828]/[.72] p-3.5 backdrop-blur-[8px]">
-      <div className="mb-[9px] text-[10px] font-extrabold tracking-[.1em] text-[#5d6b86]">CULOARE CARD</div>
-      <div className="flex flex-col gap-[5px]">
-        {LEGENDA_CULOARE.map((l) => (
-          <div key={l.nume} title={l.titlu} className="flex min-w-0 items-center gap-2 whitespace-nowrap">
-            <span className="h-[11px] w-1 shrink-0 rounded-sm" style={{ background: l.color, boxShadow: `0 0 8px 1px ${l.color}99` }} />
-            <span className="text-[11px] font-extrabold text-[#e2e8f5]">{l.nume}</span>
-            <span className="min-w-0 truncate text-[10.5px] text-[#8b9ab5]">{l.detaliu}</span>
-          </div>
-        ))}
-      </div>
-      <div className="mb-[7px] mt-[9px] h-px bg-[#1c273f]" />
-      <div className="mb-[9px] text-[10px] font-extrabold tracking-[.1em] text-[#5d6b86]">ETICHETE</div>
-      <div className="flex flex-col gap-[5px]">
-        {LEGENDA_ETICHETE.map((l) => (
-          <div key={l.nume} title={l.titlu} className="flex min-w-0 items-center gap-2 whitespace-nowrap">
-            <span className="size-[9px] shrink-0 rounded-full" style={{ background: l.color, boxShadow: `0 0 8px 1px ${l.color}99` }} />
-            <span className="text-[11px] font-extrabold text-[#e2e8f5]">{l.nume}</span>
-            <span className="min-w-0 truncate text-[10.5px] text-[#8b9ab5]">{l.detaliu}</span>
-          </div>
-        ))}
-      </div>
-    </div>
-  )
-}
 
 export function AppSidebar({
   active,
@@ -223,9 +183,6 @@ export function AppSidebar({
             </div>
           ))}
         </nav>
-        <div className="mt-4 px-1">
-          <Legenda />
-        </div>
       </SidebarContent>
     </Sidebar>
   )

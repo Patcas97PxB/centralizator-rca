@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Bell, ChevronDown, Clock3, LogOut, Sparkles } from 'lucide-react'
 import { setMotionPref, useMotionPref } from '@/lib/motion-pref'
 import { useAuth } from '@/hooks/useAuth'
@@ -11,6 +11,8 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
+import type { DeSunat } from '@/lib/rca-calc'
 import { BackupButtons } from './BackupButtons'
 
 // Aplicatia are un singur cont partajat (nu login individual) — numele afisat e
@@ -21,14 +23,15 @@ const ROL_UTILIZATOR = 'Autonom'
 export function Header({
   title,
   subtitle,
-  notificari,
-  onNotificariClick,
+  deSunat,
+  onAlegeDosar,
 }: {
   title: string
   subtitle?: string
-  notificari: number
-  onNotificariClick: () => void
+  deSunat: DeSunat[]
+  onAlegeDosar: (id: string) => void
 }) {
+  const [deschis, setDeschis] = useState(false)
   const { time, date } = useClock()
   const { logout } = useAuth()
   const motionPref = useMotionPref()
@@ -71,22 +74,74 @@ export function Header({
           </div>
         </div>
 
-        <button
-          type="button"
-          className="relative flex size-[34px] items-center justify-center rounded-[10px] border border-[#253150] bg-[#253150]/[.28] text-[#cbd5e1] transition-colors hover:bg-[#253150]/60 hover:text-white"
-          onClick={onNotificariClick}
-          aria-label={notificari > 0 ? `${notificari} dosare necesită atenție` : 'Notificări'}
-        >
-          <Bell className="size-4" aria-hidden="true" />
-          {notificari > 0 && (
-            <span
-              className="absolute -right-1.5 -top-1.5 flex h-5 min-w-5 items-center justify-center rounded-full bg-[#ef4444] px-[5px] text-[10px] font-extrabold text-white"
-              style={{ boxShadow: '0 0 0 2px #0a0e17, 0 0 12px rgba(239,68,68,.75)' }}
+        <Popover open={deschis} onOpenChange={setDeschis}>
+          <PopoverTrigger asChild>
+            <button
+              type="button"
+              className="relative flex size-[34px] items-center justify-center rounded-[10px] border border-[#253150] bg-[#253150]/[.28] text-[#cbd5e1] transition-colors hover:bg-[#253150]/60 hover:text-white"
+              aria-label={deSunat.length > 0 ? `${deSunat.length} dosare de sunat` : 'Notificări'}
             >
-              {notificari > 9 ? '9+' : notificari}
-            </span>
-          )}
-        </button>
+              <Bell className="size-4" aria-hidden="true" />
+              {deSunat.length > 0 && (
+                <span
+                  className="absolute -right-1.5 -top-1.5 flex h-5 min-w-5 items-center justify-center rounded-full bg-[#ef4444] px-[5px] text-[10px] font-extrabold text-white"
+                  style={{ boxShadow: '0 0 0 2px #0a0e17, 0 0 12px rgba(239,68,68,.75)' }}
+                >
+                  {deSunat.length > 9 ? '9+' : deSunat.length}
+                </span>
+              )}
+            </button>
+          </PopoverTrigger>
+          <PopoverContent align="end" className="w-[330px] max-w-[calc(100vw-1.5rem)] gap-0 rounded-2xl border-[#253150] bg-[#0d1524] p-0">
+            <div className="flex items-center justify-between border-b border-[#1e2a45] px-4 py-3">
+              <span className="flex items-center gap-2 text-[13.5px] font-bold text-[#f1f5f9]">
+                <Bell className="size-4 text-[#fb923c]" aria-hidden="true" />
+                De sunat
+              </span>
+              <span className="text-[11px] font-semibold text-[#8b9ab5]">{deSunat.length}</span>
+            </div>
+            {deSunat.length === 0 ? (
+              <p className="px-4 py-6 text-center text-[12.5px] text-[#8b9ab5]">Niciun dosar de sunat acum.</p>
+            ) : (
+              <ul className="max-h-[340px] overflow-y-auto p-1.5">
+                {deSunat.map(({ dosar, zile }) => {
+                  const expirat = zile <= 0
+                  const culoare = expirat ? '#ff4d6d' : '#fbbf24'
+                  const eticheta = zile < 0 ? `expirat (+${Math.abs(zile)})` : zile === 0 ? 'azi' : zile === 1 ? '1 zi' : `${zile} zile`
+                  return (
+                    <li key={dosar.id}>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setDeschis(false)
+                          onAlegeDosar(dosar.id)
+                        }}
+                        className="flex w-full items-center gap-3 rounded-xl px-2.5 py-2 text-left transition-colors hover:bg-white/5"
+                      >
+                        <span className="size-2 shrink-0 rounded-full" style={{ background: culoare, boxShadow: `0 0 8px 1px ${culoare}aa` }} />
+                        <span className="min-w-0 flex-1">
+                          <span className="block truncate text-[13px] font-bold text-[#e2e8f5]">
+                            {dosar.nrAutoPagubit || dosar.nrDosar || '—'}
+                            {dosar.marcaModel && <span className="font-medium text-[#8b9ab5]"> · {dosar.marcaModel}</span>}
+                          </span>
+                          <span className="block truncate text-[11px] text-[#8b9ab5]">
+                            {dosar.telClient ? `Client: ${dosar.telClient}` : 'Fără telefon client'}
+                          </span>
+                        </span>
+                        <span
+                          className="shrink-0 rounded-full border px-2 py-0.5 text-[10px] font-extrabold uppercase"
+                          style={{ color: culoare, borderColor: `${culoare}66`, background: `${culoare}1f` }}
+                        >
+                          {eticheta}
+                        </span>
+                      </button>
+                    </li>
+                  )
+                })}
+              </ul>
+            )}
+          </PopoverContent>
+        </Popover>
 
         <DropdownMenu>
           <DropdownMenuTrigger asChild>

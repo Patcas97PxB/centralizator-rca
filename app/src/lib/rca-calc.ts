@@ -75,8 +75,8 @@ export function businessDaysBetween(startStr: string, endStr?: string | null): n
 }
 
 export function colorClass(days: number): 'c-red' | 'c-yellow' | 'c-green' {
-  if (days <= 2) return 'c-red'
-  if (days <= 4) return 'c-yellow'
+  if (days <= 0) return 'c-red'
+  if (days <= 2) return 'c-yellow'
   return 'c-green'
 }
 
@@ -342,4 +342,36 @@ export function urgentaDosar(d: Dosar): UrgentaDosar {
     cls: colorClass(ramase),
     depasit: false,
   }
+}
+
+export interface DeSunat {
+  dosar: Dosar
+  /** Zile pana expira termenul (0 = azi, negativ = depasit). */
+  zile: number
+}
+
+// Zile pana la termenul de preluare; null daca dosarul nu are termen activ (finalizat,
+// predare in viitor sau fara deviz/zile).
+export function zileLaTermen(d: Dosar): number | null {
+  if (d.status === 'finalizat') return null
+  const panaLaPredare = zileRamase(d.start)
+  if (panaLaPredare !== null && panaLaPredare > 0) return null
+  const rca = calculRCA(d)
+  if (rca.zile === null) return null
+  return zileRamase(rca.dataPreluare)
+}
+
+// "De sunat": dosarele care mai au cel mult 2 zile pana la termen (inclusiv cele expirate).
+export function esteDeSunat(d: Dosar): boolean {
+  const z = zileLaTermen(d)
+  return z !== null && z <= 2
+}
+
+export function dosareDeSunat(dosare: Dosar[]): DeSunat[] {
+  const out: DeSunat[] = []
+  for (const dosar of dosare) {
+    const zile = zileLaTermen(dosar)
+    if (zile !== null && zile <= 2) out.push({ dosar, zile })
+  }
+  return out.sort((a, b) => a.zile - b.zile)
 }

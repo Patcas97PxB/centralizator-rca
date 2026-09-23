@@ -8,7 +8,7 @@ import type { AnalizaDeviz } from '@/lib/deviz-analiza'
 import { staggerDelay } from '@/lib/motion'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
-import { StatsRow } from './StatsRow'
+import { LegendaCulori } from './LegendaCulori'
 import { FilterBar } from './FilterBar'
 import { DosarCard } from './DosarCard'
 import { DosarFormModal } from './DosarFormModal'
@@ -20,14 +20,11 @@ import { StatisticiRapide } from '../panel/StatisticiRapide'
 export function DosarePage() {
   const {
     dosare, filtrate, servicii, loading, error, filtre, setFiltre,
-    depasiteCount, salveazaDosar, stergeDosar,
+    salveazaDosar, stergeDosar,
   } = useDosareContext()
   const [modalDeschis, setModalDeschis] = useState(false)
   const [dosarActiv, setDosarActiv] = useState<Dosar | null>(null)
   const [initialDraft, setInitialDraft] = useState<Partial<Dosar> | null>(null)
-
-  const activeCount = dosare.filter((d) => d.status !== 'finalizat').length
-  const inAsteptareCount = dosare.filter((d) => d.status === 'in_asteptare').length
 
   function deschideNou() {
     setDosarActiv(null)
@@ -68,12 +65,7 @@ export function DosarePage() {
 
       <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_250px]">
         <div className="min-w-0 space-y-4">
-          <StatsRow
-            active={activeCount}
-            total={dosare.length}
-            depasite={depasiteCount}
-            inAsteptare={inAsteptareCount}
-          />
+          <LegendaCulori />
 
           <div className="rounded-[20px] border border-[#253150] bg-[#10172a] p-3">
             <FilterBar filtre={filtre} onChange={setFiltre} servicii={servicii} onExport={() => exportDosareXlsx(filtrate)} />
@@ -102,7 +94,7 @@ export function DosarePage() {
           ) : (
             <div className="grid grid-cols-[repeat(auto-fill,minmax(min(100%,max(400px,calc(50%_-_6px))),1fr))] gap-3">
               {filtrate.map((d, i) => (
-                <div key={d.id} className="animate-fade-up min-w-0" style={staggerDelay(i)}>
+                <div key={d.id} id={`dosar-${d.id}`} className="animate-fade-up min-w-0 rounded-[18px]" style={staggerDelay(i)}>
                   <DosarCard dosar={d} onStatusChange={onStatusChange} onDeschide={deschideEditare} onPatch={onPatch} />
                 </div>
               ))}

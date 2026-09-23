@@ -2,7 +2,7 @@ import { createContext, useContext, useMemo, useState, type ReactNode } from 're
 import { useDosare } from '@/hooks/useDosare'
 import { useServicii } from '@/hooks/useServicii'
 import { filtreImplicite, filtreazaSiSorteazaDosare, type DosareFiltre } from '@/lib/dosare-filter'
-import { urgentaDosar } from '@/lib/rca-calc'
+import { dosareDeSunat, urgentaDosar, type DeSunat } from '@/lib/rca-calc'
 import { inlocuiesteToateDosarele } from '@/lib/dosare-storage'
 import { inlocuiesteToateServiciile } from '@/lib/servicii-storage'
 import type { BackupPayload } from '@/lib/backup'
@@ -18,6 +18,7 @@ interface DosareContextValue {
   setFiltre: (f: DosareFiltre) => void
   arataDoarDepasite: () => void
   depasiteCount: number
+  deSunat: DeSunat[]
   salveazaDosar: (d: Dosar) => Promise<void>
   stergeDosar: (id: string) => Promise<void>
   salveazaServiciu: (s: Serviciu) => Promise<void>
@@ -40,6 +41,7 @@ export function DosareProvider({ enabled, children }: { enabled: boolean; childr
     () => dosare.filter((d) => d.status !== 'finalizat' && urgentaDosar(d).depasit).length,
     [dosare],
   )
+  const deSunat = useMemo(() => dosareDeSunat(dosare), [dosare])
   const filtrate = useMemo(() => filtreazaSiSorteazaDosare(dosare, filtre), [dosare, filtre])
 
   function arataDoarDepasite() {
@@ -62,6 +64,7 @@ export function DosareProvider({ enabled, children }: { enabled: boolean; childr
     setFiltre,
     arataDoarDepasite,
     depasiteCount,
+    deSunat,
     salveazaDosar,
     stergeDosar,
     salveazaServiciu,
