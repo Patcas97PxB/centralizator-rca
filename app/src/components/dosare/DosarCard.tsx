@@ -296,14 +296,14 @@ export function DosarCard({
         </button>
 
         <div className="order-3 col-span-2 flex min-w-0 flex-col gap-1 sm:order-2 sm:col-span-1" title={`${urgenta.bigNum} ${urgenta.bigLabel}`}>
-          <div className="flex flex-col items-center gap-[3px] text-center">
+          <div className="flex flex-col items-center gap-1 text-center">
             <span
-              className="text-[22px] font-extrabold leading-none tracking-[-.02em] tabular-nums"
+              className="text-[32px] font-extrabold leading-none tracking-[-.02em] tabular-nums"
               style={{ color: urgColor, textShadow: `0 0 18px ${hex(urgColor, '80')}` }}
             >
               {urgenta.bigNum}
             </span>
-            <span className="text-[10px] font-extrabold uppercase leading-tight tracking-[.04em]" style={{ color: urgColor }}>
+            <span className="text-[12.5px] font-extrabold uppercase leading-tight tracking-[.04em]" style={{ color: urgColor }}>
               {urgenta.bigLabel}
             </span>
           </div>
