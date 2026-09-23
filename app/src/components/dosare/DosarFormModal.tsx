@@ -35,6 +35,7 @@ import { calculRCA, todayStr } from '@/lib/rca-calc'
 import { STATUS_META, dosarGol, type Dosar, type StatusDosar, type Vehicul } from '@/lib/types'
 import { PreluareDateSection } from './PreluareDateSection'
 import { DevizRecalculeazaButton } from './DevizRecalculeazaButton'
+import { ServiceCombobox } from './ServiceCombobox'
 import { ContractFinalSection } from './ContractFinalSection'
 
 export function DosarFormModal({
@@ -273,17 +274,7 @@ export function DosarFormModal({
           </div>
           <div className="space-y-1.5">
             <Label htmlFor="fService">Service</Label>
-            <Input
-              id="fService"
-              value={draft.service}
-              onChange={(e) => onServiceChange(e.target.value)}
-              list="servicii-list"
-            />
-            <datalist id="servicii-list">
-              {servicii.map((s) => (
-                <option key={s.id} value={s.nume} />
-              ))}
-            </datalist>
+            <ServiceCombobox id="fService" value={draft.service} servicii={servicii} onChange={onServiceChange} />
           </div>
 
           <div className="space-y-1.5">

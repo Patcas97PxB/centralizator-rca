@@ -279,7 +279,7 @@ export function DocumenteModal({
                       </div>
                     ) : (
                       <div className="truncate text-[11.5px] text-[#7b8aa6]">
-                        {optional ? 'nu se aplică' : key === 'contract' ? 'lipsește — PDF winMentor, completează zilele, valoarea și clasa' : 'lipsește'}
+                        {optional ? 'nu se aplică' : key === 'contract' ? 'lipsește — PDF winMentor, completează valoarea, zilele și durata contractului' : 'lipsește'}
                       </div>
                     )}
                   </div>

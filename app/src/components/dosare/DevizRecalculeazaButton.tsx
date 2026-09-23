@@ -1,72 +1,44 @@
-import { useRef, useState } from 'react'
-import { Calculator } from 'lucide-react'
+import { useEffect, useRef } from 'react'
+import { AlertTriangle, Calculator, Check, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { analizaDeviz, type AnalizaDeviz } from '@/lib/deviz-analiza'
-import { mesajEroareOCR, ocrImageToText, pdfLibDisponibil, pdfToImageBlobs, readPdfText } from '@/lib/pdf-ocr'
+import { useDevizScan } from '@/hooks/useDevizScan'
 import type { Dosar } from '@/lib/types'
+import { cn } from '@/lib/utils'
 
-// Portat din handleDevizOnly() (index.html) — buton separat care recalculeaza DOAR zilele
-// de reparatie dintr-un deviz, suprascriind explicit valoarea existenta (spre deosebire de
-// "PRELUARE DATE" din PreluareDateSection, care nu atinge campul daca e deja completat).
-// Util cand vrei sa reactualizezi zilele dintr-un deviz nou/corectat, fara sa umbli la restul
-// campurilor. Plasat langa campul "Zile lucratoare din deviz" din formular, nu langa
-// PRELUARE DATE, la cererea utilizatorului.
+const TILE = {
+  scanning: { border: 'rgba(125,211,252,.7)', color: '#7dd3fc' },
+  done: { border: 'rgba(0,245,160,.55)', color: '#00f5a0' },
+  error: { border: 'rgba(255,77,109,.7)', color: '#ff4d6d' },
+} as const
+
+// Calculeaza DOAR zilele de reparatie dintr-un deviz, suprascriind explicit valoarea existenta
+// (spre deosebire de "PRELUARE DATE", care nu atinge campul daca e deja completat). Rezultatul apare
+// cu aceeasi animatie ca la cardul "Zile din deviz" de pe ecranul principal.
 export function DevizRecalculeazaButton({
   onPatch,
 }: {
   onPatch: (patch: Partial<Dosar>) => void
 }) {
-  const [status, setStatus] = useState('')
-  const [analiza, setAnaliza] = useState<AnalizaDeviz | null>(null)
-  const [seIncarca, setSeIncarca] = useState(false)
+  const { stage, result, errorMsg, fileName, run } = useDevizScan()
   const inputRef = useRef<HTMLInputElement>(null)
+  const onPatchRef = useRef(onPatch)
+  onPatchRef.current = onPatch
 
-  async function handleFile(file: File) {
-    setSeIncarca(true)
-    setStatus('')
-    const isPdf = file.type === 'application/pdf' || /\.pdf$/i.test(file.name)
-    try {
-      let an: AnalizaDeviz | null = null
-      if (!isPdf) {
-        setStatus('Se scanează imaginea…')
-        const ocrText = await ocrImageToText(file)
-        an = ocrText.trim().length > 20 ? analizaDeviz(ocrText) : null
-      } else {
-        if (!pdfLibDisponibil()) {
-          setStatus('Biblioteca de citire PDF nu s-a încărcat. Verifică internetul și reîncarcă pagina.')
-          return
-        }
-        setStatus('Se citește devizul…')
-        const fullText = await readPdfText(file)
-        an = analizaDeviz(fullText)
-        if (!an && fullText.trim().length < 40) {
-          setStatus('Se scanează imaginea…')
-          const imgBlobs = await pdfToImageBlobs(file, 8)
-          const ocrText = await ocrImageToText(imgBlobs)
-          an = ocrText.trim().length > 20 ? analizaDeviz(ocrText) : null
-        }
-      }
-      if (an) {
-        onPatch({ zileDeviz: String(an.total), zileDevizExplicatie: an.explicatie, zileDevizFormula: an.formulaCalcul })
-        setAnaliza(an)
-        setStatus(isPdf ? 'Zile recalculate din deviz. Restul câmpurilor nu au fost modificate.' : 'Zile recalculate din poza devizului. Restul câmpurilor nu au fost modificate.')
-      } else {
-        setStatus('Nu am găsit manopera în acest document — verifică claritatea sau introdu zilele manual.')
-      }
-    } catch (e) {
-      console.error(e)
-      setStatus(mesajEroareOCR(e))
-    } finally {
-      setSeIncarca(false)
+  useEffect(() => {
+    if (stage === 'done' && result) {
+      onPatchRef.current({ zileDeviz: String(result.total), zileDevizExplicatie: result.explicatie, zileDevizFormula: result.formulaCalcul })
     }
-  }
+  }, [stage, result])
+
+  const seCalculeaza = stage === 'scanning'
+  const tile = stage === 'idle' ? null : TILE[stage]
 
   return (
-    <div className="space-y-1.5 sm:col-span-2">
+    <div className="space-y-2 sm:col-span-2">
       <div className="flex flex-wrap items-center gap-2">
-        <Button type="button" size="sm" variant="outline" disabled={seIncarca} onClick={() => inputRef.current?.click()}>
+        <Button type="button" size="sm" variant="outline" disabled={seCalculeaza} onClick={() => inputRef.current?.click()}>
           <Calculator className="size-3.5" aria-hidden="true" />
-          {seIncarca ? 'Se calculează…' : 'Recalculează zile din deviz'}
+          {seCalculeaza ? 'Se calculează…' : 'Calculează zile din deviz'}
         </Button>
         <span className="text-xs text-muted-foreground">Suprascrie doar zilele — restul câmpurilor rămân neatinse.</span>
         <input
@@ -76,16 +48,81 @@ export function DevizRecalculeazaButton({
           className="hidden"
           onChange={(e) => {
             const f = e.target.files?.[0]
-            if (f) handleFile(f)
+            if (f) run(f)
             e.target.value = ''
           }}
         />
       </div>
-      {status && <p className="text-xs text-foreground">{status}</p>}
-      {analiza && (
-        <div className="rounded-lg border border-primary/30 bg-primary/10 p-2.5">
-          <p className="text-sm font-semibold text-foreground">{analiza.total} zile de reparație</p>
-          <p className="text-xs text-muted-foreground">{analiza.formulaCalcul}</p>
+
+      {tile && (
+        <div
+          key={stage}
+          role="status"
+          className={cn(
+            'relative flex items-center gap-3 overflow-hidden rounded-2xl border p-3',
+            stage === 'error' && 'animate-[devizShake_.45s_ease-in-out_both]',
+          )}
+          style={{
+            borderColor: stage === 'scanning' ? 'rgba(96,165,250,.5)' : stage === 'done' ? 'rgba(0,245,160,.35)' : 'rgba(255,77,109,.45)',
+            background:
+              stage === 'done' ? 'rgba(0,245,160,.06)' : stage === 'error' ? 'rgba(255,77,109,.06)' : 'rgba(37,99,235,.08)',
+            animation: stage === 'scanning' ? 'devizGlow 2.2s ease-in-out infinite' : undefined,
+          }}
+        >
+          <span
+            className="relative flex h-12 w-10 shrink-0 items-center justify-center overflow-hidden rounded-lg border"
+            style={{ borderColor: tile.border, color: tile.color, background: 'linear-gradient(#0b1633, #0a1230)' }}
+          >
+            {stage === 'done' ? (
+              <Check className="size-5 animate-[devizPopIn_.4s_cubic-bezier(.2,.9,.2,1)_both]" aria-hidden="true" />
+            ) : stage === 'error' ? (
+              <X className="size-5 animate-[devizPopIn_.4s_cubic-bezier(.2,.9,.2,1)_both]" aria-hidden="true" />
+            ) : (
+              <Calculator className="size-5" aria-hidden="true" />
+            )}
+            {stage === 'scanning' && (
+              <span
+                aria-hidden
+                className="absolute inset-x-0 h-[14px] animate-[devizBeam_1s_ease-in-out_infinite_alternate]"
+                style={{ background: 'linear-gradient(180deg, transparent, rgba(125,211,252,.85), transparent)' }}
+              />
+            )}
+          </span>
+
+          <div className="min-w-0 flex-1">
+            {stage === 'scanning' && (
+              <>
+                <div className="truncate text-sm font-bold" style={{ color: '#7dd3fc' }}>Calculez zilele din deviz…</div>
+                <div className="truncate text-xs text-muted-foreground">{fileName}</div>
+                <div className="mt-2 h-1 overflow-hidden rounded-full bg-white/10">
+                  <div
+                    className="h-full origin-left rounded-full animate-[devizProgress_2.6s_cubic-bezier(.4,0,.2,1)_both]"
+                    style={{ background: 'linear-gradient(90deg,#2563eb,#0ea5e9)' }}
+                  />
+                </div>
+              </>
+            )}
+            {stage === 'done' && result && (
+              <div className="animate-[devizPopIn_.4s_cubic-bezier(.2,.9,.2,1)_both]">
+                <div className="flex items-baseline gap-1.5">
+                  <span className="text-2xl font-extrabold leading-none" style={{ color: '#00f5a0', textShadow: '0 0 14px rgba(0,245,160,.6)' }}>
+                    {result.total}
+                  </span>
+                  <span className="text-xs font-bold" style={{ color: '#00f5a0' }}>ZILE DE REPARAȚIE</span>
+                </div>
+                <p className="mt-1 text-xs text-muted-foreground">{result.formulaCalcul}</p>
+                <p className="mt-0.5 text-[11px] text-[#3ddc97]">Zilele au fost completate. Restul câmpurilor nu au fost modificate.</p>
+              </div>
+            )}
+            {stage === 'error' && (
+              <>
+                <div className="flex items-center gap-1 text-xs font-bold" style={{ color: 'var(--danger-strong)' }}>
+                  <AlertTriangle className="size-3.5" aria-hidden="true" /> Nu am putut calcula zilele
+                </div>
+                <p className="text-xs leading-snug text-muted-foreground">{errorMsg}</p>
+              </>
+            )}
+          </div>
         </div>
       )}
     </div>

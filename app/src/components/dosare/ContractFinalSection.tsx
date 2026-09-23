@@ -48,7 +48,7 @@ export function ContractFinalSection({
           }}
         />
       </div>
-      <p className="text-xs text-muted-foreground">Exportul final (winMentor) — verifică și completează valoarea, zilele și clasa contractată.</p>
+      <p className="text-xs text-muted-foreground">Exportul final (winMentor) — verifică și completează valoarea, zilele și durata contractului.</p>
       {status && <p className={'text-xs ' + (status.eroare ? 'text-destructive font-medium' : 'text-foreground')}>{status.text}</p>}
     </div>
   )
