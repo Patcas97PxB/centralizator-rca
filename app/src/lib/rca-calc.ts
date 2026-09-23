@@ -346,8 +346,10 @@ export function urgentaDosar(d: Dosar): UrgentaDosar {
 
 export interface DeSunat {
   dosar: Dosar
-  /** Zile pana expira termenul (0 = azi, negativ = depasit). */
-  zile: number
+  /** Zile pana expira termenul (0 = azi, negativ = depasit); null daca nu se poate calcula. */
+  zile: number | null
+  /** true daca utilizatorul a marcat manual dosarul cu statusul "De sunat". */
+  marcat: boolean
 }
 
 // Zile pana la termenul de preluare; null daca dosarul nu are termen activ (finalizat,
@@ -361,14 +363,16 @@ export function zileLaTermen(d: Dosar): number | null {
   return zileRamase(rca.dataPreluare)
 }
 
-// Alertele din clopotel: dosarele care mai au cel mult 2 zile pana la termen (inclusiv cele
-// expirate). Cand utilizatorul a sunat clientul si a mutat dosarul in "In asteptare", alerta se stinge.
+// Alertele din clopotel: dosarele marcate "De sunat" + cele care mai au cel mult 2 zile pana la
+// termen (inclusiv cele expirate). Cand utilizatorul a sunat clientul si a mutat dosarul in
+// "In asteptare", alerta se stinge.
 export function dosareDeSunat(dosare: Dosar[]): DeSunat[] {
   const out: DeSunat[] = []
   for (const dosar of dosare) {
-    if (dosar.status === 'in_asteptare') continue
+    if (dosar.status === 'in_asteptare' || dosar.status === 'finalizat') continue
     const zile = zileLaTermen(dosar)
-    if (zile !== null && zile <= 2) out.push({ dosar, zile })
+    const marcat = dosar.status === 'de_sunat'
+    if (marcat || (zile !== null && zile <= 2)) out.push({ dosar, zile, marcat })
   }
-  return out.sort((a, b) => a.zile - b.zile)
+  return out.sort((a, b) => (a.zile ?? 99) - (b.zile ?? 99))
 }

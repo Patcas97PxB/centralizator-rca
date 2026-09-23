@@ -104,10 +104,10 @@ export function Header({
               <p className="px-4 py-6 text-center text-[12.5px] text-[#8b9ab5]">Niciun dosar de sunat acum.</p>
             ) : (
               <ul className="max-h-[340px] overflow-y-auto p-1.5">
-                {deSunat.map(({ dosar, zile }) => {
-                  const expirat = zile <= 0
-                  const culoare = expirat ? '#ff4d6d' : '#fbbf24'
-                  const eticheta = zile < 0 ? `expirat (+${Math.abs(zile)})` : zile === 0 ? 'azi' : zile === 1 ? '1 zi' : `${zile} zile`
+                {deSunat.map(({ dosar, zile, marcat }) => {
+                  const culoare = marcat ? '#fb923c' : zile !== null && zile <= 0 ? '#ff4d6d' : '#fbbf24'
+                  const eticheta =
+                    zile === null ? 'de sunat' : zile < 0 ? `expirat (+${Math.abs(zile)})` : zile === 0 ? 'azi' : zile === 1 ? '1 zi' : `${zile} zile`
                   return (
                     <li key={dosar.id}>
                       <button
