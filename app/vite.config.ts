@@ -66,6 +66,8 @@ export default defineConfig(({ mode }) => ({
   // dev-serverul, dar mode ramane 'production' (ca la build) — asta chiar distinge intre ele.
   base: mode === 'production' ? '/centralizator-rca/' : '/',
   plugins: [react(), tailwindcss(), ...servesteResurseExterne()],
+  // Pozele de masini sunt in ../File/Cars/car_nobg, in afara proiectului Vite.
+  server: { fs: { allow: ['..'] } },
   resolve: {
     alias: {
       '@': path.resolve(dirname, './src'),

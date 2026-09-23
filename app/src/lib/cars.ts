@@ -1,6 +1,8 @@
-// Imaginile se pun in src/assets/cars/ (png/jpg/webp), numite dupa model ("a4.png", "bmw 3.png",
-// "c class.png"). Orice fisier nou adaugat acolo e luat automat, fara alte modificari de cod.
-const FISIERE = import.meta.glob('../assets/cars/*.{png,jpg,jpeg,webp}', {
+// Imaginile se iau direct din D:\Centralizator RCA\File\Cars\car_nobg (png/jpg/webp), numite dupa
+// model ("a4.png", "bmw 3.png", "c class.png"). Orice fisier nou pus acolo e luat automat la
+// urmatorul build/pornire a serverului, fara alte modificari de cod. Folderul File/ nu e in Git
+// (contine si documente interne), deci pozele ajung pe site doar prin build-ul local.
+const FISIERE = import.meta.glob('../../../File/Cars/car_nobg/*.{png,jpg,jpeg,webp}', {
   eager: true,
   query: '?url',
   import: 'default',
