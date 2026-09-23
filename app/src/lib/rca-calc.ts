@@ -365,11 +365,11 @@ export function zileLaTermen(d: Dosar): number | null {
 
 // Alertele din clopotel: dosarele marcate "De sunat" + cele care mai au cel mult 2 zile pana la
 // termen (inclusiv cele expirate). Cand utilizatorul a sunat clientul si a mutat dosarul in
-// "In asteptare", alerta se stinge.
+// "In asteptare" sau "Se asteapta documente", alerta se stinge.
 export function dosareDeSunat(dosare: Dosar[]): DeSunat[] {
   const out: DeSunat[] = []
   for (const dosar of dosare) {
-    if (dosar.status === 'in_asteptare' || dosar.status === 'finalizat') continue
+    if (dosar.status === 'in_asteptare' || dosar.status === 'astept_docum' || dosar.status === 'finalizat') continue
     const zile = zileLaTermen(dosar)
     const marcat = dosar.status === 'de_sunat'
     if (marcat || (zile !== null && zile <= 2)) out.push({ dosar, zile, marcat })
