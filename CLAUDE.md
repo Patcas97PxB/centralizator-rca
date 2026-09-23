@@ -33,7 +33,9 @@ Comite local oricând, dar **push doar când cere utilizatorul**. Pozele de maș
 - **Predat / Preluat** pe card: bife informative (`predatBifat`/`preluatBifat`), fără efect pe status. Preluat se poate bifa doar după Predat.
 - **Poza cardului = vehiculul de înlocuire** (`marcaModelInlocuire`), nu mașina păgubită. Pozele se iau din `File/Cars/car_nobg` (`lib/cars.ts`, potrivire pe cuvinte: „Arkana" = „Renault Arkana"). Poză nouă în folder → repornește serverul de dev.
 - **Statistici** (panoul din dreapta): total/finalizate/în curs, service și asigurator cu cele mai multe dosare, vehiculul de înlocuire cel mai oferit (cu poză).
-- Legenda culorilor e în butonul „i" din rândul de filtre. „Modificare PDF" e afișat dar dezactivat („în curând"); Dashboard/Setări = „în curând".
+- Legenda culorilor e în butonul „i" din rândul de filtre. Dashboard/Setări = „în curând".
+- **Modificare PDF** (cardul din dreapta): editor în browser, fără API/AI/server. `lib/pdf-editor.ts` + `ModificarPdfModal.tsx`. MuPDF.js (WASM, licență AGPL, încărcat lazy) citește cuvintele cu poziții și **șterge definitiv** textul ales; pdf-lib scrie noul text în același loc (font, mărime și culoare din original; Arimo ca rezervă pentru ș/ț/ă). După ștergere verifică să nu se fi schimbat altceva, altfel refuză. Originalul nu se modifică; ieșirea e o copie descărcată + jurnal .txt. Doar PDF-uri cu text (nu scanate). Testat pe „PV PREDARE-PRELUARE + CONTRACT" (Helvetica 7pt).
+- Instrucțiuni libere pentru PDF („schimbă data…") ar cere Claude API ca interpret, printr-o Supabase Edge Function (cheia din Anthropic Console pusă ca secret în Supabase — niciodată în cod sau în chat). Nu există încă.
 
 ## Design și animații
 - Tokens și `@keyframes` în `app/src/index.css`. Toate animațiile respectă `prefers-reduced-motion`; există comutator „Animații: automat/pornite" în meniul avatarului (`lib/motion-pref.ts`). Pe Windows cu „Efecte de animație" oprite, browserul raportează reduced-motion.
