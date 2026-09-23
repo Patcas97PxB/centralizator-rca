@@ -1,13 +1,13 @@
 const CULOARE_CARD = [
-  { color: '#3d8bff', nume: 'Programare', detaliu: 'de predat', titlu: 'Programare: De predat / în așteptare' },
-  { color: '#00f5a0', nume: 'În termen', detaliu: '3+ zile', titlu: 'În termen: 3+ zile rămase' },
-  { color: '#fbbf24', nume: 'Atenție', detaliu: '1–2 zile', titlu: 'Atenție: 1–2 zile rămase' },
-  { color: '#ff4d6d', nume: 'Urgență', detaliu: 'expirat', titlu: 'Urgență: Zile expirate' },
-  { color: '#94a3b8', nume: 'Finalizat', detaliu: 'arhivă', titlu: 'Finalizat: Arhivat / inactiv' },
+  { color: '#ff4d6d', nume: 'Urgență', titlu: 'Urgență: termen expirat sau azi' },
+  { color: '#fbbf24', nume: 'Atenție', titlu: 'Atenție: 1–2 zile rămase' },
+  { color: '#00f5a0', nume: 'În termen', titlu: 'În termen: 3+ zile rămase' },
+  { color: '#3d8bff', nume: 'Programare', titlu: 'Programare: înainte de predare' },
+  { color: '#94a3b8', nume: 'Finalizat', titlu: 'Finalizat: arhivat / jos în listă' },
 ]
 const ETICHETE = [
-  { color: '#e879f9', nume: 'Blochaj documente', detaliu: 'acte / deviz', titlu: 'Blocaj documente: Lipsesc acte / deviz' },
-  { color: '#fb923c', nume: 'De sunat', detaliu: 'mașină gata', titlu: 'De sunat: Mașina e gata' },
+  { color: '#fb923c', nume: 'De sunat', titlu: 'De sunat: status marcat de utilizator (culoarea pastilei de status)' },
+  { color: '#e879f9', nume: 'Blochaj documente', titlu: 'Blochaj documente: se așteaptă documente (culoarea pastilei de status)' },
 ]
 
 const TITLU = 'text-[10px] font-extrabold tracking-[.1em] text-[#5d6b86]'

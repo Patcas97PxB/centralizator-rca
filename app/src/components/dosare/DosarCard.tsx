@@ -3,7 +3,7 @@ import { AlertTriangle, ArrowDown, Check, ChevronDown, FolderPlus, ImageIcon, Pe
 import { imagineMasina } from '@/lib/cars'
 import { ALPHA, accentStyle, hex } from '@/lib/color'
 import { docStatus, docLabelText, lipsuriFinalizare } from '@/lib/documente'
-import { calculRCA, fmtDate, urgentaDosar, zileScurseDeLaPredare } from '@/lib/rca-calc'
+import { calculRCA, fmtDate, prioritateDosar, urgentaDosar, zileScurseDeLaPredare } from '@/lib/rca-calc'
 import { STATUS_META, type Dosar, type StatusDosar } from '@/lib/types'
 import { cn } from '@/lib/utils'
 import {
@@ -13,14 +13,8 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 
-const URGENTA_COLOR: Record<string, string> = {
-  'c-red': '#ff4d6d',
-  'c-yellow': '#fbbf24',
-  'c-green': '#00f5a0',
-  'c-albastru': '#3d8bff',
-}
-
-const NEUTRAL = '#94a3b8'
+// Culoarea cardului urmeaza termenul (0 rosu, 1 galben, 2 verde, 3 albastru, 4 finalizat), nu statusul.
+const RANK_COLOR = ['#ff4d6d', '#fbbf24', '#00f5a0', '#3d8bff', '#94a3b8']
 
 function Plate({ nr, model }: { nr: string; model?: string }) {
   return (
@@ -49,6 +43,8 @@ export function DosarCard({
   const dst = docStatus(dosar)
   const rca = calculRCA(dosar)
   const accent = accentStyle(meta.color)
+  const cardColor = RANK_COLOR[prioritateDosar(dosar)]
+  const cardAccent = accentStyle(cardColor)
   const finalizat = dosar.status === 'finalizat'
   const poza = imagineMasina(dosar.marcaModel)
 
@@ -58,7 +54,7 @@ export function DosarCard({
   const scurse = zileScurseDeLaPredare(dosar.start)
   const total = rca.zile
   const pct = finalizat ? 100 : scurse !== null && total ? Math.max(0, Math.min(100, (scurse / total) * 100)) : 0
-  const urgColor = finalizat ? NEUTRAL : (URGENTA_COLOR[urgenta.cls] ?? meta.color)
+  const urgColor = cardColor
   const subStanga = finalizat ? 'închis' : viitor ? 'nepredată' : scurse !== null && total ? `ziua ${scurse} / ${total}` : ''
   const subDreapta = finalizat ? 'preluată' : viitor ? 'așteaptă predarea' : urgenta.depasit ? 'termen depășit' : 'termen'
 
@@ -109,24 +105,24 @@ export function DosarCard({
         shaking && 'animate-[devizShake_.45s_ease-in-out_both]',
       )}
       style={{
-        border: `1.5px solid ${hex(meta.color, '66')}`,
+        border: `1.5px solid ${hex(cardColor, '66')}`,
         background: 'linear-gradient(#141d33 0%, #0f1628 100%)',
-        boxShadow: `var(--shadow-card-base), 0 0 22px -12px ${meta.color}`,
+        boxShadow: `var(--shadow-card-base), 0 0 22px -12px ${cardColor}`,
       }}
     >
       <span
         aria-hidden
         className="pointer-events-none absolute inset-y-0 left-0 w-1.5 animate-[railBreathe_2.4s_ease-in-out_infinite]"
         style={{
-          background: meta.color,
-          boxShadow: `${accent.railGlow.replace('14px 2px', '16px 2px')}, 0 0 44px 6px ${hex(meta.color, '39')}`,
+          background: cardColor,
+          boxShadow: `${cardAccent.railGlow.replace('14px 2px', '16px 2px')}, 0 0 44px 6px ${hex(cardColor, '39')}`,
           borderRadius: '18px 0 0 18px',
         }}
       />
       <span
         aria-hidden
         className="pointer-events-none absolute inset-0 rounded-[inherit]"
-        style={{ background: `linear-gradient(103deg, ${hex(meta.color, ALPHA.wash)} 0%, ${hex(meta.color, '00')} 46%)` }}
+        style={{ background: `linear-gradient(103deg, ${hex(cardColor, ALPHA.wash)} 0%, ${hex(cardColor, '00')} 46%)` }}
       />
 
       {celebrating && (
@@ -150,11 +146,11 @@ export function DosarCard({
       )}
 
       <div className="relative flex min-w-0 flex-col gap-1.5">
-        <div className="relative h-[72px] w-full overflow-hidden rounded-lg" style={{ color: meta.color }}>
+        <div className="relative h-[72px] w-full overflow-hidden rounded-lg" style={{ color: cardColor }}>
           {poza ? (
             <img src={poza} alt={dosar.marcaModel} loading="lazy" className="size-full object-contain drop-shadow-[0_6px_10px_rgba(0,0,0,.6)]" />
           ) : (
-            <div className="flex size-full flex-col items-center justify-center gap-0.5 rounded-lg border border-dashed opacity-60" style={{ borderColor: hex(meta.color, '80') }}>
+            <div className="flex size-full flex-col items-center justify-center gap-0.5 rounded-lg border border-dashed opacity-60" style={{ borderColor: hex(cardColor, '80') }}>
               <ImageIcon className="size-5" aria-hidden="true" />
             </div>
           )}
@@ -178,7 +174,7 @@ export function DosarCard({
           <Plate nr={dosar.nrAutoPagubit} model={dosar.marcaModel} />
           {dosar.nrAutoInlocuire && (
             <>
-              <ArrowDown className="ml-1 size-3" style={{ color: meta.color }} strokeWidth={2.5} aria-hidden="true" />
+              <ArrowDown className="ml-1 size-3" style={{ color: cardColor }} strokeWidth={2.5} aria-hidden="true" />
               <Plate nr={dosar.nrAutoInlocuire} model={dosar.marcaModelInlocuire} />
             </>
           )}
