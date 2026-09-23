@@ -68,6 +68,9 @@ export default defineConfig(({ mode }) => ({
   plugins: [react(), tailwindcss(), ...servesteResurseExterne()],
   // Pozele de masini sunt in ../File/Cars/car_nobg, in afara proiectului Vite.
   server: { fs: { allow: ['..'] } },
+  // MuPDF (editare PDF) foloseste await la nivel de modul si un fisier WASM.
+  optimizeDeps: { exclude: ['mupdf'] },
+  build: { target: 'esnext' },
   resolve: {
     alias: {
       '@': path.resolve(dirname, './src'),
