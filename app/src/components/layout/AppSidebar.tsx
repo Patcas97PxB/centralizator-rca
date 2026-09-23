@@ -1,4 +1,4 @@
-import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, useSidebar } from '@/components/ui/sidebar'
+import { Sidebar, SidebarContent, SidebarHeader, useSidebar } from '@/components/ui/sidebar'
 import { assetUrl } from '@/lib/asset-url'
 import { usePrefersReducedMotion } from '@/hooks/usePrefersReducedMotion'
 import { cn } from '@/lib/utils'
@@ -223,10 +223,10 @@ export function AppSidebar({
             </div>
           ))}
         </nav>
+        <div className="mt-4 px-1">
+          <Legenda />
+        </div>
       </SidebarContent>
-      <SidebarFooter className="relative z-10 mt-auto px-3.5 pb-3.5 pt-3">
-        <Legenda />
-      </SidebarFooter>
     </Sidebar>
   )
 }
