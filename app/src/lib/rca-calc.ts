@@ -361,15 +361,12 @@ export function zileLaTermen(d: Dosar): number | null {
   return zileRamase(rca.dataPreluare)
 }
 
-// "De sunat": dosarele care mai au cel mult 2 zile pana la termen (inclusiv cele expirate).
-export function esteDeSunat(d: Dosar): boolean {
-  const z = zileLaTermen(d)
-  return z !== null && z <= 2
-}
-
+// Alertele din clopotel: dosarele care mai au cel mult 2 zile pana la termen (inclusiv cele
+// expirate). Cand utilizatorul a sunat clientul si a mutat dosarul in "In asteptare", alerta se stinge.
 export function dosareDeSunat(dosare: Dosar[]): DeSunat[] {
   const out: DeSunat[] = []
   for (const dosar of dosare) {
+    if (dosar.status === 'in_asteptare') continue
     const zile = zileLaTermen(dosar)
     if (zile !== null && zile <= 2) out.push({ dosar, zile })
   }

@@ -1,9 +1,9 @@
 import { useEffect, useRef, useState } from 'react'
-import { AlertTriangle, ArrowDown, BellRing, Check, ChevronDown, FolderPlus, ImageIcon, Pencil } from 'lucide-react'
+import { AlertTriangle, ArrowDown, Check, ChevronDown, FolderPlus, ImageIcon, Pencil } from 'lucide-react'
 import { imagineMasina } from '@/lib/cars'
 import { ALPHA, accentStyle, hex } from '@/lib/color'
 import { docStatus, docLabelText, lipsuriFinalizare } from '@/lib/documente'
-import { calculRCA, fmtDate, urgentaDosar, zileLaTermen, zileScurseDeLaPredare } from '@/lib/rca-calc'
+import { calculRCA, fmtDate, urgentaDosar, zileScurseDeLaPredare } from '@/lib/rca-calc'
 import { STATUS_META, type Dosar, type StatusDosar } from '@/lib/types'
 import { cn } from '@/lib/utils'
 import {
@@ -51,9 +51,6 @@ export function DosarCard({
   const accent = accentStyle(meta.color)
   const finalizat = dosar.status === 'finalizat'
   const poza = imagineMasina(dosar.marcaModel)
-  const zileTermen = zileLaTermen(dosar)
-  const deSunat = zileTermen !== null && zileTermen <= 2
-  const etichetaSunat = zileTermen === null ? '' : zileTermen < 0 ? 'termen expirat' : zileTermen === 0 ? 'azi' : zileTermen === 1 ? '1 zi' : `${zileTermen} zile`
 
   const predatFacut = !!dosar.predatBifat
   const preluatFacut = !!dosar.preluatBifat
@@ -132,16 +129,6 @@ export function DosarCard({
         style={{ background: `linear-gradient(103deg, ${hex(meta.color, ALPHA.wash)} 0%, ${hex(meta.color, '00')} 46%)` }}
       />
 
-      {deSunat && (
-        <span
-          role="status"
-          className="absolute -top-2.5 right-4 z-[8] flex items-center gap-1.5 rounded-full border border-[#fb923c]/70 bg-[#2a1a0c] px-2.5 py-0.5 text-[10px] font-extrabold uppercase tracking-[.04em] text-[#fb923c]"
-          style={{ boxShadow: '0 0 14px -2px rgba(251,146,60,.7)' }}
-        >
-          <BellRing className="size-3 animate-[pulseDot_1.6s_ease-in-out_infinite]" aria-hidden="true" />
-          De sunat · {etichetaSunat}
-        </span>
-      )}
       {celebrating && (
         <>
           <span aria-hidden className="pointer-events-none absolute inset-0 z-[6] animate-[finalRing_2.2s_cubic-bezier(.2,.8,.2,1)_both] rounded-[inherit]" />

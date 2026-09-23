@@ -79,7 +79,7 @@ export function Header({
             <button
               type="button"
               className="relative flex size-[34px] items-center justify-center rounded-[10px] border border-[#253150] bg-[#253150]/[.28] text-[#cbd5e1] transition-colors hover:bg-[#253150]/60 hover:text-white"
-              aria-label={deSunat.length > 0 ? `${deSunat.length} dosare de sunat` : 'Notificări'}
+              aria-label={deSunat.length > 0 ? `${deSunat.length} ${deSunat.length === 1 ? "dosar" : "dosare"} de sunat` : 'Notificări'}
             >
               <Bell className="size-4" aria-hidden="true" />
               {deSunat.length > 0 && (
