@@ -106,7 +106,7 @@ export function FilterBar({
                   <SelectValue placeholder="Sortare" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="actualizare">Ultima actualizare</SelectItem>
+                  <SelectItem value="actualizare">Prioritate (implicit)</SelectItem>
                   <SelectItem value="urgenta">Zile rămase</SelectItem>
                   <SelectItem value="nrDosar">Nr. dosar</SelectItem>
                 </SelectContent>

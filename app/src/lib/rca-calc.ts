@@ -376,3 +376,18 @@ export function dosareDeSunat(dosare: Dosar[]): DeSunat[] {
   }
   return out.sort((a, b) => (a.zile ?? 99) - (b.zile ?? 99))
 }
+
+// Ordinea implicita a cardurilor: 0 rosu, 1 galben, 2 verde, 3 albastru, 4 finalizat (jos).
+export function prioritateDosar(d: Dosar): number {
+  if (d.status === 'finalizat') return 4
+  switch (urgentaDosar(d).cls) {
+    case 'c-red':
+      return 0
+    case 'c-yellow':
+      return 1
+    case 'c-green':
+      return 2
+    default:
+      return 3
+  }
+}

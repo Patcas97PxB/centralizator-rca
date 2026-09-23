@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { Plus, X } from 'lucide-react'
 import { useDosareContext } from '@/contexts/DosareContext'
 import { filtreImplicite } from '@/lib/dosare-filter'
@@ -6,6 +6,7 @@ import { exportDosareXlsx } from '@/lib/xlsx-export'
 import type { Dosar } from '@/lib/types'
 import type { AnalizaDeviz } from '@/lib/deviz-analiza'
 import { staggerDelay } from '@/lib/motion'
+import { prioritateDosar, zileLaTermen } from '@/lib/rca-calc'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { LegendaCulori } from './LegendaCulori'
@@ -25,6 +26,69 @@ export function DosarePage() {
   const [modalDeschis, setModalDeschis] = useState(false)
   const [dosarActiv, setDosarActiv] = useState<Dosar | null>(null)
   const [initialDraft, setInitialDraft] = useState<Partial<Dosar> | null>(null)
+
+  // Un dosar tocmai finalizat ramane pe loc cat dureaza animatia de finalizare (~2,3 s), apoi
+  // coboara direct jos. Pana atunci se sorteaza cu statusul de dinainte.
+  const [inCelebrare, setInCelebrare] = useState<Record<string, Dosar['status']>>({})
+  const statusuriAnterioare = useRef<Map<string, Dosar['status']>>(new Map())
+  useEffect(() => {
+    const nou: Record<string, Dosar['status']> = {}
+    for (const d of dosare) {
+      const prev = statusuriAnterioare.current.get(d.id)
+      if (prev && prev !== 'finalizat' && d.status === 'finalizat') nou[d.id] = prev
+    }
+    statusuriAnterioare.current = new Map(dosare.map((d) => [d.id, d.status]))
+    const ids = Object.keys(nou)
+    if (ids.length === 0) return
+    setInCelebrare((c) => ({ ...c, ...nou }))
+    const t = window.setTimeout(() => {
+      setInCelebrare((c) => {
+        const copie = { ...c }
+        ids.forEach((id) => delete copie[id])
+        return copie
+      })
+    }, 2500)
+    return () => window.clearTimeout(t)
+  }, [dosare])
+
+  const ordonate = useMemo(() => {
+    if (filtre.sortare !== 'actualizare') return filtrate
+    const efectiv = (d: Dosar): Dosar => (inCelebrare[d.id] ? { ...d, status: inCelebrare[d.id] } : d)
+    return filtrate
+      .map((d, i) => ({ d, i, e: efectiv(d) }))
+      .sort((a, b) => {
+        const pa = prioritateDosar(a.e)
+        const pb = prioritateDosar(b.e)
+        if (pa !== pb) return pa - pb
+        const za = zileLaTermen(a.e) ?? 999
+        const zb = zileLaTermen(b.e) ?? 999
+        if (za !== zb) return za - zb
+        return a.i - b.i
+      })
+      .map((x) => x.d)
+  }, [filtrate, filtre.sortare, inCelebrare])
+
+  // Cand se schimba ordinea, cardurile "aluneca" la noul loc in loc sa sara.
+  const carduri = useRef<Map<string, HTMLElement>>(new Map())
+  const pozitii = useRef<Map<string, { x: number; y: number }>>(new Map())
+  useLayoutEffect(() => {
+    const noi = new Map<string, { x: number; y: number }>()
+    carduri.current.forEach((el, id) => {
+      const r = el.getBoundingClientRect()
+      noi.set(id, { x: r.left + window.scrollX, y: r.top + window.scrollY })
+    })
+    noi.forEach((n, id) => {
+      const p = pozitii.current.get(id)
+      const el = carduri.current.get(id)
+      if (p && el && (Math.abs(p.x - n.x) > 1 || Math.abs(p.y - n.y) > 1)) {
+        el.animate(
+          [{ transform: `translate(${p.x - n.x}px, ${p.y - n.y}px)` }, { transform: 'none' }],
+          { duration: 700, easing: 'cubic-bezier(.2,.8,.2,1)' },
+        )
+      }
+    })
+    pozitii.current = noi
+  })
 
   function deschideNou() {
     setDosarActiv(null)
@@ -93,8 +157,14 @@ export function DosarePage() {
             </div>
           ) : (
             <div className="grid grid-cols-[repeat(auto-fill,minmax(min(100%,max(400px,calc(50%_-_6px))),1fr))] gap-3">
-              {filtrate.map((d, i) => (
-                <div key={d.id} id={`dosar-${d.id}`} className="animate-fade-up min-w-0 rounded-[18px]" style={staggerDelay(i)}>
+              {ordonate.map((d, i) => (
+                <div
+                  key={d.id}
+                  ref={(el) => {
+                    if (el) carduri.current.set(d.id, el)
+                    else carduri.current.delete(d.id)
+                  }}
+                  id={`dosar-${d.id}`} className="animate-fade-up min-w-0 rounded-[18px]" style={staggerDelay(i)}>
                   <DosarCard dosar={d} onStatusChange={onStatusChange} onDeschide={deschideEditare} onPatch={onPatch} />
                 </div>
               ))}
