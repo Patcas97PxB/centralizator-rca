@@ -46,7 +46,7 @@ export function DosarCard({
   const cardColor = RANK_COLOR[prioritateDosar(dosar)]
   const cardAccent = accentStyle(cardColor)
   const finalizat = dosar.status === 'finalizat'
-  const poza = imagineMasina(dosar.marcaModel)
+  const poza = imagineMasina(dosar.marcaModelInlocuire ?? '')
 
   const predatFacut = !!dosar.predatBifat
   const preluatFacut = !!dosar.preluatBifat
@@ -148,7 +148,7 @@ export function DosarCard({
       <div className="relative flex min-w-0 flex-col gap-1.5">
         <div className="relative h-[72px] w-full overflow-hidden rounded-lg" style={{ color: cardColor }}>
           {poza ? (
-            <img src={poza} alt={dosar.marcaModel} loading="lazy" className="size-full object-contain drop-shadow-[0_6px_10px_rgba(0,0,0,.6)]" />
+            <img src={poza} alt={dosar.marcaModelInlocuire} loading="lazy" className="size-full object-contain drop-shadow-[0_6px_10px_rgba(0,0,0,.6)]" />
           ) : (
             <div className="flex size-full flex-col items-center justify-center gap-0.5 rounded-lg border border-dashed opacity-60" style={{ borderColor: hex(cardColor, '80') }}>
               <ImageIcon className="size-5" aria-hidden="true" />

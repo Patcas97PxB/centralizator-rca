@@ -28,6 +28,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { KNOWN_INSURERS } from '@/lib/asiguratori'
+import { imagineMasina } from '@/lib/cars'
 import { suggestClasaFromModel, vehicleClasses } from '@/lib/clase-auto'
 import { lipsuriFinalizare } from '@/lib/documente'
 import { calculRCA, todayStr } from '@/lib/rca-calc'
@@ -221,11 +222,21 @@ export function DosarFormModal({
           </div>
           <div className="space-y-1.5">
             <Label htmlFor="fMarcaModelInlocuire">Marcă / model înlocuire</Label>
-            <Input
-              id="fMarcaModelInlocuire"
-              value={draft.marcaModelInlocuire ?? ''}
-              onChange={(e) => set('marcaModelInlocuire', e.target.value)}
-            />
+            <div className="relative">
+              <Input
+                id="fMarcaModelInlocuire"
+                value={draft.marcaModelInlocuire ?? ''}
+                onChange={(e) => set('marcaModelInlocuire', e.target.value)}
+                className={imagineMasina(draft.marcaModelInlocuire ?? '') ? 'pr-[74px]' : undefined}
+              />
+              {imagineMasina(draft.marcaModelInlocuire ?? '') && (
+                <img
+                  src={imagineMasina(draft.marcaModelInlocuire ?? '') ?? undefined}
+                  alt={draft.marcaModelInlocuire}
+                  className="pointer-events-none absolute right-2 top-1/2 h-[30px] w-[60px] -translate-y-1/2 object-contain drop-shadow-[0_4px_6px_rgba(0,0,0,.6)]"
+                />
+              )}
+            </div>
           </div>
 
           <div className="space-y-1.5">
