@@ -1,6 +1,5 @@
 import { useEffect, useRef } from 'react'
 import { Bell, ChevronDown, Clock3, LogOut, Sparkles } from 'lucide-react'
-import { usePrefersReducedMotion } from '@/hooks/usePrefersReducedMotion'
 import { setMotionPref, useMotionPref } from '@/lib/motion-pref'
 import { useAuth } from '@/hooks/useAuth'
 import { useClock } from '@/hooks/useClock'
@@ -32,7 +31,6 @@ export function Header({
 }) {
   const { time, date } = useClock()
   const { logout } = useAuth()
-  const reduced = usePrefersReducedMotion()
   const motionPref = useMotionPref()
   const headerRef = useRef<HTMLElement>(null)
 
@@ -54,13 +52,6 @@ export function Header({
         className="pointer-events-none absolute inset-x-0 bottom-0 h-px"
         style={{ background: 'linear-gradient(90deg, rgba(96,165,250,.85) 0%, rgba(124,58,237,.6) 55%, rgba(124,58,237,0) 100%)', boxShadow: '0 0 10px 0 rgba(96,165,250,.35)' }}
       />
-      {!reduced && (
-        <span
-          aria-hidden
-          className="pointer-events-none absolute bottom-0 h-px w-[120px] animate-[rayLoopH_8s_linear_infinite]"
-          style={{ background: 'linear-gradient(90deg, transparent, #fff, transparent)', boxShadow: '0 0 10px 2px rgba(191,219,254,.9)' }}
-        />
-      )}
       <img src={assetUrl('/icons/logo.png')} alt="Centralizator RCA" className="h-8 w-auto md:hidden" />
 
       <div className="hidden min-w-0 md:block">

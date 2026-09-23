@@ -2,6 +2,7 @@ import type { CSSProperties, ReactNode } from 'react'
 import { SidebarInset, SidebarProvider } from '@/components/ui/sidebar'
 import { AppSidebar } from './AppSidebar'
 import { Header } from './Header'
+import { LightRay } from './LightRay'
 import { MobileBottomNav } from './MobileBottomNav'
 import type { SectionKey } from './nav-items'
 
@@ -24,6 +25,7 @@ export function AppShell({
 }) {
   return (
     <SidebarProvider style={{ '--sidebar-width': '245px' } as CSSProperties}>
+      <LightRay />
       <AppSidebar active={active} onSelect={onSelect} badgeDosare={notificari} />
       <SidebarInset>
         <Header

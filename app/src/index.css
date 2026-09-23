@@ -150,6 +150,7 @@
 @keyframes rayLoopV { 0% { top: 100%; opacity: 0; } 4% { opacity: 1; } 46% { opacity: 1; } 50%, 100% { top: calc(var(--hdrH, 66px) - 80px); opacity: 0; } }
 @keyframes rayLoopH { 0%, 50% { left: -120px; opacity: 0; } 52% { opacity: 1; } 96% { opacity: 1; } 100% { left: 100%; opacity: 0; } }
 @keyframes orbDrift { 0%, 100% { transform: translate(0, 0); } 50% { transform: translate(24px, 30px); } }
+@keyframes rayRun { 0% { stroke-dashoffset: var(--l); } 68%, 100% { stroke-dashoffset: var(--e); } }
 @keyframes dashFlow { 100% { stroke-dashoffset: -48; } }
 @keyframes twinkle { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: .25; transform: scale(.55); } }
 

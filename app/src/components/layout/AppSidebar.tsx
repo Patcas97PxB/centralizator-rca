@@ -82,13 +82,6 @@ function SidebarDecor({ reduced }: { reduced: boolean }) {
       />
       {!reduced && (
         <>
-          <span
-            className="absolute right-0 h-20 w-0.5 animate-[rayLoopV_8s_linear_infinite]"
-            style={{
-              background: 'linear-gradient(rgba(255,255,255,0), #fff, rgba(255,255,255,0))',
-              boxShadow: '0 0 14px 2px rgba(191,219,254,.9)',
-            }}
-          />
           {TWINKLES.map((t) => (
             <span
               key={`${t.left}-${t.top}`}
