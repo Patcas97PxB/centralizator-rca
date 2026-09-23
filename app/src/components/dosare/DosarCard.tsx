@@ -32,11 +32,13 @@ export function DosarCard({
   onStatusChange,
   onDeschide,
   onPatch,
+  onDocumente,
 }: {
   dosar: Dosar
   onStatusChange: (id: string, status: StatusDosar) => void
   onDeschide: (id: string) => void
   onPatch: (id: string, patch: Partial<Dosar>) => void
+  onDocumente: (id: string) => void
 }) {
   const meta = STATUS_META[dosar.status] ?? STATUS_META.in_asteptare
   const urgenta = urgentaDosar(dosar)
@@ -368,7 +370,7 @@ export function DosarCard({
         </button>
         <button
           type="button"
-          onClick={() => onDeschide(dosar.id)}
+          onClick={() => onDocumente(dosar.id)}
           className="flex h-7 w-full max-w-[170px] min-w-0 items-center justify-center gap-1.5 justify-self-end overflow-hidden whitespace-nowrap rounded-[9px] border border-[#2c3a5c] bg-[#1a2335] px-2.5 text-xs font-bold text-[#e2e8f5] transition-colors hover:border-[#3b4d78] hover:bg-[#222d46]"
         >
           <FolderPlus className="size-[13px] shrink-0" aria-hidden="true" />

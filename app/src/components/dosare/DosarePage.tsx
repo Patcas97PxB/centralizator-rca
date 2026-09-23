@@ -12,6 +12,7 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { FilterBar } from './FilterBar'
 import { DosarCard } from './DosarCard'
 import { DosarFormModal } from './DosarFormModal'
+import { DocumenteModal } from './DocumenteModal'
 import { ScanDevizCard } from './ScanDevizCard'
 import { ModificarPdfCard } from './ModificarPdfCard'
 import { ActivitateRecenta } from '../panel/ActivitateRecenta'
@@ -25,6 +26,7 @@ export function DosarePage() {
   const [modalDeschis, setModalDeschis] = useState(false)
   const [dosarActiv, setDosarActiv] = useState<Dosar | null>(null)
   const [initialDraft, setInitialDraft] = useState<Partial<Dosar> | null>(null)
+  const [docsId, setDocsId] = useState<string | null>(null)
 
   // Un dosar tocmai finalizat ramane pe loc cat dureaza animatia de finalizare (~2,3 s), apoi
   // coboara direct jos. Pana atunci se sorteaza cu statusul de dinainte.
@@ -163,7 +165,7 @@ export function DosarePage() {
                     else carduri.current.delete(d.id)
                   }}
                   id={`dosar-${d.id}`} className="animate-fade-up min-w-0 rounded-[18px]" style={staggerDelay(i)}>
-                  <DosarCard dosar={d} onStatusChange={onStatusChange} onDeschide={deschideEditare} onPatch={onPatch} />
+                  <DosarCard dosar={d} onStatusChange={onStatusChange} onDeschide={deschideEditare} onPatch={onPatch} onDocumente={setDocsId} />
                 </div>
               ))}
             </div>
@@ -192,6 +194,13 @@ export function DosarePage() {
       >
         <Plus className="size-6" aria-hidden="true" />
       </button>
+
+      <DocumenteModal
+        open={docsId !== null}
+        dosar={dosare.find((x) => x.id === docsId) ?? null}
+        onClose={() => setDocsId(null)}
+        onSave={salveazaDosar}
+      />
 
       <DosarFormModal
         open={modalDeschis}
