@@ -296,17 +296,15 @@ export function DosarCard({
         </button>
 
         <div className="order-3 col-span-2 flex min-w-0 flex-col gap-1 sm:order-2 sm:col-span-1" title={`${urgenta.bigNum} ${urgenta.bigLabel}`}>
-          <div className="flex items-baseline justify-between gap-2">
-            <span className="flex min-w-0 items-baseline gap-[5px] whitespace-nowrap">
-              <span
-                className="text-[22px] font-extrabold leading-none tracking-[-.02em] tabular-nums"
-                style={{ color: urgColor, textShadow: `0 0 18px ${hex(urgColor, '80')}` }}
-              >
-                {urgenta.bigNum}
-              </span>
-              <span className="truncate text-[10px] font-extrabold uppercase tracking-[.04em]" style={{ color: urgColor }}>
-                {urgenta.bigLabel}
-              </span>
+          <div className="flex flex-col items-center gap-[3px] text-center">
+            <span
+              className="text-[22px] font-extrabold leading-none tracking-[-.02em] tabular-nums"
+              style={{ color: urgColor, textShadow: `0 0 18px ${hex(urgColor, '80')}` }}
+            >
+              {urgenta.bigNum}
+            </span>
+            <span className="text-[10px] font-extrabold uppercase leading-tight tracking-[.04em]" style={{ color: urgColor }}>
+              {urgenta.bigLabel}
             </span>
           </div>
           <div className="relative h-2 rounded-full border" style={{ background: 'rgba(37,49,80,.55)', borderColor: hex(urgColor, '73') }}>
@@ -319,8 +317,9 @@ export function DosarCard({
               }}
             />
           </div>
-          <div className="flex justify-between gap-2 whitespace-nowrap text-[9.5px] font-semibold text-[#6b7a96]">
-            <span>{subStanga}</span>
+          <div className="flex justify-center gap-1.5 whitespace-nowrap text-center text-[9.5px] font-semibold text-[#6b7a96]">
+            {subStanga && <span>{subStanga}</span>}
+            {subStanga && subDreapta && <span aria-hidden="true">·</span>}
             <span>{subDreapta}</span>
           </div>
         </div>
