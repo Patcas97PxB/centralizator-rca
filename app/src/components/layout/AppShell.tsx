@@ -32,8 +32,8 @@ export function AppShell({
           notificari={notificari}
           onNotificariClick={onNotificariClick}
         />
-        <main className="flex-1 pb-20 md:pb-0">{children}</main>
-        <MobileBottomNav active={active} onSelect={onSelect} />
+        <main className="flex-1 pb-[84px] md:pb-0">{children}</main>
+        <MobileBottomNav active={active} onSelect={onSelect} badgeDosare={notificari} />
       </SidebarInset>
     </SidebarProvider>
   )

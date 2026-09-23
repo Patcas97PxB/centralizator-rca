@@ -5,7 +5,6 @@ import { setMotionPref, useMotionPref } from '@/lib/motion-pref'
 import { useAuth } from '@/hooks/useAuth'
 import { useClock } from '@/hooks/useClock'
 import { assetUrl } from '@/lib/asset-url'
-import { SidebarTrigger } from '@/components/ui/sidebar'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import {
   DropdownMenu,
@@ -62,7 +61,6 @@ export function Header({
           style={{ background: 'linear-gradient(90deg, transparent, #fff, transparent)', boxShadow: '0 0 10px 2px rgba(191,219,254,.9)' }}
         />
       )}
-      <SidebarTrigger className="md:hidden" />
       <img src={assetUrl('/icons/logo.png')} alt="Centralizator RCA" className="h-8 w-auto md:hidden" />
 
       <div className="hidden min-w-0 md:block">

@@ -24,18 +24,18 @@ function KpiTile({ card: c, index, warn }: { card: StatCard; index: number; warn
   const t = TONE[c.tone]
   return (
     <div
-      className="animate-fade-up rounded-[20px] border border-[#253150] bg-[#10172a] p-4 transition-[transform,border-color] duration-[180ms] hover:-translate-y-0.5 hover:border-[#3b4d78]"
+      className="animate-fade-up rounded-2xl border border-[#253150] bg-[#10172a] p-3 transition-[transform,border-color] sm:rounded-[20px] sm:p-4 duration-[180ms] hover:-translate-y-0.5 hover:border-[#3b4d78]"
       style={staggerDelay(index)}
     >
       <span
-        className="mb-3 flex size-[38px] items-center justify-center rounded-xl border"
+        className="mb-2 flex size-8 items-center justify-center rounded-[10px] border sm:mb-3 sm:size-[38px] sm:rounded-xl"
         style={{ borderColor: t.border, background: t.bg, color: t.color, boxShadow: `0 0 18px -4px ${t.glow}` }}
       >
-        <c.icon className="size-[18px]" aria-hidden="true" />
+        <c.icon className="size-4 sm:size-[18px]" aria-hidden="true" />
       </span>
-      <div className="text-[26px] font-extrabold leading-none tracking-[-.02em] tabular-nums">{value}</div>
-      <div className="mt-1 text-[13px] text-[#94a3b8]">{c.label}</div>
-      <div className={cn('mt-[5px] text-[11.5px]', warn ? 'font-bold text-[#fbbf24]' : 'font-semibold text-[#64748b]')}>{c.caption}</div>
+      <div className="text-[22px] font-extrabold leading-none sm:text-[26px] tracking-[-.02em] tabular-nums">{value}</div>
+      <div className="mt-1 text-xs text-[#94a3b8] sm:text-[13px]">{c.label}</div>
+      <div className={cn('mt-1 text-[10.5px] sm:mt-[5px] sm:text-[11.5px]', warn ? 'font-bold text-[#fbbf24]' : 'font-semibold text-[#64748b]')}>{c.caption}</div>
     </div>
   )
 }
@@ -59,7 +59,7 @@ export function StatsRow({
   ]
 
   return (
-    <div className="grid grid-cols-[repeat(auto-fit,minmax(150px,1fr))] gap-3">
+    <div className="grid grid-cols-2 gap-2 sm:grid-cols-[repeat(auto-fit,minmax(150px,1fr))] sm:gap-3">
       {cards.map((c, i) => (
         <KpiTile key={c.key} card={c} index={i} warn={c.key === 'depasite' && depasite > 0} />
       ))}
