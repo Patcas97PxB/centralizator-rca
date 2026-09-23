@@ -37,10 +37,12 @@ export function DosarCard({
   dosar,
   onStatusChange,
   onDeschide,
+  onPatch,
 }: {
   dosar: Dosar
   onStatusChange: (id: string, status: StatusDosar) => void
   onDeschide: (id: string) => void
+  onPatch: (id: string, patch: Partial<Dosar>) => void
 }) {
   const meta = STATUS_META[dosar.status] ?? STATUS_META.in_asteptare
   const urgenta = urgentaDosar(dosar)
@@ -50,7 +52,8 @@ export function DosarCard({
   const finalizat = dosar.status === 'finalizat'
   const poza = imagineMasina(dosar.marcaModel)
 
-  const predatFacut = dosar.status !== 'in_asteptare' && dosar.status !== 'de_predat'
+  const predatFacut = !!dosar.predatBifat
+  const preluatFacut = !!dosar.preluatBifat
   const viitor = urgenta.cls === 'c-albastru' && /până la predare/.test(urgenta.bigLabel)
   const scurse = zileScurseDeLaPredare(dosar.start)
   const total = rca.zile
@@ -236,13 +239,20 @@ export function DosarCard({
       </div>
 
       <div className="relative col-span-full grid grid-cols-2 items-center gap-x-3 gap-y-2 border-t border-[#1e2a45] pt-[7px] sm:grid-cols-[auto_minmax(0,1fr)_auto]">
-        <div className="order-1 flex items-center gap-2 text-[#9aa8c1]">
+        <button
+          type="button"
+          onClick={() => onPatch(dosar.id, predatFacut ? { predatBifat: false, preluatBifat: false } : { predatBifat: true })}
+          aria-pressed={predatFacut}
+          title={predatFacut ? 'Contract început — click pentru a anula' : 'Marchează începutul contractului (mașina predată)'}
+          className="order-1 flex items-center gap-2 justify-self-start text-left text-[#9aa8c1] transition-colors hover:text-[#e2e8f5]"
+        >
           <span
             className="flex size-6 shrink-0 items-center justify-center rounded-full border-[1.5px] transition-colors"
             style={{
               borderColor: predatFacut ? '#00f5a0' : '#3a4a6e',
               background: predatFacut ? 'rgba(0,245,160,.22)' : 'transparent',
               color: '#00f5a0',
+              boxShadow: predatFacut ? '0 0 12px -2px rgba(0,245,160,.7)' : 'none',
             }}
           >
             {predatFacut && <Check className="size-3.5" strokeWidth={3} aria-hidden="true" />}
@@ -251,18 +261,33 @@ export function DosarCard({
             <span className="whitespace-nowrap text-[10.5px] font-bold">Predat</span>
             <span className="whitespace-nowrap text-xs font-extrabold tabular-nums text-[#e2e8f5]">{fmtDate(dosar.start) || '—'}</span>
           </span>
-        </div>
+        </button>
 
-        <div className="order-2 flex flex-row-reverse items-center gap-2 sm:order-3" style={{ opacity: predatFacut ? 1 : 0.55, color: predatFacut ? '#9aa8c1' : '#5b6884' }}>
+        <button
+          type="button"
+          disabled={!predatFacut}
+          onClick={() => onPatch(dosar.id, { preluatBifat: !preluatFacut })}
+          aria-pressed={preluatFacut}
+          title={
+            !predatFacut
+              ? 'Se poate bifa după „Predat"'
+              : preluatFacut
+                ? 'Mașina s-a întors — click pentru a anula'
+                : 'Marchează că mașina s-a întors la client'
+          }
+          className="order-2 flex flex-row-reverse items-center gap-2 justify-self-end text-right transition-colors enabled:hover:text-[#e2e8f5] disabled:cursor-not-allowed sm:order-3"
+          style={{ opacity: predatFacut ? 1 : 0.55, color: predatFacut ? '#9aa8c1' : '#5b6884' }}
+        >
           <span
             className="flex size-6 shrink-0 items-center justify-center rounded-full border-[1.5px] transition-colors"
             style={{
-              borderColor: finalizat ? '#00f5a0' : '#2c3a5c',
-              background: finalizat ? 'rgba(0,245,160,.22)' : 'rgba(148,163,184,.08)',
+              borderColor: preluatFacut ? '#00f5a0' : '#2c3a5c',
+              background: preluatFacut ? 'rgba(0,245,160,.22)' : 'rgba(148,163,184,.08)',
               color: '#00f5a0',
+              boxShadow: preluatFacut ? '0 0 12px -2px rgba(0,245,160,.7)' : 'none',
             }}
           >
-            {finalizat && <Check className="size-3.5" strokeWidth={3} aria-hidden="true" />}
+            {preluatFacut && <Check className="size-3.5" strokeWidth={3} aria-hidden="true" />}
           </span>
           <span className="flex flex-col items-end gap-px">
             <span className="whitespace-nowrap text-[10.5px] font-bold">Preluat</span>
@@ -270,7 +295,7 @@ export function DosarCard({
               {fmtDate(rca.dataPreluare) || '—'}
             </span>
           </span>
-        </div>
+        </button>
 
         <div className="order-3 col-span-2 flex min-w-0 flex-col gap-1 sm:order-2 sm:col-span-1" title={`${urgenta.bigNum} ${urgenta.bigLabel}`}>
           <div className="flex items-baseline justify-between gap-2">

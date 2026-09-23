@@ -44,6 +44,10 @@ export function DosarePage() {
     setDosarActiv(dosare.find((x) => x.id === id) ?? null)
     setModalDeschis(true)
   }
+  async function onPatch(id: string, patch: Partial<Dosar>) {
+    const d = dosare.find((x) => x.id === id)
+    if (d) await salveazaDosar({ ...d, ...patch })
+  }
   async function onStatusChange(id: string, status: Dosar['status']) {
     const d = dosare.find((x) => x.id === id)
     if (d) await salveazaDosar({ ...d, status })
@@ -99,7 +103,7 @@ export function DosarePage() {
             <div className="grid grid-cols-[repeat(auto-fill,minmax(min(100%,max(400px,calc(50%_-_6px))),1fr))] gap-3">
               {filtrate.map((d, i) => (
                 <div key={d.id} className="animate-fade-up min-w-0" style={staggerDelay(i)}>
-                  <DosarCard dosar={d} onStatusChange={onStatusChange} onDeschide={deschideEditare} />
+                  <DosarCard dosar={d} onStatusChange={onStatusChange} onDeschide={deschideEditare} onPatch={onPatch} />
                 </div>
               ))}
             </div>

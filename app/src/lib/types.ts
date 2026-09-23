@@ -27,6 +27,10 @@ export interface Dosar {
   marcaModel: string
   nrAutoInlocuire: string
   marcaModelInlocuire?: string
+  /** Informativ: contractul a inceput (masina predata). Nu schimba statusul dosarului. */
+  predatBifat?: boolean
+  /** Informativ: masina s-a intors la client. Nu schimba statusul dosarului. */
+  preluatBifat?: boolean
   clasaAuto: string
   valoareContract: string
   valoareContractCuTVA: string
