@@ -16,12 +16,26 @@ function curata(text: string): string {
     .replace(/\bclasa\b/g, 'class')
 }
 
-// Doua variante pentru cratime: "C-Class" -> [c, class] sau [cclass]; "C-HR" -> [c, hr] sau [chr].
+const IGNORATE = new Set(['model', 'seria', 'series'])
+
+// Variante de scriere: cu cratima ca separator ("C-Class" -> [c, class]), cu cratima lipita
+// ("C-HR" -> [chr]) si complet compact ("rav 4" -> [rav4]).
 function variante(text: string): string[][] {
   const t = curata(text)
   const impartit = t.replace(/[^a-z0-9]+/g, ' ').split(' ').filter(Boolean)
   const lipit = t.replace(/-/g, '').replace(/[^a-z0-9]+/g, ' ').split(' ').filter(Boolean)
-  return [impartit, lipit]
+  const out = [impartit, lipit]
+  if (impartit.length > 1) out.push([impartit.join('')])
+  return out
+}
+
+// Tokenii modelului scris de utilizator + perechile de cuvinte alaturate lipite ("Tesla Model 3" ->
+// tesla3, "Toyota Rav 4" -> rav4), ca sa se potriveasca si cu poze numite fara spatiu.
+function tokeniModel(text: string): Set<string> {
+  const set = new Set(variante(text).flat())
+  const cuvinte = curata(text).replace(/[^a-z0-9]+/g, ' ').split(' ').filter((w) => w && !IGNORATE.has(w))
+  for (let i = 0; i + 1 < cuvinte.length; i++) set.add(cuvinte[i] + cuvinte[i + 1])
+  return set
 }
 
 const CATALOG = Object.entries(FISIERE).map(([cale, url]) => {
@@ -30,7 +44,7 @@ const CATALOG = Object.entries(FISIERE).map(([cale, url]) => {
 })
 
 export function imagineMasina(marcaModel: string): string | null {
-  const model = new Set(variante(marcaModel || '').flat())
+  const model = tokeniModel(marcaModel || '')
   if (model.size === 0) return null
   let best: { n: number; url: string } | null = null
   for (const c of CATALOG) {

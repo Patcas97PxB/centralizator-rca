@@ -5,18 +5,23 @@ import type { Dosar } from './types'
 export const DOCUMENT_LABELS = [
   { key: 'nc', label: 'Notă constatare (NC)' },
   { key: 'deviz', label: 'Deviz' },
-  { key: 'doc_pagubit', label: 'Documente păgubit (permis/buletin/talon)' },
-  { key: 'doc_vinovat', label: 'Documente vinovat (permis/buletin/talon)' },
-  { key: 'rca_vinovat', label: 'RCA vinovat' },
-  { key: 'rca_pagubit', label: 'RCA păgubit' },
+  { key: 'doc_pagubit', label: 'Documente păgubit (permis/buletin/talon/RCA)' },
+  { key: 'doc_vinovat', label: 'Documente vinovat (permis/buletin/talon/RCA)' },
   { key: 'amiabila', label: 'Amiabilă / PV poliție' },
   { key: 'cesiune', label: 'Cesiune creanță (CC)' },
   { key: 'cerere_despagubire', label: 'Cerere despăgubire (CD)' },
-  { key: 'contract', label: 'Contract' },
+  // Cheia ramane 'contract' (compatibilitate cu datele existente), dar e "Contract final" — obligatoriu.
+  { key: 'contract', label: 'Contract final' },
   { key: 'pv_predare', label: 'PV predare/primire' },
   { key: 'intrare_iesire', label: 'Document intrare-ieșire' },
   { key: 'altele', label: 'Altele' },
 ] as const
+
+// RCA vinovat / RCA pagubit nu mai sunt tipuri separate: intra la documentele partii respective.
+export const ETICHETE_VECHI: Record<string, string> = {
+  rca_vinovat: 'doc_vinovat',
+  rca_pagubit: 'doc_pagubit',
+}
 
 // Etichete care intra in calculul "X/Y documente" — intrare_iesire si altele se urmaresc
 // separat, nu conteaza la total.
@@ -32,11 +37,16 @@ export interface DocStatus {
   complete: boolean
 }
 
-export function docStatus(d: Pick<Dosar, 'documente' | 'etichetaOptionale'>): DocStatus {
+type DocInput = Pick<Dosar, 'documente' | 'etichetaOptionale'> & Partial<Pick<Dosar, 'contractFinalIncarcat' | 'zileContractFinal'>>
+
+export function docStatus(d: DocInput): DocStatus {
   const docs = Array.isArray(d.documente) ? d.documente : []
   const optionale = Array.isArray(d.etichetaOptionale) ? d.etichetaOptionale : []
-  const prezente = new Set(docs.map((x) => x.eticheta))
-  const necesare = DOCUMENT_LABELS_NUMARATE.filter((k) => !optionale.includes(k))
+  const prezente = new Set(docs.map((x) => ETICHETE_VECHI[x.eticheta] ?? x.eticheta))
+  // Contractul final se considera prezent si cand a fost preluat prin "Contract final" din formular.
+  if (d.contractFinalIncarcat || d.zileContractFinal) prezente.add('contract')
+  // Contractul final e mereu obligatoriu (nu se poate marca "nu se aplica").
+  const necesare = DOCUMENT_LABELS_NUMARATE.filter((k) => k === 'contract' || !optionale.includes(k))
   const have = necesare.filter((k) => prezente.has(k)).length
   const missing = necesare.filter((k) => !prezente.has(k))
   const intrareIesirePrezent = prezente.has('intrare_iesire')
@@ -44,10 +54,8 @@ export function docStatus(d: Pick<Dosar, 'documente' | 'etichetaOptionale'>): Do
 }
 
 // Ce lipseste ca un dosar sa poata fi marcat "Finalizat": documentele obligatorii + contractul final.
-export function lipsuriFinalizare(d: Pick<Dosar, 'documente' | 'etichetaOptionale' | 'contractFinalIncarcat' | 'zileContractFinal'>): string[] {
-  const lipsuri = docStatus(d).missing.map(docLabelText)
-  if (!d.contractFinalIncarcat && !d.zileContractFinal) lipsuri.push('contractul final')
-  return lipsuri
+export function lipsuriFinalizare(d: DocInput): string[] {
+  return docStatus(d).missing.map(docLabelText)
 }
 
 export function docLabelText(key: string): string {
@@ -66,8 +74,8 @@ export function detectAllDocLabels(nume: string): string[] {
   tokens.forEach((t) => { if (ABBR[t]) found.add(ABBR[t]) })
   if (/\bnc\d*\b|nota.*constat|constatare/.test(nLower)) found.add('nc')
   if (/deviz/.test(nLower)) found.add('deviz')
-  if (/rca.*vinovat|vinovat.*rca/.test(nLower)) found.add('rca_vinovat')
-  if (/rca.*pagubit|pagubit.*rca/.test(nLower)) found.add('rca_pagubit')
+  if (/rca.*vinovat|vinovat.*rca/.test(nLower)) found.add('doc_vinovat')
+  if (/rca.*pagubit|pagubit.*rca/.test(nLower)) found.add('doc_pagubit')
   if (/amiabil|pv.*politie|politie/.test(nLower)) found.add('amiabila')
   if (/cesiune/.test(nLower)) found.add('cesiune')
   if (/cerere.*despagub/.test(nLower)) found.add('cerere_despagubire')

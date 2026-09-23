@@ -55,7 +55,7 @@ export function randFinanciar(d: Dosar): RandFinanciar {
 
   return {
     dosar: d, valoare, procent, comision, finalizat, tarifAsteptat, zilePentruTarif, alerte,
-    areContract: !!(d.contractFinalIncarcat || d.zileContractFinal),
+    areContract: !!(d.contractFinalIncarcat || d.zileContractFinal || (Array.isArray(d.documente) && d.documente.some((x) => x.eticheta === 'contract'))),
   }
 }
 

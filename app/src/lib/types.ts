@@ -83,12 +83,17 @@ export const STATUS_META: Record<StatusDosar, { label: string; color: string }> 
 // arunca o eroare la deschidere si utilizatorul vede "nu se intampla nimic". Se aplica o
 // singura data, la citirea din Supabase (dosare-storage.ts), ca tot codul din aval sa
 // primeasca mereu un obiect complet.
+// RCA vinovat / RCA pagubit au fost unite cu documentele partii respective.
+const ETICHETE_VECHI_DOC: Record<string, string> = { rca_vinovat: 'doc_vinovat', rca_pagubit: 'doc_pagubit' }
+
 export function normalizeazaDosar(raw: Partial<Dosar> & { id: string }): Dosar {
   return {
     ...dosarGol(),
     ...raw,
-    documente: Array.isArray(raw.documente) ? raw.documente : [],
-    etichetaOptionale: Array.isArray(raw.etichetaOptionale) ? raw.etichetaOptionale : [],
+    documente: Array.isArray(raw.documente) ? raw.documente.map((x) => ({ ...x, eticheta: ETICHETE_VECHI_DOC[x.eticheta] ?? x.eticheta })) : [],
+    etichetaOptionale: Array.isArray(raw.etichetaOptionale)
+      ? [...new Set(raw.etichetaOptionale.map((k) => ETICHETE_VECHI_DOC[k] ?? k))]
+      : [],
   }
 }
 

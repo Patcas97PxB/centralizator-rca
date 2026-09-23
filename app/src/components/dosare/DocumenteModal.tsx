@@ -51,7 +51,6 @@ export function DocumenteModal({
   const optionale = Array.isArray(draft.etichetaOptionale) ? draft.etichetaOptionale : []
   const st = docStatus(draft)
   const lipsuri = lipsuriFinalizare(draft)
-  const areContract = !!(draft.contractFinalIncarcat || draft.zileContractFinal)
   const procent = st.total > 0 ? Math.round((st.have / st.total) * 100) : 0
 
   function patch(p: Partial<Dosar>) {
@@ -211,8 +210,9 @@ export function DocumenteModal({
           <div className="flex flex-col gap-2">
             {chei.map((key) => {
               const fisiere = documente.filter((d) => d.eticheta === key)
-              const are = fisiere.length > 0
-              const optional = optionale.includes(key)
+              const doarFlag = key === 'contract' && fisiere.length === 0 && !!(draft.contractFinalIncarcat || draft.zileContractFinal)
+              const are = fisiere.length > 0 || doarFlag
+              const optional = key !== 'contract' && optionale.includes(key)
               return (
                 <div
                   key={key}
@@ -232,8 +232,15 @@ export function DocumenteModal({
                     {are ? <Check className="size-[17px]" strokeWidth={2.6} aria-hidden="true" /> : <span className="size-2 rounded-full bg-current opacity-50" />}
                   </span>
                   <div className="min-w-0 flex-1">
-                    <div className="truncate text-[13.5px] font-bold text-[#f1f5f9]">{docLabelText(key)}</div>
-                    {are ? (
+                    <div className="flex items-center gap-2 truncate text-[13.5px] font-bold text-[#f1f5f9]">
+                      {docLabelText(key)}
+                      {key === 'contract' && (
+                        <span className="rounded-full border border-[#a855f7]/50 bg-[#a855f7]/15 px-1.5 py-px text-[9px] font-extrabold tracking-wide text-[#d8b4fe]">OBLIGATORIU</span>
+                      )}
+                    </div>
+                    {doarFlag ? (
+                      <div className="truncate text-[11.5px] text-[#3ddc97]">încărcat din „Editează” (Contract final)</div>
+                    ) : are ? (
                       <div className="mt-0.5 flex flex-col gap-0.5">
                         {fisiere.map((f) => (
                           <div key={f.id} className="flex items-center gap-1.5 text-[11.5px] text-[#3ddc97]">
@@ -274,6 +281,7 @@ export function DocumenteModal({
                           Încarcă
                         </button>
                       )}
+                      {key !== 'contract' && (
                       <button
                         type="button"
                         onClick={() => toggleOptional(key)}
@@ -282,38 +290,13 @@ export function DocumenteModal({
                       >
                         {optional ? 'obligatoriu' : 'nu se aplică'}
                       </button>
+                      )}
                     </>
                   )}
                 </div>
               )
             })}
 
-            <div
-              className={cn(
-                'flex items-center gap-[11px] rounded-[13px] border px-3 py-2.5',
-                areContract ? 'border-[#00f5a0]/35 bg-[#00f5a0]/[.06]' : 'border-[#2c3a5c] bg-white/[.02]',
-              )}
-            >
-              <span
-                className="flex size-[34px] shrink-0 items-center justify-center rounded-[10px] border"
-                style={
-                  areContract
-                    ? { borderColor: 'rgba(0,245,160,.5)', background: 'rgba(0,245,160,.16)', color: '#00f5a0' }
-                    : { borderColor: '#2c3a5c', background: 'transparent', color: '#5b6884' }
-                }
-              >
-                {areContract ? <Check className="size-[17px]" strokeWidth={2.6} aria-hidden="true" /> : <span className="size-2 rounded-full bg-current opacity-50" />}
-              </span>
-              <div className="min-w-0 flex-1">
-                <div className="flex items-center gap-2 truncate text-[13.5px] font-bold text-[#f1f5f9]">
-                  Contract final
-                  <span className="rounded-full border border-[#a855f7]/50 bg-[#a855f7]/15 px-1.5 py-px text-[9px] font-extrabold tracking-wide text-[#d8b4fe]">OBLIGATORIU</span>
-                </div>
-                <div className="truncate text-[11.5px]" style={{ color: areContract ? '#3ddc97' : '#7b8aa6' }}>
-                  {areContract ? 'încărcat' : 'lipsește — se încarcă din „Editează”, la Contract final'}
-                </div>
-              </div>
-            </div>
           </div>
         </div>
 

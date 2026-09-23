@@ -140,8 +140,8 @@ export function DosarFormModal({
           </span>
           <div className="min-w-0 flex-1">
             <DialogTitle className="text-[17px] font-extrabold leading-tight text-[#f8fafc]">{dosar ? 'Editează dosar' : 'Dosar nou'}</DialogTitle>
-            {dosar && (draft.nrAutoPagubit || draft.marcaModel) && (
-              <p className="mt-0.5 truncate text-[12.5px] text-[#94a3b8]">{[draft.nrAutoPagubit, draft.marcaModel].filter(Boolean).join(' · ')}</p>
+            {dosar && (draft.nrAutoPagubit || draft.nrDosar) && (
+              <p className="mt-0.5 truncate text-[12.5px] text-[#94a3b8]">{[draft.nrAutoPagubit, draft.nrDosar].filter(Boolean).join(' · ')}</p>
             )}
           </div>
           <button
