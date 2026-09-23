@@ -1,5 +1,8 @@
 import { cn } from '@/lib/utils'
-import { NAV_ITEMS, type SectionKey } from './nav-items'
+import { accentStyle } from '@/lib/color'
+import { NAV_ITEMS, SIDEBAR_ACCENT, type SectionKey } from './nav-items'
+
+const ACCENT = accentStyle(SIDEBAR_ACCENT)
 
 export function MobileBottomNav({
   active,
@@ -24,7 +27,12 @@ export function MobileBottomNav({
           )}
           aria-current={active === item.key ? 'page' : undefined}
         >
-          <item.icon className="size-5" aria-hidden="true" />
+          <span
+            className="flex size-8 items-center justify-center rounded-lg border border-transparent transition-colors"
+            style={active === item.key ? { background: ACCENT.tileBg, borderColor: ACCENT.tileBorder } : undefined}
+          >
+            <item.icon className="size-5" aria-hidden="true" />
+          </span>
           {item.label}
         </button>
       ))}

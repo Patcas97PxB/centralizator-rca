@@ -2,7 +2,6 @@ import { useRef, useState } from 'react'
 import { Download, Upload } from 'lucide-react'
 import { useDosareContext } from '@/contexts/DosareContext'
 import { exportaBackup, parseazaBackup } from '@/lib/backup'
-import { Button } from '@/components/ui/button'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -37,12 +36,12 @@ export function BackupButtons() {
 
   return (
     <>
-      <Button variant="outline" size="icon" onClick={() => exportaBackup(dosare, servicii)} title="Exportă backup" aria-label="Exportă backup">
+      <button type="button" className="flex size-[34px] items-center justify-center rounded-[10px] border border-[#253150] bg-[#253150]/[.28] text-[#cbd5e1] transition-colors hover:bg-[#253150]/60 hover:text-white" onClick={() => exportaBackup(dosare, servicii)} title="Exportă backup" aria-label="Exportă backup">
         <Download className="size-4" aria-hidden="true" />
-      </Button>
-      <Button variant="outline" size="icon" onClick={() => inputRef.current?.click()} title="Importă backup" aria-label="Importă backup">
+      </button>
+      <button type="button" className="flex size-[34px] items-center justify-center rounded-[10px] border border-[#253150] bg-[#253150]/[.28] text-[#cbd5e1] transition-colors hover:bg-[#253150]/60 hover:text-white" onClick={() => inputRef.current?.click()} title="Importă backup" aria-label="Importă backup">
         <Upload className="size-4" aria-hidden="true" />
-      </Button>
+      </button>
       <input
         ref={inputRef}
         type="file"

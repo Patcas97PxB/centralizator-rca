@@ -43,6 +43,13 @@ export function docStatus(d: Pick<Dosar, 'documente' | 'etichetaOptionale'>): Do
   return { have, total: necesare.length, missing, intrareIesirePrezent, complete: missing.length === 0 }
 }
 
+// Ce lipseste ca un dosar sa poata fi marcat "Finalizat": documentele obligatorii + contractul final.
+export function lipsuriFinalizare(d: Pick<Dosar, 'documente' | 'etichetaOptionale' | 'contractFinalIncarcat' | 'zileContractFinal'>): string[] {
+  const lipsuri = docStatus(d).missing.map(docLabelText)
+  if (!d.contractFinalIncarcat && !d.zileContractFinal) lipsuri.push('contractul final')
+  return lipsuri
+}
+
 export function docLabelText(key: string): string {
   const l = DOCUMENT_LABELS.find((x) => x.key === key)
   return l ? l.label : key

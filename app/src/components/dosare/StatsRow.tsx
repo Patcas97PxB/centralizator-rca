@@ -1,5 +1,7 @@
-import { AlertTriangle, Clock, Download, FolderOpen, ShieldCheck, Sparkles } from 'lucide-react'
+import { AlertTriangle, Clock, FolderOpen, ShieldCheck } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { useCountUp } from '@/hooks/useCountUp'
+import { staggerDelay } from '@/lib/motion'
 
 interface StatCard {
   key: string
@@ -10,11 +12,32 @@ interface StatCard {
   tone: 'success' | 'info' | 'warning' | 'violet'
 }
 
-const TONE_CLASSES: Record<StatCard['tone'], string> = {
-  success: 'border-success/30 bg-success/10 text-success',
-  info: 'border-info/30 bg-info/10 text-info',
-  warning: 'border-warning/30 bg-warning/10 text-warning',
-  violet: 'border-violet/30 bg-violet/10 text-violet',
+const TONE: Record<StatCard['tone'], { border: string; bg: string; color: string; glow: string }> = {
+  success: { border: 'rgba(61,220,151,.4)', bg: 'rgba(61,220,151,.14)', color: '#3ddc97', glow: 'rgba(61,220,151,.5)' },
+  info: { border: 'rgba(59,130,246,.42)', bg: 'rgba(59,130,246,.14)', color: '#60a5fa', glow: 'rgba(59,130,246,.55)' },
+  warning: { border: 'rgba(245,158,11,.45)', bg: 'rgba(245,158,11,.14)', color: '#fbbf24', glow: 'rgba(245,158,11,.6)' },
+  violet: { border: 'rgba(124,58,237,.5)', bg: 'rgba(124,58,237,.16)', color: '#c084fc', glow: 'rgba(124,58,237,.6)' },
+}
+
+function KpiTile({ card: c, index, warn }: { card: StatCard; index: number; warn: boolean }) {
+  const value = useCountUp(c.value)
+  const t = TONE[c.tone]
+  return (
+    <div
+      className="animate-fade-up rounded-[20px] border border-[#253150] bg-[#10172a] p-4 transition-[transform,border-color] duration-[180ms] hover:-translate-y-0.5 hover:border-[#3b4d78]"
+      style={staggerDelay(index)}
+    >
+      <span
+        className="mb-3 flex size-[38px] items-center justify-center rounded-xl border"
+        style={{ borderColor: t.border, background: t.bg, color: t.color, boxShadow: `0 0 18px -4px ${t.glow}` }}
+      >
+        <c.icon className="size-[18px]" aria-hidden="true" />
+      </span>
+      <div className="text-[26px] font-extrabold leading-none tracking-[-.02em] tabular-nums">{value}</div>
+      <div className="mt-1 text-[13px] text-[#94a3b8]">{c.label}</div>
+      <div className={cn('mt-[5px] text-[11.5px]', warn ? 'font-bold text-[#fbbf24]' : 'font-semibold text-[#64748b]')}>{c.caption}</div>
+    </div>
+  )
 }
 
 export function StatsRow({
@@ -22,72 +45,24 @@ export function StatsRow({
   total,
   depasite,
   inAsteptare,
-  onExport,
 }: {
   active: number
   total: number
   depasite: number
   inAsteptare: number
-  onExport: () => void
 }) {
   const cards: StatCard[] = [
     { key: 'active', label: 'Active', value: active, caption: 'dosare deschise', icon: FolderOpen, tone: 'success' },
     { key: 'total', label: 'Total', value: total, caption: 'dosare în total', icon: ShieldCheck, tone: 'info' },
-    {
-      key: 'depasite',
-      label: 'Depășite',
-      value: depasite,
-      caption: depasite > 0 ? 'Necesită atenție' : 'Totul la zi',
-      icon: Clock,
-      tone: 'warning',
-    },
-    {
-      key: 'asteptare',
-      label: 'În așteptare',
-      value: inAsteptare,
-      caption: 'status curent',
-      icon: AlertTriangle,
-      tone: 'violet',
-    },
+    { key: 'depasite', label: 'Depășite', value: depasite, caption: depasite > 0 ? 'Necesită atenție' : 'Totul la zi', icon: Clock, tone: 'warning' },
+    { key: 'asteptare', label: 'În așteptare', value: inAsteptare, caption: 'status curent', icon: AlertTriangle, tone: 'violet' },
   ]
 
   return (
-    <div className="grid grid-cols-2 gap-3 lg:grid-cols-5">
-      {cards.map((c) => (
-        <div key={c.key} className="rounded-2xl border border-border bg-card p-4">
-          <div className={cn('mb-3 flex size-9 items-center justify-center rounded-xl border', TONE_CLASSES[c.tone])}>
-            <c.icon className="size-4.5" aria-hidden="true" />
-          </div>
-          <div className="text-2xl font-bold text-foreground">{c.value}</div>
-          <div className="text-sm text-muted-foreground">{c.label}</div>
-          <div
-            className={cn(
-              'mt-1.5 text-xs font-medium',
-              c.key === 'depasite' && depasite > 0 ? 'text-warning' : 'text-muted-foreground',
-            )}
-          >
-            {c.caption}
-          </div>
-        </div>
+    <div className="grid grid-cols-[repeat(auto-fit,minmax(150px,1fr))] gap-3">
+      {cards.map((c, i) => (
+        <KpiTile key={c.key} card={c} index={i} warn={c.key === 'depasite' && depasite > 0} />
       ))}
-
-      <button
-        type="button"
-        onClick={onExport}
-        className="col-span-2 flex flex-col justify-between rounded-2xl border border-primary/40 bg-primary/10 p-4 text-left transition-colors hover:bg-primary/15 lg:col-span-1"
-      >
-        <div className="flex items-center justify-between">
-          <div className="flex size-9 items-center justify-center rounded-xl border border-primary/30 bg-primary/15 text-primary">
-            <Download className="size-4.5" aria-hidden="true" />
-          </div>
-          <span className="flex items-center gap-1 rounded-full bg-primary px-2 py-0.5 text-[10px] font-bold text-primary-foreground">
-            <Sparkles className="size-3" aria-hidden="true" />
-            NOU
-          </span>
-        </div>
-        <div className="mt-3 text-sm font-semibold text-foreground">Exportă dosarele în Excel</div>
-        <div className="mt-1 text-xs text-muted-foreground">Lista filtrată curentă, gata de descărcat.</div>
-      </button>
     </div>
   )
 }

@@ -12,8 +12,8 @@ import { TooltipProvider } from '@/components/ui/tooltip'
 const TITLURI: Record<SectionKey, { title: string; subtitle: string }> = {
   dosare: { title: 'Toate dosarele RCA. Un singur loc.', subtitle: 'Urmărește, gestionează, rezolvă mai rapid.' },
   dashboard: { title: 'Dashboard', subtitle: 'În curând.' },
-  servicii: { title: 'Service-uri', subtitle: 'Gestionează lista de service-uri.' },
-  rapoarte: { title: 'Rapoarte', subtitle: 'Comision și verificare tarif din grilă.' },
+  servicii: { title: 'Service-uri', subtitle: 'Lista folosită la completarea dosarelor.' },
+  rapoarte: { title: 'Rapoarte', subtitle: 'Comision, verificare tarif din grilă și export financiar.' },
   setari: { title: 'Setări', subtitle: 'În curând.' },
 }
 

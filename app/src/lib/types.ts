@@ -26,6 +26,7 @@ export interface Dosar {
   nrAutoPagubit: string
   marcaModel: string
   nrAutoInlocuire: string
+  marcaModelInlocuire?: string
   clasaAuto: string
   valoareContract: string
   valoareContractCuTVA: string
@@ -63,12 +64,12 @@ export interface Serviciu {
 }
 
 export const STATUS_META: Record<StatusDosar, { label: string; color: string }> = {
-  in_asteptare: { label: 'ÎN AȘTEPTARE', color: '#93a0bd' },
-  de_predat: { label: 'DE PREDAT', color: '#4f8cff' },
-  de_preluat: { label: 'DE PRELUAT', color: '#ffb454' },
-  de_sunat: { label: 'DE SUNAT', color: '#ff5d6c' },
-  astept_docum: { label: 'SE AȘTEAPTĂ DOCUMENTE', color: '#c084fc' },
-  finalizat: { label: 'FINALIZAT', color: '#3ddc97' },
+  in_asteptare: { label: 'ÎN AȘTEPTARE', color: '#3d8bff' },
+  de_predat: { label: 'DE PREDAT', color: '#3d8bff' },
+  de_preluat: { label: 'DE PRELUAT', color: '#00f5a0' },
+  de_sunat: { label: 'DE SUNAT', color: '#fb923c' },
+  astept_docum: { label: 'SE AȘTEAPTĂ DOCUMENTE', color: '#e879f9' },
+  finalizat: { label: 'FINALIZAT', color: '#94a3b8' },
 }
 
 // Dosarele mai vechi (migrate din blob-ul app_storage sau salvate inainte sa existe un

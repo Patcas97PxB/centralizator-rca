@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Trash2 } from 'lucide-react'
+import { FolderPlus, Pencil, Trash2, X } from 'lucide-react'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -13,11 +13,9 @@ import {
 import {
   Dialog,
   DialogContent,
-  DialogFooter,
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
-import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
@@ -31,6 +29,7 @@ import {
 } from '@/components/ui/select'
 import { KNOWN_INSURERS } from '@/lib/asiguratori'
 import { suggestClasaFromModel, vehicleClasses } from '@/lib/clase-auto'
+import { lipsuriFinalizare } from '@/lib/documente'
 import { calculRCA, todayStr } from '@/lib/rca-calc'
 import { STATUS_META, dosarGol, type Dosar, type StatusDosar, type Vehicul } from '@/lib/types'
 import { PreluareDateSection } from './PreluareDateSection'
@@ -41,6 +40,7 @@ import { DocumenteSection } from './DocumenteSection'
 export function DosarFormModal({
   open,
   dosar,
+  initialDraft,
   servicii,
   onClose,
   onSave,
@@ -48,6 +48,7 @@ export function DosarFormModal({
 }: {
   open: boolean
   dosar: Dosar | null
+  initialDraft?: Partial<Dosar> | null
   servicii: { id: string; nume: string; telefon: string }[]
   onClose: () => void
   onSave: (d: Dosar) => Promise<void>
@@ -57,19 +58,36 @@ export function DosarFormModal({
   const [saving, setSaving] = useState(false)
   const [eroare, setEroare] = useState('')
   const [confirmStergere, setConfirmStergere] = useState(false)
+  const [shakeKey, setShakeKey] = useState(0)
 
   useEffect(() => {
     if (open) {
-      setDraft(dosar ?? { ...dosarGol(), id: 'd' + Date.now(), start: todayStr() })
+      setDraft(dosar ?? { ...dosarGol(), ...initialDraft, id: 'd' + Date.now(), start: todayStr() })
       setEroare('')
     }
-  }, [open, dosar])
+  }, [open, dosar, initialDraft])
 
   function set<K extends keyof Dosar>(key: K, value: Dosar[K]) {
     setDraft((d) => ({ ...d, [key]: value }))
   }
   function patch(p: Partial<Dosar>) {
     setDraft((d) => ({ ...d, ...p }))
+  }
+
+  function blocheazaFinalizare(d: Dosar): boolean {
+    if (d.status !== 'finalizat' || dosar?.status === 'finalizat') return false
+    const lipsuri = lipsuriFinalizare(d)
+    if (lipsuri.length === 0) return false
+    setEroare('Nu poți finaliza dosarul — lipsește: ' + lipsuri.join(', ') + '.')
+    setShakeKey((k) => k + 1)
+    return true
+  }
+
+  function onStatusChange(v: StatusDosar) {
+    const next = { ...draft, status: v }
+    if (blocheazaFinalizare(next)) return
+    setEroare('')
+    set('status', v)
   }
 
   function onMarcaModelBlur() {
@@ -94,6 +112,7 @@ export function DosarFormModal({
       setEroare('Alege asiguratorul.')
       return
     }
+    if (blocheazaFinalizare(draft)) return
     setSaving(true)
     setEroare('')
     try {
@@ -110,14 +129,34 @@ export function DosarFormModal({
 
   return (
     <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
-      <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-2xl">
-        <DialogHeader>
-          <DialogTitle>{dosar ? 'Editează dosar' : 'Dosar nou'}</DialogTitle>
+      <DialogContent
+        showCloseButton={false}
+        className="max-h-[90vh] gap-0 overflow-y-auto rounded-[22px] border border-[#2c3a5c] bg-[#0d1524] bg-none p-0 shadow-[0_40px_90px_-30px_#000] sm:max-w-[760px]"
+      >
+        <DialogHeader className="sticky top-0 z-[5] flex-row items-center gap-3 rounded-t-[22px] border-b border-[#1e2a45] bg-[#0d1524] px-[22px] py-[18px]">
+          <span className="flex size-9 shrink-0 items-center justify-center rounded-[11px] border border-[#2563eb]/45 bg-[#2563eb]/[.16] text-[#60a5fa]">
+            {dosar ? <Pencil className="size-[18px]" aria-hidden="true" /> : <FolderPlus className="size-[18px]" aria-hidden="true" />}
+          </span>
+          <div className="min-w-0 flex-1">
+            <DialogTitle className="text-[17px] font-extrabold leading-tight text-[#f8fafc]">{dosar ? 'Editează dosar' : 'Dosar nou'}</DialogTitle>
+            {dosar && (draft.nrAutoPagubit || draft.marcaModel) && (
+              <p className="mt-0.5 truncate text-[12.5px] text-[#94a3b8]">{[draft.nrAutoPagubit, draft.marcaModel].filter(Boolean).join(' · ')}</p>
+            )}
+          </div>
+          <button
+            type="button"
+            aria-label="Închide"
+            onClick={onClose}
+            className="flex size-[34px] shrink-0 items-center justify-center rounded-[10px] border border-[#253150] bg-[#253150]/[.28] text-[#cbd5e1] transition-colors hover:bg-[#253150]/60 hover:text-white"
+          >
+            <X className="size-4" strokeWidth={2.5} aria-hidden="true" />
+          </button>
         </DialogHeader>
 
+        <div className="flex flex-col gap-4 px-[22px] pb-[22px] pt-[18px]">
         <PreluareDateSection draft={draft} onPatch={patch} />
 
-        <div className="grid gap-4 py-2 sm:grid-cols-2">
+        <div className="grid gap-4 sm:grid-cols-2">
           <div className="space-y-1.5">
             <Label htmlFor="fNrDosar">Nr. dosar *</Label>
             <Input id="fNrDosar" value={draft.nrDosar} onChange={(e) => set('nrDosar', e.target.value)} />
@@ -144,8 +183,12 @@ export function DosarFormModal({
           </div>
           <div className="space-y-1.5">
             <Label htmlFor="fStatus">Status</Label>
-            <Select value={draft.status} onValueChange={(v) => set('status', v as StatusDosar)}>
-              <SelectTrigger id="fStatus" className="w-full">
+            <Select value={draft.status} onValueChange={(v) => onStatusChange(v as StatusDosar)}>
+              <SelectTrigger
+                key={shakeKey}
+                id="fStatus"
+                className={shakeKey ? 'w-full animate-[devizShake_.45s_ease-in-out_both] border-[var(--danger-strong)]' : 'w-full'}
+              >
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -177,6 +220,15 @@ export function DosarFormModal({
             />
           </div>
           <div className="space-y-1.5">
+            <Label htmlFor="fMarcaModelInlocuire">Marcă / model înlocuire</Label>
+            <Input
+              id="fMarcaModelInlocuire"
+              value={draft.marcaModelInlocuire ?? ''}
+              onChange={(e) => set('marcaModelInlocuire', e.target.value)}
+            />
+          </div>
+
+          <div className="space-y-1.5">
             <Label htmlFor="fClasaAuto">Clasă auto</Label>
             <Select value={draft.clasaAuto || '__none__'} onValueChange={(v) => set('clasaAuto', v === '__none__' ? '' : v)}>
               <SelectTrigger id="fClasaAuto" className="w-full">
@@ -192,29 +244,9 @@ export function DosarFormModal({
               </SelectContent>
             </Select>
           </div>
-
           <div className="space-y-1.5">
             <Label htmlFor="fTelClient">Telefon client</Label>
             <Input id="fTelClient" value={draft.telClient} onChange={(e) => set('telClient', e.target.value)} />
-          </div>
-
-          <div className="space-y-1.5">
-            <Label htmlFor="fService">Service</Label>
-            <Input
-              id="fService"
-              value={draft.service}
-              onChange={(e) => onServiceChange(e.target.value)}
-              list="servicii-list"
-            />
-            <datalist id="servicii-list">
-              {servicii.map((s) => (
-                <option key={s.id} value={s.nume} />
-              ))}
-            </datalist>
-          </div>
-          <div className="space-y-1.5">
-            <Label htmlFor="fTelService">Telefon service</Label>
-            <Input id="fTelService" value={draft.telService} onChange={(e) => set('telService', e.target.value)} />
           </div>
 
           <div className="space-y-1.5">
@@ -229,6 +261,26 @@ export function DosarFormModal({
               </SelectContent>
             </Select>
           </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="fService">Service</Label>
+            <Input
+              id="fService"
+              value={draft.service}
+              onChange={(e) => onServiceChange(e.target.value)}
+              list="servicii-list"
+            />
+            <datalist id="servicii-list">
+              {servicii.map((s) => (
+                <option key={s.id} value={s.nume} />
+              ))}
+            </datalist>
+          </div>
+
+          <div className="space-y-1.5">
+            <Label htmlFor="fTelService">Telefon service</Label>
+            <Input id="fTelService" value={draft.telService} onChange={(e) => set('telService', e.target.value)} />
+          </div>
+          <span className="hidden sm:block" />
           <DevizRecalculeazaButton onPatch={patch} />
           <div className="space-y-1.5">
             <Label htmlFor="fZileDeviz">Zile lucrătoare din deviz</Label>
@@ -286,24 +338,39 @@ export function DosarFormModal({
 
         {eroare && <p className="text-sm text-destructive">{eroare}</p>}
 
-        <DialogFooter className="sm:justify-between">
+        </div>
+
+        <div className="sticky bottom-0 z-[5] flex items-center justify-between gap-2 rounded-b-[22px] border-t border-[#1e2a45] bg-[#0d1524] px-[22px] py-3.5">
           {dosar ? (
-            <Button variant="ghost" className="text-destructive hover:text-destructive" onClick={() => setConfirmStergere(true)}>
-              <Trash2 />
+            <button
+              type="button"
+              onClick={() => setConfirmStergere(true)}
+              className="flex h-9 items-center gap-1.5 rounded-[10px] px-2.5 text-[12.5px] font-bold text-[#f87171] transition-colors hover:bg-[#f87171]/10"
+            >
+              <Trash2 className="size-4" aria-hidden="true" />
               Șterge dosar
-            </Button>
+            </button>
           ) : (
             <span />
           )}
           <div className="flex gap-2">
-            <Button variant="outline" onClick={onClose}>
+            <button
+              type="button"
+              onClick={onClose}
+              className="h-9 rounded-[10px] border border-[#2c3a5c] bg-[#1a2335] px-4 text-[12.5px] font-bold text-[#e2e8f5] transition-colors hover:bg-[#222d46]"
+            >
               Anulează
-            </Button>
-            <Button onClick={handleSubmit} disabled={saving}>
+            </button>
+            <button
+              type="button"
+              onClick={handleSubmit}
+              disabled={saving}
+              className="h-9 rounded-[10px] border border-[#3b82f6] bg-[#2563eb] px-[18px] text-[12.5px] font-extrabold text-white shadow-[0_10px_24px_-14px_#2563eb] transition-colors hover:bg-[#2563eb]/90 disabled:opacity-60"
+            >
               {saving ? 'Se salvează…' : 'Salvează'}
-            </Button>
+            </button>
           </div>
-        </DialogFooter>
+        </div>
       </DialogContent>
 
       <AlertDialog open={confirmStergere} onOpenChange={setConfirmStergere}>

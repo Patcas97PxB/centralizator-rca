@@ -20,30 +20,31 @@ export function ActivitateRecenta({ dosare, limit = 5 }: { dosare: Dosar[]; limi
     .slice(0, limit)
 
   return (
-    <div className="rounded-2xl border border-border bg-card p-4">
-      <div className="mb-3 flex items-center gap-2 text-sm font-semibold text-foreground">
-        <Activity className="size-4 text-muted-foreground" aria-hidden="true" />
+    <div className="w-full rounded-[20px] border border-[#253150] bg-[#10172a] p-4">
+      <div className="mb-[13px] flex items-center gap-2 text-[13.5px] font-bold text-[#f1f5f9]">
+        <Activity className="size-4 text-[#94a3b8]" aria-hidden="true" />
         Activitate recentă
       </div>
       {recente.length === 0 ? (
         <p className="text-xs text-muted-foreground">Nicio modificare încă.</p>
       ) : (
-        <ul className="space-y-3">
-          {recente.map((d) => (
-            <li key={d.id} className="flex items-start gap-2.5 text-xs">
-              <span
-                className="mt-1 size-2 shrink-0 rounded-full"
-                style={{ background: STATUS_META[d.status]?.color ?? '#94a3b8' }}
-                aria-hidden="true"
-              />
-              <div className="min-w-0">
-                <div className="truncate font-medium text-foreground">
-                  Dosar {d.nrAutoPagubit || d.nrDosar || '—'} actualizat
+        <ul className="m-0 flex list-none flex-col gap-3 p-0">
+          {recente.map((d) => {
+            const c = STATUS_META[d.status]?.color ?? '#94a3b8'
+            return (
+              <li key={d.id} className="flex items-start gap-2.5 text-[11.5px]">
+                <span
+                  className="mt-[5px] size-2 shrink-0 rounded-full"
+                  style={{ background: c, boxShadow: `0 0 9px 1px ${c}bb` }}
+                  aria-hidden="true"
+                />
+                <div className="min-w-0">
+                  <div className="truncate font-bold text-[#e2e8f5]">Dosar {d.nrAutoPagubit || d.nrDosar || '—'} actualizat</div>
+                  <div className="mt-px text-[#8b9ab5]">{timpRelativ(d.updatedAt as string)}</div>
                 </div>
-                <div className="text-muted-foreground">{timpRelativ(d.updatedAt as string)}</div>
-              </div>
-            </li>
-          ))}
+              </li>
+            )
+          })}
         </ul>
       )}
     </div>

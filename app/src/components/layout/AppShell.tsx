@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react'
+import type { CSSProperties, ReactNode } from 'react'
 import { SidebarInset, SidebarProvider } from '@/components/ui/sidebar'
 import { AppSidebar } from './AppSidebar'
 import { Header } from './Header'
@@ -23,8 +23,8 @@ export function AppShell({
   children: ReactNode
 }) {
   return (
-    <SidebarProvider>
-      <AppSidebar active={active} onSelect={onSelect} />
+    <SidebarProvider style={{ '--sidebar-width': '245px' } as CSSProperties}>
+      <AppSidebar active={active} onSelect={onSelect} badgeDosare={notificari} />
       <SidebarInset>
         <Header
           title={headerTitle}

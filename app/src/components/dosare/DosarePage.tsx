@@ -4,15 +4,18 @@ import { useDosareContext } from '@/contexts/DosareContext'
 import { filtreImplicite } from '@/lib/dosare-filter'
 import { exportDosareXlsx } from '@/lib/xlsx-export'
 import type { Dosar } from '@/lib/types'
+import type { AnalizaDeviz } from '@/lib/deviz-analiza'
+import { staggerDelay } from '@/lib/motion'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { StatsRow } from './StatsRow'
 import { FilterBar } from './FilterBar'
 import { DosarCard } from './DosarCard'
 import { DosarFormModal } from './DosarFormModal'
+import { ScanDevizCard } from './ScanDevizCard'
+import { ModificarPdfCard } from './ModificarPdfCard'
 import { ActivitateRecenta } from '../panel/ActivitateRecenta'
 import { StatisticiRapide } from '../panel/StatisticiRapide'
-import { SuportWidget } from '../panel/SuportWidget'
 
 export function DosarePage() {
   const {
@@ -21,15 +24,23 @@ export function DosarePage() {
   } = useDosareContext()
   const [modalDeschis, setModalDeschis] = useState(false)
   const [dosarActiv, setDosarActiv] = useState<Dosar | null>(null)
+  const [initialDraft, setInitialDraft] = useState<Partial<Dosar> | null>(null)
 
   const activeCount = dosare.filter((d) => d.status !== 'finalizat').length
   const inAsteptareCount = dosare.filter((d) => d.status === 'in_asteptare').length
 
   function deschideNou() {
     setDosarActiv(null)
+    setInitialDraft(null)
+    setModalDeschis(true)
+  }
+  function onDevizScanat(an: AnalizaDeviz) {
+    setDosarActiv(null)
+    setInitialDraft({ zileDeviz: String(an.total), zileDevizExplicatie: an.explicatie, zileDevizFormula: an.formulaCalcul })
     setModalDeschis(true)
   }
   function deschideEditare(id: string) {
+    setInitialDraft(null)
     setDosarActiv(dosare.find((x) => x.id === id) ?? null)
     setModalDeschis(true)
   }
@@ -46,23 +57,22 @@ export function DosarePage() {
       </div>
 
       {error && (
-        <div className="mb-4 rounded-xl border border-destructive/40 bg-destructive/10 p-3 text-sm text-destructive">
+        <div className="animate-fade-up mb-4 rounded-xl border border-destructive/40 bg-destructive/10 p-3 text-sm text-destructive">
           {error}
         </div>
       )}
 
-      <div className="grid gap-5 lg:grid-cols-[1fr_320px]">
+      <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_250px]">
         <div className="min-w-0 space-y-4">
           <StatsRow
             active={activeCount}
             total={dosare.length}
             depasite={depasiteCount}
             inAsteptare={inAsteptareCount}
-            onExport={() => exportDosareXlsx(filtrate)}
           />
 
-          <div className="rounded-2xl border border-border bg-card p-3">
-            <FilterBar filtre={filtre} onChange={setFiltre} servicii={servicii} />
+          <div className="rounded-[20px] border border-[#253150] bg-[#10172a] p-3">
+            <FilterBar filtre={filtre} onChange={setFiltre} servicii={servicii} onExport={() => exportDosareXlsx(filtrate)} />
           </div>
 
           {filtre.doarDepasite && (
@@ -86,22 +96,27 @@ export function DosarePage() {
               Niciun dosar nu corespunde filtrelor curente.
             </div>
           ) : (
-            <div className="grid gap-3 sm:grid-cols-2">
-              {filtrate.map((d) => (
-                <DosarCard key={d.id} dosar={d} onStatusChange={onStatusChange} onDeschide={deschideEditare} />
+            <div className="grid grid-cols-[repeat(auto-fill,minmax(min(100%,max(400px,calc(50%_-_6px))),1fr))] gap-3">
+              {filtrate.map((d, i) => (
+                <div key={d.id} className="animate-fade-up min-w-0" style={staggerDelay(i)}>
+                  <DosarCard dosar={d} onStatusChange={onStatusChange} onDeschide={deschideEditare} />
+                </div>
               ))}
             </div>
           )}
         </div>
 
-        <div className="space-y-4">
-          <Button onClick={deschideNou} className="hidden w-full gap-2 lg:flex">
+        <div className="flex flex-col gap-4">
+          <Button onClick={deschideNou} className="btn-brand-gradient hidden h-[42px] w-full gap-2 rounded-[13px] border border-[#bfdbfe]/45 text-sm font-extrabold tracking-[.01em] [text-shadow:0_1px_6px_rgba(0,0,0,.35)] lg:flex">
             <Plus className="size-4" aria-hidden="true" />
             Dosar nou
           </Button>
+          <div className="hidden flex-col gap-4 lg:flex">
+            <ScanDevizCard onApply={onDevizScanat} />
+            <ModificarPdfCard />
+          </div>
           <ActivitateRecenta dosare={dosare} />
           <StatisticiRapide dosare={dosare} />
-          <SuportWidget />
         </div>
       </div>
 
@@ -117,6 +132,7 @@ export function DosarePage() {
       <DosarFormModal
         open={modalDeschis}
         dosar={dosarActiv}
+        initialDraft={initialDraft}
         servicii={servicii}
         onClose={() => setModalDeschis(false)}
         onSave={salveazaDosar}
