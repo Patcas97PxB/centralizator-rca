@@ -235,7 +235,7 @@ export function DosarCard({
         </div>
       </div>
 
-      <div className="relative col-span-full grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3 border-t border-[#1e2a45] pt-[7px]">
+      <div className="relative col-span-full grid grid-cols-2 items-center gap-x-3 gap-y-2 border-t border-[#1e2a45] pt-[7px] sm:grid-cols-[auto_minmax(0,1fr)_auto]">
         <div className="order-1 flex items-center gap-2 text-[#9aa8c1]">
           <span
             className="flex size-6 shrink-0 items-center justify-center rounded-full border-[1.5px] transition-colors"
@@ -253,7 +253,7 @@ export function DosarCard({
           </span>
         </div>
 
-        <div className="order-3 flex flex-row-reverse items-center gap-2" style={{ opacity: predatFacut ? 1 : 0.55, color: predatFacut ? '#9aa8c1' : '#5b6884' }}>
+        <div className="order-2 flex flex-row-reverse items-center gap-2 sm:order-3" style={{ opacity: predatFacut ? 1 : 0.55, color: predatFacut ? '#9aa8c1' : '#5b6884' }}>
           <span
             className="flex size-6 shrink-0 items-center justify-center rounded-full border-[1.5px] transition-colors"
             style={{
@@ -272,7 +272,7 @@ export function DosarCard({
           </span>
         </div>
 
-        <div className="order-2 flex min-w-0 flex-col gap-1" title={`${urgenta.bigNum} ${urgenta.bigLabel}`}>
+        <div className="order-3 col-span-2 flex min-w-0 flex-col gap-1 sm:order-2 sm:col-span-1" title={`${urgenta.bigNum} ${urgenta.bigLabel}`}>
           <div className="flex items-baseline justify-between gap-2">
             <span className="flex min-w-0 items-baseline gap-[5px] whitespace-nowrap">
               <span
@@ -350,8 +350,9 @@ export function DosarCard({
           onClick={() => onDeschide(dosar.id)}
           className="flex h-7 w-full max-w-[170px] min-w-0 items-center justify-center gap-1.5 justify-self-end overflow-hidden whitespace-nowrap rounded-[9px] border border-[#2c3a5c] bg-[#1a2335] px-2.5 text-xs font-bold text-[#e2e8f5] transition-colors hover:border-[#3b4d78] hover:bg-[#222d46]"
         >
-          <FolderPlus className="size-[13px]" aria-hidden="true" />
-          Adaugă documente
+          <FolderPlus className="size-[13px] shrink-0" aria-hidden="true" />
+          <span className="truncate sm:hidden">Documente</span>
+          <span className="hidden truncate sm:inline">Adaugă documente</span>
         </button>
       </div>
     </div>

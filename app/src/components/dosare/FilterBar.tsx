@@ -51,7 +51,7 @@ export function FilterBar({
       </div>
 
       <Select value={filtre.status} onValueChange={(v) => onChange({ ...filtre, status: v as DosareFiltre['status'] })}>
-        <SelectTrigger className={cn(CONTROL, 'w-[168px] shrink-0 gap-2 px-2.5')}>
+        <SelectTrigger className={cn(CONTROL, 'w-[calc(50%-5px)] shrink-0 gap-2 px-2.5 sm:w-[168px]')}>
           <span
             className="size-2 shrink-0 rounded-full"
             style={{ background: statusColor, boxShadow: filtre.status === 'toate' ? 'none' : `0 0 8px 1px ${statusColor}` }}
@@ -76,7 +76,7 @@ export function FilterBar({
             type="button"
             className={cn(
               CONTROL,
-              'flex w-[142px] shrink-0 items-center justify-center gap-2 whitespace-nowrap border px-3 text-[#cbd5e1] hover:text-white',
+              'flex w-[calc(50%-5px)] shrink-0 items-center justify-center gap-2 whitespace-nowrap border px-3 text-[#cbd5e1] hover:text-white sm:w-[142px]',
               activeFiltreAvansate && 'border-[#2563eb] bg-[#2563eb]/20 text-white',
             )}
           >

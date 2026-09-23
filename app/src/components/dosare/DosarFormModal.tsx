@@ -131,7 +131,7 @@ export function DosarFormModal({
     <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
       <DialogContent
         showCloseButton={false}
-        className="max-h-[90vh] gap-0 overflow-y-auto rounded-[22px] border border-[#2c3a5c] bg-[#0d1524] bg-none p-0 shadow-[0_40px_90px_-30px_#000] sm:max-w-[760px]"
+        className="max-h-[90vh] grid-cols-[minmax(0,1fr)] gap-0 overflow-x-hidden overflow-y-auto rounded-[22px] border border-[#2c3a5c] bg-[#0d1524] bg-none p-0 shadow-[0_40px_90px_-30px_#000] sm:max-w-[760px]"
       >
         <DialogHeader className="sticky top-0 z-[5] flex-row items-center gap-3 rounded-t-[22px] border-b border-[#1e2a45] bg-[#0d1524] px-[22px] py-[18px]">
           <span className="flex size-9 shrink-0 items-center justify-center rounded-[11px] border border-[#2563eb]/45 bg-[#2563eb]/[.16] text-[#60a5fa]">
@@ -345,7 +345,7 @@ export function DosarFormModal({
             <button
               type="button"
               onClick={() => setConfirmStergere(true)}
-              className="flex h-9 items-center gap-1.5 rounded-[10px] px-2.5 text-[12.5px] font-bold text-[#f87171] transition-colors hover:bg-[#f87171]/10"
+              className="flex h-9 items-center gap-1.5 whitespace-nowrap rounded-[10px] px-2.5 text-[12.5px] font-bold text-[#f87171] transition-colors hover:bg-[#f87171]/10"
             >
               <Trash2 className="size-4" aria-hidden="true" />
               Șterge dosar

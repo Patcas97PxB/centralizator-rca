@@ -111,7 +111,7 @@ export function DosarePage() {
             <Plus className="size-4" aria-hidden="true" />
             Dosar nou
           </Button>
-          <div className="hidden flex-col gap-4 lg:flex">
+          <div className="flex flex-col gap-4">
             <ScanDevizCard onApply={onDevizScanat} />
             <ModificarPdfCard />
           </div>
@@ -123,7 +123,7 @@ export function DosarePage() {
       <button
         type="button"
         onClick={deschideNou}
-        className="fixed bottom-20 right-4 z-40 flex size-14 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg shadow-primary/30 lg:hidden"
+        className="fixed bottom-[76px] right-4 z-40 flex size-12 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg shadow-primary/30 lg:hidden"
         aria-label="Dosar nou"
       >
         <Plus className="size-6" aria-hidden="true" />

@@ -1,4 +1,4 @@
-import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader } from '@/components/ui/sidebar'
+import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, useSidebar } from '@/components/ui/sidebar'
 import { assetUrl } from '@/lib/asset-url'
 import { usePrefersReducedMotion } from '@/hooks/usePrefersReducedMotion'
 import { cn } from '@/lib/utils'
@@ -161,6 +161,7 @@ export function AppSidebar({
   badgeDosare?: number
 }) {
   const reduced = usePrefersReducedMotion()
+  const { setOpenMobile } = useSidebar()
   return (
     <Sidebar collapsible="offcanvas" className="border-[#1c273f] [&_[data-sidebar=sidebar]]:bg-[#070b14]">
       <SidebarDecor reduced={reduced} />
@@ -183,7 +184,10 @@ export function AppSidebar({
                   <button
                     key={item.key}
                     type="button"
-                    onClick={() => onSelect(item.key)}
+                    onClick={() => {
+                      onSelect(item.key)
+                      setOpenMobile(false)
+                    }}
                     aria-current={on ? 'page' : undefined}
                     className={cn(
                       'relative flex h-[46px] w-full items-center gap-3 rounded-[13px] px-2.5 text-left text-sm font-bold transition-colors',
