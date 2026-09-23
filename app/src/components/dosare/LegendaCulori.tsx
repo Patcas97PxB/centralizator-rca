@@ -1,38 +1,59 @@
+import { Info } from 'lucide-react'
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
+
 const CULOARE_CARD = [
-  { color: '#ff4d6d', nume: 'Urgență', titlu: 'Urgență: termen expirat sau azi' },
-  { color: '#fbbf24', nume: 'Atenție', titlu: 'Atenție: 1–2 zile rămase' },
-  { color: '#00f5a0', nume: 'În termen', titlu: 'În termen: 3+ zile rămase' },
-  { color: '#3d8bff', nume: 'Programare', titlu: 'Programare: înainte de predare' },
-  { color: '#94a3b8', nume: 'Finalizat', titlu: 'Finalizat: arhivat / jos în listă' },
+  { color: '#ff4d6d', nume: 'Urgență', detaliu: 'termen expirat sau azi' },
+  { color: '#fbbf24', nume: 'Atenție', detaliu: '1–2 zile rămase' },
+  { color: '#00f5a0', nume: 'În termen', detaliu: '3+ zile rămase' },
+  { color: '#3d8bff', nume: 'Programare', detaliu: 'înainte de predare' },
+  { color: '#94a3b8', nume: 'Finalizat', detaliu: 'jos, în arhivă' },
 ]
 const STATUS = [
-  { color: '#fb923c', nume: 'De sunat', titlu: 'De sunat: status marcat de utilizator (culoarea pastilei de status)' },
-  { color: '#e879f9', nume: 'Blochaj documente', titlu: 'Blochaj documente: se așteaptă documente (culoarea pastilei de status)' },
+  { color: '#fb923c', nume: 'De sunat', detaliu: 'marcat de tine' },
+  { color: '#e879f9', nume: 'Blochaj documente', detaliu: 'se așteaptă acte' },
 ]
 
-const TITLU = 'shrink-0 text-[10px] font-extrabold tracking-[.1em] text-[#5d6b86]'
-const ITEM = 'flex cursor-default items-center gap-2 whitespace-nowrap text-[12px] font-semibold text-[#cbd5e1]'
+const TITLU = 'mb-2 text-[10px] font-extrabold tracking-[.1em] text-[#5d6b86]'
 
-export function LegendaCulori() {
+function Rand({ color, nume, detaliu, rotund }: { color: string; nume: string; detaliu: string; rotund?: boolean }) {
   return (
-    <div className="animate-fade-up flex flex-wrap items-center justify-between gap-x-5 gap-y-2 rounded-2xl border border-[#253150] bg-[#10172a] px-4 py-3">
-      <span className={TITLU}>CARD</span>
-      {CULOARE_CARD.map((l) => (
-        <span key={l.nume} title={l.titlu} className={ITEM}>
-          <span className="h-3 w-1 rounded-full" style={{ background: l.color }} />
-          {l.nume}
-        </span>
-      ))}
-
-      <span className="hidden h-4 w-px bg-[#1e2a45] lg:block" aria-hidden="true" />
-
-      <span className={TITLU}>STATUS</span>
-      {STATUS.map((l) => (
-        <span key={l.nume} title={l.titlu} className={ITEM}>
-          <span className="size-2 rounded-full" style={{ background: l.color }} />
-          {l.nume}
-        </span>
-      ))}
+    <div className="flex items-center gap-2.5 text-[12px]">
+      <span className={rotund ? 'size-2 shrink-0 rounded-full' : 'h-3 w-1 shrink-0 rounded-full'} style={{ background: color }} />
+      <span className="font-semibold text-[#e2e8f5]">{nume}</span>
+      <span className="ml-auto text-[11px] text-[#7b8aa6]">{detaliu}</span>
     </div>
+  )
+}
+
+// Legenda apare doar la cerere (buton "i" in randul de filtre), ca sa nu incarce pagina.
+export function LegendaButton() {
+  return (
+    <Popover>
+      <PopoverTrigger asChild>
+        <button
+          type="button"
+          aria-label="Legendă culori"
+          title="Legendă culori"
+          className="flex size-[34px] shrink-0 items-center justify-center rounded-[11px] border border-[#253150] bg-[#253150]/[.24] text-[#94a3b8] transition-colors hover:bg-[#253150]/50 hover:text-white"
+        >
+          <Info className="size-4" aria-hidden="true" />
+        </button>
+      </PopoverTrigger>
+      <PopoverContent align="end" className="w-72 rounded-2xl border-[#253150] bg-[#0d1524] p-4">
+        <div className={TITLU}>CULOARE CARD</div>
+        <div className="flex flex-col gap-2">
+          {CULOARE_CARD.map((l) => (
+            <Rand key={l.nume} {...l} />
+          ))}
+        </div>
+        <div className="my-3 h-px bg-[#1e2a45]" />
+        <div className={TITLU}>STATUS</div>
+        <div className="flex flex-col gap-2">
+          {STATUS.map((l) => (
+            <Rand key={l.nume} {...l} rotund />
+          ))}
+        </div>
+      </PopoverContent>
+    </Popover>
   )
 }

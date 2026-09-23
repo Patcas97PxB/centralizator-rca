@@ -9,7 +9,6 @@ import { staggerDelay } from '@/lib/motion'
 import { prioritateDosar, zileLaTermen } from '@/lib/rca-calc'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
-import { LegendaCulori } from './LegendaCulori'
 import { FilterBar } from './FilterBar'
 import { DosarCard } from './DosarCard'
 import { DosarFormModal } from './DosarFormModal'
@@ -126,10 +125,6 @@ export function DosarePage() {
           {error}
         </div>
       )}
-
-      <div className="mb-4">
-        <LegendaCulori />
-      </div>
 
       <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_250px]">
         <div className="min-w-0 space-y-4">

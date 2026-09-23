@@ -14,6 +14,7 @@ import type { DosareFiltre } from '@/lib/dosare-filter'
 import { STATUS_META } from '@/lib/types'
 import type { Serviciu } from '@/lib/types'
 import { cn } from '@/lib/utils'
+import { LegendaButton } from './LegendaCulori'
 
 const CONTROL =
   'h-[34px] rounded-[11px] border-[#253150] bg-[#253150]/[.24] text-[13.5px] font-semibold text-[#f1f5f9] transition-colors hover:bg-[#253150]/50'
@@ -168,6 +169,8 @@ export function FilterBar({
           </Button>
         </PopoverContent>
       </Popover>
+
+      <LegendaButton />
     </div>
   )
 }
