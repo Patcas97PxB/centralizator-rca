@@ -60,10 +60,15 @@ export function DosarFormModal({
   const [eroare, setEroare] = useState('')
   const [confirmStergere, setConfirmStergere] = useState(false)
   const [shakeKey, setShakeKey] = useState(0)
+  // Data preluare se completeaza automat din calcul (deviz + weekend + 1 zi) cat timp nu a fost
+  // scrisa de mana. La un dosar existent cu data deja completata, se actualizeaza doar dupa
+  // "Calculează zile din deviz".
+  const [endAuto, setEndAuto] = useState(true)
 
   useEffect(() => {
     if (open) {
       setDraft(dosar ?? { ...dosarGol(), ...initialDraft, id: 'd' + Date.now(), start: todayStr() })
+      setEndAuto(!dosar?.end)
       setEroare('')
     }
   }, [open, dosar, initialDraft])
@@ -127,6 +132,13 @@ export function DosarFormModal({
   }
 
   const rcaPreview = calculRCA(draft)
+  const preluareCalculata = draft.dte ? null : rcaPreview.dataPreluare
+
+  useEffect(() => {
+    if (open && endAuto && preluareCalculata && preluareCalculata !== draft.end) {
+      setDraft((d) => ({ ...d, end: preluareCalculata }))
+    }
+  }, [open, endAuto, preluareCalculata, draft.end])
 
   return (
     <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
@@ -282,7 +294,13 @@ export function DosarFormModal({
             <Input id="fTelService" value={draft.telService} onChange={(e) => set('telService', e.target.value)} />
           </div>
           <span className="hidden sm:block" />
-          <DevizRecalculeazaButton onPatch={patch} />
+          <DevizRecalculeazaButton
+            onPatch={(p) => {
+              setEndAuto(true)
+              patch(p)
+            }}
+            calcul={rcaPreview}
+          />
           <div className="space-y-1.5">
             <Label htmlFor="fZileDeviz">Zile lucrătoare din deviz</Label>
             <Input id="fZileDeviz" type="number" min={0} value={draft.zileDeviz} onChange={(e) => set('zileDeviz', e.target.value)} />
@@ -294,7 +312,16 @@ export function DosarFormModal({
           </div>
           <div className="space-y-1.5">
             <Label htmlFor="fEnd">Data preluare</Label>
-            <Input id="fEnd" type="date" value={draft.end} onChange={(e) => set('end', e.target.value)} disabled={draft.dte} />
+            <Input
+              id="fEnd"
+              type="date"
+              value={draft.end}
+              onChange={(e) => {
+                setEndAuto(false)
+                set('end', e.target.value)
+              }}
+              disabled={draft.dte}
+            />
           </div>
 
           <div className="space-y-1.5">
