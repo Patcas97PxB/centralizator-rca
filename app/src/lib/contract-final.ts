@@ -14,8 +14,11 @@ export function normPlate(raw?: string | null): string {
 }
 
 // Nr. dosar comparat fara spatii/cratime/majuscule ("HDR121926-4698" = "hdr 121926 4698").
+// Hellas: "HDR121926-4698" = "HDR 121926" (sufixul de dupa liniuta nu face parte din nr. dosar).
 export function normDosar(raw?: string | null): string {
-  return (raw || '').toUpperCase().replace(/[^A-Z0-9]/g, '')
+  const n = (raw || '').toUpperCase()
+  const hdr = n.match(/^\s*HDR\s*(\d+)/)
+  return hdr ? 'HDR' + hdr[1] : n.replace(/[^A-Z0-9]/g, '')
 }
 
 const RE_NR_RO = /^[A-Z]{1,2}\d{2,3}[A-Z]{3}$/
@@ -23,11 +26,17 @@ const RE_NR_RO = /^[A-Z]{1,2}\d{2,3}[A-Z]{3}$/
 // La scanari OCR-ul confunda litere/cifre (8↔B↔S↔E, 0↔O↔D, 1↔I↔L…). Doua valori de aceeasi lungime
 // care difera in cel mult 2 pozitii le consideram "probabil aceeasi" — nu declaram contract gresit pe
 // baza unei litere citite prost.
+const CONFUZII = ['8BES53', '0ODQ', '1IL7', '2Z', '6G', '4A']
+const seConfunda = (x: string, y: string) => CONFUZII.some((g) => g.includes(x) && g.includes(y))
 export function aproapeLaFel(a: string, b: string): boolean {
   if (a === b) return true
   if (!a || !b || a.length !== b.length) return false
   let dif = 0
-  for (let i = 0; i < a.length; i++) if (a[i] !== b[i]) dif++
+  for (let i = 0; i < a.length; i++) {
+    if (a[i] === b[i]) continue
+    if (!seConfunda(a[i], b[i])) return false // ex. 6 vs 7 = alt dosar, nu greseala de citire
+    dif++
+  }
   return dif <= 2
 }
 
@@ -145,6 +154,10 @@ export function parseContractFinalText(fullText: string, dinOcr = false): Contra
     const plate = mRef[1].toUpperCase()
     if (!dinOcr || RE_NR_RO.test(plate)) out.nrAutoPagubit = formatPlate(plate)
     out.nrDosar = mRef[2].trim()
+    // Hellas Direct: formatul canonic e "HDR 121926" — fara sufixul de dupa liniuta ("HDR121926-4698"),
+    // aceeasi regula ca la PRELUARE DATE (shared/extractie.js).
+    const mHdr = out.nrDosar.match(/^HDR\s*(\d+)/i)
+    if (mHdr) out.nrDosar = 'HDR ' + mHdr[1]
   }
 
   const ALIASE: Record<string, RegExp> = {
