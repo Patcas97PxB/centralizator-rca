@@ -186,7 +186,9 @@ export interface DosarPentruVerificare {
 // amestecam date intre dosare).
 export function detectContractGresit(ex: ContractFinalExtras, curent: DosarPentruVerificare, dinOcr = false): string | null {
   const difera = (a: string, b: string) => (dinOcr ? !aproapeLaFel(a, b) : a !== b)
-  if (ex.nrContract && curent.nrRezervare && difera(ex.nrContract, curent.nrRezervare)) {
+  // Nr. rezervare se scrie de mana in mai multe feluri ("RBH/29770", "RBH 29770", "29770") — comparam cifrele.
+  const cifre = (x: string) => x.replace(/\D/g, '')
+  if (ex.nrContract && cifre(curent.nrRezervare) && difera(cifre(ex.nrContract), cifre(curent.nrRezervare))) {
     return `⛔ CONTRACT GREȘIT — ați încărcat contractul de la ${ex.nrContract} (acest dosar e ${curent.nrRezervare}).`
   }
   if (ex.nrAutoPagubit && curent.nrAutoPagubit && difera(normPlate(ex.nrAutoPagubit), normPlate(curent.nrAutoPagubit))) {
