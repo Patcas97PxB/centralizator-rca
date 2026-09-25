@@ -71,20 +71,24 @@ export function analizaDeviz(rawText: string): AnalizaDeviz | null {
   }
 }
 
-function numarRo(s: string): number {
-  return parseFloat(s.replace(/\./g, '').replace(',', '.')) || 0
+// Ore din sumar: "17,20" (sau "17.20" cand OCR-ul citeste virgula ca punct).
+function oreGT(s: string): number {
+  return parseFloat(s.replace(',', '.')) || 0
 }
 
-// Devize GT Estimate (GtEstimate Web): orele se iau din sumarul de la final —
-// "Manopera ... Total exc. reducere (17,20 h)" si "Vopsitorie ... Subtotal Manoperă (13,10 h)".
-// Aceeasi formula ca la Audatex: (manopera + vopsitorie) / 4, rotunjit. Orele de manopera
-// se iau intregi (inclusiv "Timp intocmire deviz" / "Timp reconstatare"), confirmat de utilizator.
+// Devize GT Estimate (GtEstimate Web), PDF sau poza (OCR): orele se iau din sumarul de la final —
+// "Total exc. reducere (17,20 h)" = manopera si "Subtotal Manoperă (13,10 h)" = vopsitorie
+// (singurele randuri din deviz cu ore intre paranteze). Aceeasi formula ca la Audatex:
+// (manopera + vopsitorie) / 4, rotunjit. Orele de manopera se iau intregi (inclusiv
+// "Timp intocmire deviz" / "Timp reconstatare"), confirmat de utilizator. Regex-urile tolereaza
+// greselile tipice de OCR: punct in loc de virgula, "h" lipsa/citit "n", paranteza citita "{" / "[".
 function analizaDevizGT(t: string): AnalizaDeviz | null {
-  const mMan = t.match(/Total I\/D Timp manoper[aă](?!\s*vopsire)[\s\S]*?Total exc\.?\s*reducere\s*\(\s*([\d.,]+)\s*h\s*\)/i)
-  const mVop = t.match(/Total I\/D Timp manoper[aă]\s*vopsire[\s\S]*?Subtotal Manoper[aă]\s*\(\s*([\d.,]+)\s*h\s*\)/i)
+  const ORE = String.raw`[(\[{]\s*(\d{1,3}[.,]\d{1,2})\s*[hn]?\s*[)\]}]`
+  const mMan = t.match(new RegExp(String.raw`Total\s*exc\.?\s*reducere\s*` + ORE, 'i'))
+  const mVop = t.match(new RegExp(String.raw`Subtotal\s*Manoper\S*\s*` + ORE, 'i'))
   if (!mMan && !mVop) return null
-  const oreManopera = mMan ? numarRo(mMan[1]) : 0
-  const oreVopsitorie = mVop ? numarRo(mVop[1]) : 0
+  const oreManopera = mMan ? oreGT(mMan[1]) : 0
+  const oreVopsitorie = mVop ? oreGT(mVop[1]) : 0
   const ore = oreManopera + oreVopsitorie
   if (!ore) return null
   const total = Math.round(ore / 4)

@@ -39,7 +39,7 @@ export function useDevizScan() {
         setResult(an)
         setStage('done')
       } else {
-        setErrorMsg('Nu am găsit manopera în acest document — verifică claritatea sau introdu zilele manual.')
+        setErrorMsg('Nu am găsit orele de manoperă în acest document. La poze, fotografiază pagina cu totalurile (la GT Estimate: „Total exc. reducere (… h)”) clar și drept, sau introdu zilele manual.')
         setStage('error')
       }
     } catch (e) {
