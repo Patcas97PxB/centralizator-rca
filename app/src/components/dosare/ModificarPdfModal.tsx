@@ -6,6 +6,7 @@ import {
   Download,
   FileEdit,
   FileText,
+  Files,
   Loader2,
   ScrollText,
   Undo2,
@@ -13,7 +14,7 @@ import {
   X,
 } from 'lucide-react'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
-import { aplicaModificare, randeazaPagina, type Cuvant, type PaginaRandata } from '@/lib/pdf-editor'
+import { aplicaModificare, extragePagini, randeazaPagina, type Cuvant, type PaginaRandata } from '@/lib/pdf-editor'
 import { cn } from '@/lib/utils'
 
 interface IntrareJurnal {
@@ -92,6 +93,7 @@ export function ModificarPdfModal({ open, onClose }: { open: boolean; onClose: (
   const [eroare, setEroare] = useState('')
   const [avertizari, setAvertizari] = useState<string[]>([])
   const [dragOver, setDragOver] = useState(false)
+  const [paginiAlese, setPaginiAlese] = useState<number[]>([])
   const inputRef = useRef<HTMLInputElement>(null)
   const ancora = useRef<number | null>(null)
 
@@ -107,6 +109,7 @@ export function ModificarPdfModal({ open, onClose }: { open: boolean; onClose: (
     setEroare('')
     setAvertizari([])
     setSeLucreaza(null)
+    setPaginiAlese([])
   }
 
   useEffect(() => {
@@ -219,6 +222,22 @@ export function ModificarPdfModal({ open, onClose }: { open: boolean; onClose: (
   function descarcaPdf() {
     if (bytes) descarca(bytes as BlobPart, baza + ' (modificat).pdf', 'application/pdf')
   }
+  // „Salvează pagini": PDF nou doar cu paginile bifate (ex. pagina 2 din 3).
+  async function salveazaPagini() {
+    if (!bytes || paginiAlese.length === 0) return
+    setSeLucreaza('Se salvează paginile…')
+    setEroare('')
+    try {
+      const nou = await extragePagini(bytes, paginiAlese)
+      const nr = [...paginiAlese].sort((a, b) => a - b).map((i) => i + 1)
+      descarca(nou as BlobPart, `${baza} (${nr.length === 1 ? 'pagina' : 'paginile'} ${nr.join(', ')}).pdf`, 'application/pdf')
+    } catch (e) {
+      setEroare('Nu am putut separa paginile (' + (e instanceof Error ? e.message : 'eroare') + ').')
+    } finally {
+      setSeLucreaza(null)
+    }
+  }
+
   function descarcaJurnal() {
     const linii = [
       'Jurnal modificări PDF',
@@ -245,7 +264,7 @@ export function ModificarPdfModal({ open, onClose }: { open: boolean; onClose: (
           <div className="min-w-0 flex-1">
             <DialogTitle className="text-[17px] font-extrabold leading-tight text-[#f8fafc]">Modificare PDF</DialogTitle>
             <p className="mt-0.5 truncate text-[12.5px] text-[#94a3b8]">
-              {numeFisier || 'Alege un PDF, apasă pe textul pe care vrei să-l schimbi și scrie noua valoare'}
+              {numeFisier || 'Alege un PDF: schimbă text sau separă paginile într-un PDF nou'}
             </p>
           </div>
           <button
@@ -449,6 +468,58 @@ export function ModificarPdfModal({ open, onClose }: { open: boolean; onClose: (
                       </button>
                     ))}
                   </div>
+                </section>
+              )}
+
+              {randare && randare.nrPagini > 1 && (
+                <section className="rounded-2xl border border-[#00f5a0]/25 bg-[#00f5a0]/[.04] p-3.5">
+                  <div className="mb-1.5 flex items-center gap-1.5 text-[10px] font-extrabold tracking-[.1em] text-[#8ea0c4]">
+                    <Files className="size-3" aria-hidden="true" />
+                    SEPARĂ PAGINI
+                  </div>
+                  <p className="mb-2 text-xs leading-relaxed text-[#94a3b8]">Apasă pe paginile pe care le vrei într-un PDF nou (le vezi în stânga).</p>
+                  <div className="flex flex-wrap gap-1.5">
+                    {Array.from({ length: randare.nrPagini }, (_, i) => {
+                      const bifata = paginiAlese.includes(i)
+                      return (
+                        <button
+                          key={i}
+                          type="button"
+                          aria-pressed={bifata}
+                          disabled={ocupat}
+                          onClick={() => {
+                            setPaginiAlese((l) => (bifata ? l.filter((x) => x !== i) : [...l, i]))
+                            if (!bifata && i !== pagina) {
+                              setPagina(i)
+                              setAlese([])
+                            }
+                          }}
+                          className={cn(
+                            'h-8 min-w-8 rounded-[9px] border px-2 text-[12.5px] font-bold tabular-nums transition-colors disabled:opacity-50',
+                            bifata
+                              ? 'border-[#00f5a0]/70 bg-[#00f5a0]/20 text-[#00f5a0]'
+                              : 'border-[#253150] bg-white/[.02] text-[#cbd5e1] hover:bg-white/[.06]',
+                            i === pagina && !bifata && 'border-[#60a5fa]/70',
+                          )}
+                        >
+                          {i + 1}
+                        </button>
+                      )
+                    })}
+                  </div>
+                  <button
+                    type="button"
+                    disabled={ocupat || paginiAlese.length === 0}
+                    onClick={salveazaPagini}
+                    className="mt-2.5 flex h-9 w-full items-center justify-center gap-2 rounded-[10px] border border-[#00f5a0]/50 bg-[#00f5a0]/15 px-4 text-[12.5px] font-extrabold text-[#00f5a0] transition-colors hover:bg-[#00f5a0]/25 disabled:opacity-40"
+                  >
+                    <Download className="size-4" aria-hidden="true" />
+                    {paginiAlese.length === 0
+                      ? 'Alege cel puțin o pagină'
+                      : paginiAlese.length === 1
+                        ? `Salvează pagina ${paginiAlese[0] + 1} ca PDF nou`
+                        : `Salvează ${paginiAlese.length} pagini ca PDF nou`}
+                  </button>
                 </section>
               )}
 

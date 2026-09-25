@@ -289,3 +289,14 @@ export async function aplicaModificare(
   const finalBytes = await pdf.save()
   return { bytes: new Uint8Array(finalBytes), avertizari }
 }
+
+// Pagini separate: copiaza paginile alese (index de la 0, in ordinea din document) intr-un PDF nou.
+// Pleaca de la versiunea curenta, deci pastreaza si modificarile facute deja. Merge si pe PDF-uri scanate.
+export async function extragePagini(bytes: Uint8Array, indici: number[]): Promise<Uint8Array> {
+  const sursa = await PDFDocument.load(bytes, { ignoreEncryption: true })
+  const nou = await PDFDocument.create()
+  const ordonate = [...new Set(indici)].sort((a, b) => a - b)
+  const pagini = await nou.copyPages(sursa, ordonate)
+  pagini.forEach((p) => nou.addPage(p))
+  return nou.save()
+}
