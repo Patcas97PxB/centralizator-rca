@@ -1,5 +1,5 @@
 // Portat 1:1 din analizaDeviz() (index.html) — calculul zilelor de reparatie dintr-un
-// deviz Audatex, conform Normei ASF nr. 20/2017, art. 25 alin. 4 (timp normat total /
+// deviz Audatex (si GT Estimate, vezi analizaDevizGT), conform Normei ASF nr. 20/2017, art. 25 alin. 4 (timp normat total /
 // 4, rotunjit). NU se reinterpreteaza formula.
 export interface AnalizaDeviz {
   ul: number
@@ -17,7 +17,7 @@ export function analizaDeviz(rawText: string): AnalizaDeviz | null {
   // Baza de normare a manoperei variaza pe deviz: poate fi in UL, UT sau direct in ORE.
   // Formate intalnite: "BAZA MANOPERA 10 UL=1 ORA", "100 UT=1 ORA", sau "BAZA MANOPERA = 1 ORA".
   const mBaza = t.match(/BAZA MANOPERA\s*(\d+)?\s*(UL|UT)?\s*=\s*1\s*ORA/i)
-  if (!mBaza) return null
+  if (!mBaza) return analizaDevizGT(t)
   const baza = mBaza[1] ? parseFloat(mBaza[1]) : 1
   const unitate = mBaza[2] ? mBaza[2].toUpperCase() : 'ORE'
 
@@ -67,6 +67,39 @@ export function analizaDeviz(rawText: string): AnalizaDeviz | null {
       `Manoperă: ${sumaUnitati} ${unitate} (bază ${baza}${unitate}=1 oră) = ${oreManopera.toFixed(1)} ore`,
       `Vopsitorie: ${oreVopsitorie.toFixed(1)} ore`,
       `Total ore normate: ${ore.toFixed(1)} ore ÷ 4 = ${total} ${total === 1 ? 'zi' : 'zile'} (Norma ASF nr. 20/2017, art. 25 alin. 4)`,
+    ],
+  }
+}
+
+function numarRo(s: string): number {
+  return parseFloat(s.replace(/\./g, '').replace(',', '.')) || 0
+}
+
+// Devize GT Estimate (GtEstimate Web): orele se iau din sumarul de la final —
+// "Manopera ... Total exc. reducere (17,20 h)" si "Vopsitorie ... Subtotal Manoperă (13,10 h)".
+// Aceeasi formula ca la Audatex: (manopera + vopsitorie) / 4, rotunjit. Orele de manopera
+// se iau intregi (inclusiv "Timp intocmire deviz" / "Timp reconstatare"), confirmat de utilizator.
+function analizaDevizGT(t: string): AnalizaDeviz | null {
+  const mMan = t.match(/Total I\/D Timp manoper[aă](?!\s*vopsire)[\s\S]*?Total exc\.?\s*reducere\s*\(\s*([\d.,]+)\s*h\s*\)/i)
+  const mVop = t.match(/Total I\/D Timp manoper[aă]\s*vopsire[\s\S]*?Subtotal Manoper[aă]\s*\(\s*([\d.,]+)\s*h\s*\)/i)
+  if (!mMan && !mVop) return null
+  const oreManopera = mMan ? numarRo(mMan[1]) : 0
+  const oreVopsitorie = mVop ? numarRo(mVop[1]) : 0
+  const ore = oreManopera + oreVopsitorie
+  if (!ore) return null
+  const total = Math.round(ore / 4)
+  const f = (n: number, d = 1) => n.toFixed(d).replace('.', ',')
+  return {
+    ul: ore,
+    ore,
+    total,
+    unitate: 'ORE',
+    explicatie: `GT Estimate: ${f(oreManopera, 2)} h manoperă + ${f(oreVopsitorie, 2)} h vopsitorie = ${f(ore, 2)} ore`,
+    formulaCalcul: `${f(oreManopera, 2)} h manoperă + ${f(oreVopsitorie, 2)} h vopsitorie = ${f(ore, 2)} ore ÷ 4 = ${f(ore / 4, 2)} → ${total} ${total === 1 ? 'zi' : 'zile'}`,
+    detalii: [
+      `Manoperă: ${f(oreManopera, 2)} ore`,
+      `Vopsitorie: ${f(oreVopsitorie, 2)} ore`,
+      `Total ore normate: ${f(ore)} ore ÷ 4 = ${total} ${total === 1 ? 'zi' : 'zile'} (Norma ASF nr. 20/2017, art. 25 alin. 4)`,
     ],
   }
 }

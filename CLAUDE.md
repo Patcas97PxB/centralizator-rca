@@ -37,6 +37,8 @@ Comite local oricând, dar **push doar când cere utilizatorul**. Pozele de maș
 - **Modificare PDF** (cardul din dreapta): editor în browser, fără API/AI/server. `lib/pdf-editor.ts` + `ModificarPdfModal.tsx`. MuPDF.js (WASM, licență AGPL, încărcat lazy) citește cuvintele cu poziții și **șterge definitiv** textul ales; pdf-lib scrie noul text în același loc (font, mărime și culoare din original; Arimo ca rezervă pentru ș/ț/ă). După ștergere verifică să nu se fi schimbat altceva, altfel refuză. Originalul nu se modifică; ieșirea e o copie descărcată + jurnal .txt. Doar PDF-uri cu text (nu scanate). Testat pe „PV PREDARE-PRELUARE + CONTRACT" (Helvetica 7pt).
 - Instrucțiuni libere pentru PDF („schimbă data…") ar cere Claude API ca interpret, printr-o Supabase Edge Function (cheia din Anthropic Console pusă ca secret în Supabase — niciodată în cod sau în chat). Nu există încă.
 
+- **Zile din deviz** (`lib/deviz-analiza.ts`): (ore manoperă + ore vopsitorie) ÷ 4, rotunjit. Audatex: din „BAZA MANOPERA” + „TOTAL CL”. **GT Estimate**: din sumar — „Total exc. reducere (X h)” (manoperă, cu tot cu întocmire deviz/reconstatare) + „Subtotal Manoperă (Y h)” (vopsitorie). Verificat pe 2 devize GT reale: 30,30 h → 8 zile, 11,50 h → 3 zile.
+
 ## Design și animații
 - Tokens și `@keyframes` în `app/src/index.css`. Toate animațiile respectă `prefers-reduced-motion`; există comutator „Animații: automat/pornite" în meniul avatarului (`lib/motion-pref.ts`). Pe Windows cu „Efecte de animație" oprite, browserul raportează reduced-motion.
 - Lumina de pe marginea sidebar-ului + header-ului: `components/layout/LightRay.tsx` (un singur traseu SVG, colț drept).
@@ -48,7 +50,7 @@ Comite local oricând, dar **push doar când cere utilizatorul**. Pozele de maș
 - Serverul de dev și site-ul live folosesc **aceeași bază de date Supabase**: la teste nu salva/șterge dosare reale (deschide formulare și închide cu Anulează).
 - Avertismentele Git „LF will be replaced by CRLF" sunt inofensive.
 - Modalul de documente salvează automat fiecare schimbare.
-- Netestat cu fișiere reale: extragerea zilelor dintr-un deviz real și citirea unui contract final real (codul e portat din versiunea veche).
+- Netestat cu fișiere reale: extragerea zilelor dintr-un deviz Audatex real și citirea unui contract final real (codul e portat din versiunea veche).
 
 ## Preferințe de lucru ale utilizatorului
 Răspunsuri scurte, în română. Verifică vizual în browser înainte să spui că e gata. Când nu ești sigur de o regulă de business, întreabă. Nu adăuga butoane sau elemente noi pe card fără cerere explicită.
