@@ -58,7 +58,7 @@ export function DosarCard({
   const pct = finalizat ? 100 : scurse !== null && total ? Math.max(0, Math.min(100, (scurse / total) * 100)) : 0
   const urgColor = cardColor
   const subStanga = finalizat ? 'închis' : viitor ? 'nepredată' : scurse !== null && total ? `ziua ${scurse} / ${total}` : ''
-  const subDreapta = finalizat ? 'preluată' : viitor ? 'așteaptă predarea' : urgenta.depasit ? 'termen depășit' : 'termen'
+  const subDreapta = finalizat || preluatFacut ? 'preluată' : viitor ? 'așteaptă predarea' : urgenta.depasit ? 'termen depășit' : 'termen'
 
   const prevStatusRef = useRef(dosar.status)
   const [celebrating, setCelebrating] = useState(false)

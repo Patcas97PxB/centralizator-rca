@@ -322,6 +322,10 @@ export function urgentaDosar(d: Dosar): UrgentaDosar {
   if (finalizat) {
     return { bigNum: String(rca.zile), bigLabel: 'zile decontabile (finalizat)', cls: 'c-green', depasit: false }
   }
+  // Masina e deja preluata, mai ramane doar inchiderea contractului: nu mai e alerta (fara rosu/"peste termen").
+  if (d.preluatBifat) {
+    return { bigNum: String(rca.zile), bigLabel: 'zile · preluată, închide contractul', cls: 'c-green', depasit: false }
+  }
   if (ramase === null) {
     return { bigNum: String(rca.zile), bigLabel: 'zile decontabile', cls: colorClass(rca.zile), depasit: false }
   }
@@ -372,6 +376,7 @@ export function dosareDeSunat(dosare: Dosar[]): DeSunat[] {
     if (dosar.status === 'in_asteptare' || dosar.status === 'astept_docum' || dosar.status === 'finalizat') continue
     const zile = zileLaTermen(dosar)
     const marcat = dosar.status === 'de_sunat'
+    if (!marcat && dosar.preluatBifat) continue
     if (marcat || (zile !== null && zile <= 2)) out.push({ dosar, zile, marcat })
   }
   return out.sort((a, b) => (a.zile ?? 99) - (b.zile ?? 99))
