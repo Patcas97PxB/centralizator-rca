@@ -165,6 +165,41 @@ async function octeti(url: string): Promise<ArrayBuffer> {
   return r.arrayBuffer()
 }
 
+// Cat de inchis arata textul dintr-o zona, pe pagina randata (0 = alb, 255 = negru). Se ia contrastul
+// dintre pixelii cei mai inchisi (miezul literelor) si fundal, deci tine cont de culoare, transparenta
+// si grosimea literelor — exact ce vede ochiul. null daca zona e goala.
+const SCARA_TON = 4
+function tonZona(mupdf: Mupdf, page: import('mupdf').Page, rect: [number, number, number, number]): number | null {
+  const pix = page.toPixmap(mupdf.Matrix.scale(SCARA_TON, SCARA_TON), mupdf.ColorSpace.DeviceRGB, false, false)
+  try {
+    const px = pix.getPixels()
+    const w = pix.getWidth()
+    const h = pix.getHeight()
+    const st = pix.getStride()
+    const n = pix.getNumberOfComponents()
+    const ox = pix.getX()
+    const oy = pix.getY()
+    const x0 = Math.max(0, Math.floor(rect[0] * SCARA_TON - ox))
+    const x1 = Math.min(w, Math.ceil(rect[2] * SCARA_TON - ox))
+    const y0 = Math.max(0, Math.floor(rect[1] * SCARA_TON - oy))
+    const y1 = Math.min(h, Math.ceil(rect[3] * SCARA_TON - oy))
+    const d: number[] = []
+    for (let y = y0; y < y1; y++) {
+      for (let x = x0; x < x1; x++) {
+        const i = y * st + x * n
+        d.push(255 - (0.299 * px[i] + 0.587 * px[i + 1] + 0.114 * px[i + 2]))
+      }
+    }
+    if (d.length < 4) return null
+    d.sort((a, b) => a - b)
+    const fundal = d[Math.floor(d.length * 0.1)]
+    const miez = d[Math.floor(d.length * 0.97)]
+    return miez - fundal > 8 ? miez - fundal : null
+  } finally {
+    pix.destroy()
+  }
+}
+
 function uniuneRect(cuvinte: Cuvant[]): [number, number, number, number] {
   return [
     Math.min(...cuvinte.map((c) => c.rect[0])),
@@ -198,10 +233,12 @@ export async function aplicaModificare(
   let dupaStergere: Uint8Array
   let inainte: Cuvant[]
   let dupa: Cuvant[]
+  let tonOriginal: number | null = null
   try {
     const page = doc.loadPage(pagina) as import('mupdf').PDFPage
     inainte = extrageCuvinte(mupdf, page)
     const rect = uniuneRect(alese)
+    tonOriginal = tonZona(mupdf, page, rect)
     const annot = page.createAnnotation('Redact')
     annot.setRect(rect)
     page.applyRedactions(false, mupdf.PDFPage.REDACT_IMAGE_NONE, mupdf.PDFPage.REDACT_LINE_ART_NONE, mupdf.PDFPage.REDACT_TEXT_REMOVE)
@@ -231,48 +268,84 @@ export async function aplicaModificare(
   // 3) scrie textul nou exact in acelasi loc
   if (textNou.length === 0) return { bytes: dupaStergere, avertizari }
   const prim = alese[0]
-  const pdf = await PDFDocument.load(dupaStergere)
-  pdf.registerFontkit(fontkit)
-  const pag = pdf.getPage(pagina)
-  if (pag.getRotation().angle % 360 !== 0) throw new Error('Paginile rotite nu sunt suportate încă.')
-  const crop = pag.getCropBox()
-  const x = crop.x + prim.origin[0]
-  const y = crop.y + crop.height - prim.origin[1]
-  const culoare = rgb(prim.color[0], prim.color[1], prim.color[2])
 
-  let latimeText = 0
-  const std = await pdf.embedFont(fontStandard(prim.font))
-  let encodabil = true
-  try {
-    std.encodeText(textNou)
-  } catch {
-    encodabil = false
+  // Scrie textul cu o anumita culoare peste varianta dupa stergere; intoarce PDF-ul si latimea textului.
+  const scrieText = async (col: [number, number, number]) => {
+    const pdf = await PDFDocument.load(dupaStergere)
+    pdf.registerFontkit(fontkit)
+    const pag = pdf.getPage(pagina)
+    if (pag.getRotation().angle % 360 !== 0) throw new Error('Paginile rotite nu sunt suportate încă.')
+    const crop = pag.getCropBox()
+    const x = crop.x + prim.origin[0]
+    const y = crop.y + crop.height - prim.origin[1]
+    const culoare = rgb(col[0], col[1], col[2])
+    const std = await pdf.embedFont(fontStandard(prim.font))
+    let encodabil = true
+    try {
+      std.encodeText(textNou)
+    } catch {
+      encodabil = false
+    }
+    let latime: number
+    if (encodabil) {
+      pag.drawText(textNou, { x, y, size: prim.size, font: std, color: culoare })
+      latime = std.widthOfTextAtSize(textNou, prim.size)
+    } else {
+      // Litere care nu exista in fontul standard (ș, ț, ă...): font cu acoperire completa, pe portiuni.
+      const latin: PDFFont = await pdf.embedFont(await octeti(arimoLatinUrl), { subset: true })
+      const ext: PDFFont = await pdf.embedFont(await octeti(arimoExtUrl), { subset: true })
+      let cx = x
+      let run = ''
+      let runLatin = true
+      const scrie = () => {
+        if (!run) return
+        const f = runLatin ? latin : ext
+        pag.drawText(run, { x: cx, y, size: prim.size, font: f, color: culoare })
+        cx += f.widthOfTextAtSize(run, prim.size)
+        run = ''
+      }
+      for (const ch of textNou) {
+        const esteLatin = LATIN.test(ch)
+        if (run && esteLatin !== runLatin) scrie()
+        runLatin = esteLatin
+        run += ch
+      }
+      scrie()
+      latime = cx - x
+    }
+    return { bytes: await pdf.save(), latime, encodabil, latimePagina: pag.getWidth() }
   }
-  if (encodabil) {
-    pag.drawText(textNou, { x, y, size: prim.size, font: std, color: culoare })
-    latimeText = std.widthOfTextAtSize(textNou, prim.size)
-  } else {
-    // Litere care nu exista in fontul standard (ș, ț, ă...): font cu acoperire completa, pe portiuni.
-    const latin: PDFFont = await pdf.embedFont(await octeti(arimoLatinUrl), { subset: true })
-    const ext: PDFFont = await pdf.embedFont(await octeti(arimoExtUrl), { subset: true })
-    let cx = x
-    let run = ''
-    let runLatin = true
-    const scrie = () => {
-      if (!run) return
-      const f = runLatin ? latin : ext
-      pag.drawText(run, { x: cx, y, size: prim.size, font: f, color: culoare })
-      cx += f.widthOfTextAtSize(run, prim.size)
-      run = ''
+
+  // Tonul textului nou, masurat pe pagina randata, in zona in care a fost scris.
+  const tonNou = (b: Uint8Array, latime: number): number | null => {
+    const d = mupdf.Document.openDocument(b, 'application/pdf')
+    try {
+      const pg = d.loadPage(pagina)
+      const r: [number, number, number, number] = [prim.origin[0], Math.min(...alese.map((c) => c.rect[1])), prim.origin[0] + latime, Math.max(...alese.map((c) => c.rect[3]))]
+      const t = tonZona(mupdf, pg, r)
+      pg.destroy()
+      return t
+    } finally {
+      d.destroy()
     }
-    for (const ch of textNou) {
-      const esteLatin = LATIN.test(ch)
-      if (run && esteLatin !== runLatin) scrie()
-      runLatin = esteLatin
-      run += ch
+  }
+
+  // Scrisul nou iese de regula mai apasat decat originalul (transparenta pierduta, font de rezerva
+  // mai gros). Il deschidem la culoare pana arata la fel de inchis ca textul original. Doar deschidem,
+  // niciodata nu intunecam peste culoarea originala.
+  let culoare: [number, number, number] = [...prim.color]
+  let rez = await scrieText(culoare)
+  if (tonOriginal !== null) {
+    for (let pas = 0; pas < 3; pas++) {
+      const t = tonNou(rez.bytes, rez.latime)
+      if (t === null || t <= tonOriginal * 1.06) break
+      const k = Math.max(0.15, tonOriginal / t)
+      culoare = culoare.map((c) => 1 - (1 - c) * k) as [number, number, number]
+      rez = await scrieText(culoare)
     }
-    scrie()
-    latimeText = cx - x
+  }
+  const latimeText = rez.latime
+  if (!rez.encodabil) {
     avertizari.push('Textul conține litere speciale (ș, ț, ă…): am folosit fontul Arimo, foarte asemănător cu cel din document.')
   }
 
@@ -284,10 +357,9 @@ export async function aplicaModificare(
   if (vecin && capat > vecin.rect[0] - 0.8) {
     avertizari.push('Noul text este mai lung și se apropie de „' + vecin.text + '”. Verifică rezultatul.')
   }
-  if (capat > pag.getWidth() - 4) avertizari.push('Noul text ajunge la marginea paginii.')
+  if (capat > rez.latimePagina - 4) avertizari.push('Noul text ajunge la marginea paginii.')
 
-  const finalBytes = await pdf.save()
-  return { bytes: new Uint8Array(finalBytes), avertizari }
+  return { bytes: new Uint8Array(rez.bytes), avertizari }
 }
 
 // Pagini separate: copiaza paginile alese (index de la 0, in ordinea din document) intr-un PDF nou.
