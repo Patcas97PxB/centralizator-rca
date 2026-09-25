@@ -80,7 +80,7 @@ export function DocumenteModal({
       // Contractul final: se citeste (zile, valoare, clasa) si se verifica sa fie al acestui dosar.
       if (labels.includes('contract')) {
         setStatus('Se citește contractul final ' + file.name + '…')
-        const r = await citesteContractFinal(file, { ...(latest.current as Dosar), ...dePatch })
+        const r = await citesteContractFinal(file, { ...(latest.current as Dosar), ...dePatch }, setStatus)
         if (r.valid) {
           dePatch = { ...dePatch, ...r.patch, contractFinalIncarcat: true }
           mesaje.push(r.mesaj)

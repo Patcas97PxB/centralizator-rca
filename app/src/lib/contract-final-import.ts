@@ -1,5 +1,5 @@
 import { detectContractGresit, normPlate, parseContractFinalText } from '@/lib/contract-final'
-import { pdfLibDisponibil, readPdfText } from '@/lib/pdf-ocr'
+import { mesajEroareOCR, ocrImageToText, pdfLibDisponibil, pdfToImageBlobs, readPdfText } from '@/lib/pdf-ocr'
 import type { Dosar } from '@/lib/types'
 
 export interface RezultatContractFinal {
@@ -11,19 +11,47 @@ export interface RezultatContractFinal {
   eroare: boolean
 }
 
+// Textul contractului: din PDF-ul cu text (export direct), iar pentru scanari (PDF scanat la imprimanta
+// sau poza) prin OCR (Tesseract, ron+eng), pagina cu pagina.
+async function textContract(file: File, laStadiu?: (mesaj: string) => void): Promise<string> {
+  const estePdf = file.type === 'application/pdf' || /\.pdf$/i.test(file.name)
+  if (!estePdf) {
+    laStadiu?.('Se citește poza contractului…')
+    return ocrImageToText(file)
+  }
+  if (!pdfLibDisponibil()) throw new Error('Biblioteca de citire PDF nu s-a încărcat. Verifică internetul și reîncarcă pagina.')
+  const text = await readPdfText(file)
+  if (text.replace(/\s+/g, '').length >= 80 && parseContractFinalText(text).valid) return text
+  // PDF fara text (scanat): randam paginile si le citim cu OCR
+  laStadiu?.('Contract scanat — se citește textul din imagine…')
+  const imagini = await pdfToImageBlobs(file, 4)
+  return text + '\n' + (await ocrImageToText(imagini))
+}
+
 // Citeste contractul final (export winMentor) si completeaza/verifica campurile — daca datele nu se
 // potrivesc cu dosarul curent (alt nr. contract/dosar/auto/asigurator), NU completeaza nimic si
 // avertizeaza. Folosit si din formular ("Contract final"), si din modalul de documente.
-export async function citesteContractFinal(file: File, dosar: Dosar): Promise<RezultatContractFinal> {
+export async function citesteContractFinal(
+  file: File,
+  dosar: Dosar,
+  laStadiu?: (mesaj: string) => void,
+): Promise<RezultatContractFinal> {
   const esec = (mesaj: string): RezultatContractFinal => ({ valid: false, patch: {}, mesaj, eroare: true })
-  const esteConform = file.type === 'application/pdf' || /\.pdf$/i.test(file.name)
-  if (!esteConform) return esec('Contractul final trebuie să fie PDF. Nu am completat nimic.')
-  if (!pdfLibDisponibil()) return esec('Biblioteca de citire PDF nu s-a încărcat. Verifică internetul și reîncarcă pagina.')
+  const esteConform = file.type === 'application/pdf' || /\.pdf$/i.test(file.name) || file.type.startsWith('image/')
+  if (!esteConform) return esec('Contractul final trebuie să fie PDF sau poză (JPG, PNG). Nu am completat nimic.')
+
+  let text: string
+  try {
+    text = await textContract(file, laStadiu)
+  } catch (e) {
+    console.error(e)
+    return esec(e instanceof Error && e.message ? e.message : mesajEroareOCR(e))
+  }
 
   try {
-    const ex = parseContractFinalText(await readPdfText(file))
+    const ex = parseContractFinalText(text)
     if (!ex.valid) {
-      return esec('⛔ Acest fișier nu pare să fie un contract final (nu am găsit nr. contract sau tabelul de cost). Nu am completat nimic.')
+      return esec('⛔ Acest fișier nu pare să fie un contract final (nu am găsit nr. contract sau tabelul de cost). La scanări, verifică să fie drept și clar. Nu am completat nimic.')
     }
     const eroareContract = detectContractGresit(ex, {
       nrRezervare: dosar.nrRezervare,

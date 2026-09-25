@@ -33,15 +33,17 @@ export interface ContractFinalExtras {
 // zile totale, valoare fara TVA, asigurator, nr. inmatriculare auto inchiriat (inlocuire),
 // nr. auto pagubit + nr. dosar (din "Referinta").
 export function parseContractFinalText(fullText: string): ContractFinalExtras {
+  // OCR-ul (scanari/poze) poate citi „și" in loc de „si", „;" in loc de „:", spatii in plus etc.
   const norm = fullText.replace(/\s+/g, ' ')
+  const SI = '[sșş][iîl1]'
   const out: ContractFinalExtras = {
     nrContract: '', clasa: '', zile: '', valoare: '', asigurator: '',
     nrInmatriculare: '', nrAutoPagubit: '', nrDosar: '', valid: false,
   }
-  const mContract = norm.match(/Nr\.?\s*contract:?\s*(RBH\/\d+)/i)
-  if (mContract) out.nrContract = mContract[1]
+  const mContract = norm.match(/Nr[.,]?\s*contract\s*[:;.]?\s*(R[B8]H)\s*[/|]\s*(\d+)/i)
+  if (mContract) out.nrContract = 'RBH/' + mContract[2]
 
-  const mZileContract = norm.match(/Total zile si ore:?\s*(\d+)\s*zile(?:\s*si\s*(\d+)\s*ore)?/i)
+  const mZileContract = norm.match(new RegExp(`Total\\s*zile\\s*${SI}\\s*ore\\s*[:;.]?\\s*(\\d+)\\s*zile(?:\\s*${SI}\\s*(\\d+)\\s*ore)?`, 'i'))
   if (mZileContract) {
     let zileBaza = parseInt(mZileContract[1], 10)
     const ore = mZileContract[2] ? parseInt(mZileContract[2], 10) : 0
@@ -49,27 +51,27 @@ export function parseContractFinalText(fullText: string): ContractFinalExtras {
     out.zile = String(zileBaza)
   }
 
-  const mClasaRez = norm.match(/Clasa auto rezervat[ăa]:?\s*CLASA\s*([A-Za-z0-9]+)/i)
+  const mClasaRez = norm.match(/Clasa\s*auto\s*rezervat[ăa]\s*[:;.]?\s*CLASA\s*([A-Za-z0-9]+)/i)
   if (mClasaRez) out.clasa = normalizeClasaCode(mClasaRez[1])
 
-  const mRand = norm.match(/INCHIRIERE AUTO CLASA\s*[A-Za-z0-9/]*\s+(\d+)\s+([\d.,]+)\s+([\d.,]+)\s+([\d.,]+)/i)
+  const mRand = norm.match(/[IÎ]NCHIRIERE\s*AUTO\s*CLASA\s*[A-Za-z0-9/]*\s+(\d+)\s+([\d.,]+)\s+([\d.,]+)\s+([\d.,]+)/i)
   if (mRand) {
     out.valoare = mRand[3].replace(',', '.')
     out.pretZi = mRand[2].replace(',', '.')
     out.valoareCuTVA = mRand[4].replace(',', '.')
   } else {
-    const mTotal = norm.match(/Valoare\s*fara\s*TVA[\s:]*([\d.,]+)/i)
+    const mTotal = norm.match(/Valoare\s*f[aă]r[aă]\s*TVA[\s:;]*([\d.,]+)/i)
     if (mTotal) out.valoare = mTotal[1].replace(',', '.')
   }
 
   // Data reala de predare (plecare client cu masina) si preluare (predare masina inapoi la Autonom).
-  const mPlecare = norm.match(/Data\s*si\s*ora\s*plecare:?\s*[A-Za-zăâîșțĂÂÎȘȚ]*,?\s*(\d{2})\.(\d{2})\.(\d{4})/i)
+  const mPlecare = norm.match(new RegExp(`Data\\s*${SI}\\s*ora\\s*plecare[:;]?` + String.raw`\s*[A-Za-zăâîșțĂÂÎȘȚ]*,?\s*(\d{2})[.,](\d{2})[.,](\d{4})`, 'i'))
   if (mPlecare) out.dataPredareReala = `${mPlecare[3]}-${mPlecare[2]}-${mPlecare[1]}`
-  const mPredareInapoi = norm.match(/Data\s*si\s*ora\s*predare:?\s*[A-Za-zăâîșțĂÂÎȘȚ]*,?\s*(\d{2})\.(\d{2})\.(\d{4})/i)
+  const mPredareInapoi = norm.match(new RegExp(`Data\\s*${SI}\\s*ora\\s*predare[:;]?` + String.raw`\s*[A-Za-zăâîșțĂÂÎȘȚ]*,?\s*(\d{2})[.,](\d{2})[.,](\d{4})`, 'i'))
   if (mPredareInapoi) out.dataPreluareReala = `${mPredareInapoi[3]}-${mPredareInapoi[2]}-${mPredareInapoi[1]}`
 
   // Nr. inmatriculare (Detalii auto) = mașina de ÎNLOCUIRE oferită de Autonom clientului — NU mașina păgubită.
-  const mNr = norm.match(/Nr\.?\s*inmatriculare:?\s*([A-Z0-9\-\s]{4,12}?)\s*(?:Marca|Km|Combustibil)/i)
+  const mNr = norm.match(/Nr[.,]?\s*[iî]nmatriculare\s*[:;.]?\s*([A-Z0-9\-\s]{4,12}?)\s*(?:Marca|Km|Combustibil)/i)
   if (mNr) out.nrInmatriculare = formatPlate(mNr[1])
 
   // Referinta (colț dreapta-sus): "B126PJF - U21202010742" = nr. auto PĂGUBIT - nr. dosar.
