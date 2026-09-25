@@ -1,4 +1,4 @@
-import { useRef, useState, type DragEvent } from 'react'
+import { useEffect, useRef, useState, type DragEvent } from 'react'
 import { AlertTriangle, Check, FileSearch, X } from 'lucide-react'
 import { useDevizScan } from '@/hooks/useDevizScan'
 import type { AnalizaDeviz } from '@/lib/deviz-analiza'
@@ -16,6 +16,14 @@ export function ScanDevizCard({ onApply }: { onApply: (an: AnalizaDeviz) => void
   const inputRef = useRef<HTMLInputElement>(null)
   const [dragOver, setDragOver] = useState(false)
   const tile = TILE_BY_STAGE[stage]
+
+  // Dupa un rezultat (sau o eroare), cardul revine singur la starea initiala in 10 secunde.
+  useEffect(() => {
+    if (stage !== 'done' && stage !== 'error') return
+    const t = setTimeout(reset, 10_000)
+    return () => clearTimeout(t)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [stage])
 
   function pick() {
     if (stage === 'scanning') return
