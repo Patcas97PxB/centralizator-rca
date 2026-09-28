@@ -10,6 +10,7 @@ import {
   lipsuriFinalizare,
 } from '@/lib/documente'
 import { citesteContractFinal } from '@/lib/contract-final-import'
+import { majuscule } from '@/lib/majuscule'
 import { incarcaDocument, mesajEroareAsset, stergeDocumentStocare } from '@/lib/documente-storage'
 import type { Dosar, DocumentDosar } from '@/lib/types'
 import { cn } from '@/lib/utils'
@@ -60,7 +61,7 @@ export function DocumenteModal({
   const procent = st.total > 0 ? Math.round((st.have / st.total) * 100) : 0
 
   function patch(p: Partial<Dosar>) {
-    const next = { ...(latest.current as Dosar), ...p }
+    const next = { ...(latest.current as Dosar), ...majuscule(p) }
     latest.current = next
     setDraft(next)
     onSave(next).catch((e) => setStatus(e instanceof Error ? e.message : 'Eroare la salvare.'))

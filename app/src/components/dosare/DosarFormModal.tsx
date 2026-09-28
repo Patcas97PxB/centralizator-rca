@@ -33,6 +33,7 @@ import { suggestClasaFromModel, vehicleClasses } from '@/lib/clase-auto'
 import { lipsuriFinalizare } from '@/lib/documente'
 import { calculRCA, todayStr } from '@/lib/rca-calc'
 import { STATUS_META, dosarGol, type Dosar, type StatusDosar, type Vehicul } from '@/lib/types'
+import { majuscule } from '@/lib/majuscule'
 import { PreluareDateSection } from './PreluareDateSection'
 import { DevizRecalculeazaButton } from './DevizRecalculeazaButton'
 import { ServiceCombobox } from './ServiceCombobox'
@@ -67,17 +68,17 @@ export function DosarFormModal({
 
   useEffect(() => {
     if (open) {
-      setDraft(dosar ?? { ...dosarGol(), ...initialDraft, id: 'd' + Date.now(), start: todayStr() })
+      setDraft(majuscule(dosar ?? { ...dosarGol(), ...initialDraft, id: 'd' + Date.now(), start: todayStr() }))
       setEndAuto(!dosar?.end)
       setEroare('')
     }
   }, [open, dosar, initialDraft])
 
   function set<K extends keyof Dosar>(key: K, value: Dosar[K]) {
-    setDraft((d) => ({ ...d, [key]: value }))
+    setDraft((d) => ({ ...d, ...majuscule({ [key]: value } as Partial<Dosar>) }))
   }
   function patch(p: Partial<Dosar>) {
-    setDraft((d) => ({ ...d, ...p }))
+    setDraft((d) => ({ ...d, ...majuscule(p) }))
   }
 
   function blocheazaFinalizare(d: Dosar): boolean {
@@ -122,7 +123,7 @@ export function DosarFormModal({
     setSaving(true)
     setEroare('')
     try {
-      await onSave(draft)
+      await onSave(majuscule(draft))
       onClose()
     } catch (e) {
       setEroare(e instanceof Error ? e.message : 'Eroare la salvare.')
