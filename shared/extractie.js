@@ -44,7 +44,7 @@ function extractFromText(text) {
       .replace(/([A-Za-z0-9])\s*-\s*([A-Za-z0-9])/g, '$1-$2');
     // Acoperă "nr. dosar", "dosar nr.", "dosar daune:" / "dosar daună nr." (Groupama și alții, fără "nr" explicit)
     // (?!daun) previne capturarea cuvântului "daună/daune" ca valoare, atunci când eticheta nu îl consumă
-    let m = compact.match(new RegExp('(?:nr\\.?\\s*dosar(?:\\s*(?:de\\s*)?daun[' + RO_WORD + ']*)?|dosar\\s*(?:de\\s*)?daun[' + RO_WORD + ']*(?:\\s*nr\\.?)?|dosar\\s*nr\\.?|num[ăa]r\\s*dosar(?:\\s*(?:de\\s*)?daun[' + RO_WORD + ']*)?)\\s*[:\\-]?\\s*(?!daun)([A-Z0-9][A-Z0-9\\/\\-\\.]{2,24})', 'i'));
+    let m = compact.match(new RegExp('(?:nr\\.?\\s*dosar(?:\\s*(?:de\\s*)?daun[' + RO_WORD + ']*)?|dosar\\s*(?:de\\s*)?daun[' + RO_WORD + ']*(?:\\s*nr\\.?)?|dosar\\s*nr\\.?|num[ăa]r\\s*dosar(?:\\s*(?:de\\s*)?daun[' + RO_WORD + ']*)?)\\s*[:\\-]?\\s*(?!daun)(?=[A-Z0-9\\/\\-\\.]*\\d)([A-Z0-9][A-Z0-9\\/\\-\\.]{2,24})', 'i'));
     if (m) result.nrDosar = m[1].trim();
     else {
       // Fallback pt. formulare tip "SERIE: BH NR: U21201994394" (proces-verbal Groupama)
@@ -54,6 +54,12 @@ function extractFromText(text) {
         // Fallback pt. formulare Grawe: eticheta vine DUPA valoare — "Seria: BH-...-2025 (nr. dosar)"
         const mSeriaDupa = compact.match(/Seria:?\s*([A-Z0-9][A-Z0-9\/\-\.]{2,24})\s*\(\s*nr\.?\s*dosar/i);
         if (mSeriaDupa) result.nrDosar = mSeriaDupa[1].trim();
+        else if (result.asigurator === 'Allianz') {
+          // Allianz, nota de constatare cu etichetele sus si valorile jos: dupa "Dosar de dauna Nr." urmeaza
+          // alta eticheta, iar numarul apare separat ca "ZB856348 / BU" (nr. dosar / regiune).
+          const mAllianz = norm.match(/\b([A-Z]{2}\d{5,8})\s*\/\s*[A-Z]{2}\b/);
+          if (mAllianz) result.nrDosar = mAllianz[1];
+        }
       }
     }
   }

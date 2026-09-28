@@ -150,5 +150,16 @@
       "marcaModel": "DACIA",
       "asigurator": "Allianz"
     }
+  },
+  {
+    "id": "allianz-nc-etichete-sus-valori-jos",
+    "descriere": "Allianz - nota de constatare PDF cu etichetele sus si valorile jos: dupa 'Dosar de dauna Nr.' urmeaza eticheta 'Auto marca/model', nr. dosar apare separat ca 'ZB856348 / BU'",
+    "text": "NOTĂ DE CONSTATARE RCA  Dosar de dauna Nr.  Auto marcă/model  Număr de  inmatriculare  Număr de identificare  Data producerii evenimentului  Număr poliță  Regres:   Da   Nu   X  Țară/Județ/Localitate/Stradă/ Număr/ în intersecția  Romania,jud.Bihor,loc.Sanmartin,str.Dn76,nr.1  Păgubit   Bt Leasing Transilvania Ifn Sa Punct De Lucru  BH11JPE  WBA11EV0X09S46912  23.sep.2026 08:45  128135291  Bmw X5 (G05n)(04.2023->)  Culpă comună:   Da   Nu   X  ZB856348 / BU  Call Center 021 20 19 180, 021 20 19 181  S-au constatat urmatoarele daune:  Dată avizare daune:   25.sep.2026 25.sep.2026   Dată constatare:  Nr. Crt   Cod intern Ax   Denumire reper avariat   Soluție tehnologică   Timp (ore)  1   0283   Bara Protectie Fata   Inlocuire ( vopsire )   -  2   0303   Ornament Mijl Bara F   Inlocuire   -  3   0305   Grila Bara Fata   Inlocuire   -  4   0324   Grila Dr Bara Fata   Inlocuire   -  5   0562   Far Dreapta Fara Unitati Control   Inlocuire   -  6   0742   Aripa Fata Dreapta   Inlocuire   -  7   0788   Ornam Pas Roata F Dr   Inlocuire ( vopsire )   -  8   9900   Vehicul Complet Masurare Cu Reglare   Geometrie   -  Pagina -1-  Nr. înregistrare: 206129176/9/25/2026\nAllianz Țiriac Asigurări",
+    "expected": {
+      "nrDosar": "ZB856348",
+      "nrAuto": "BH11JPE",
+      "marcaModel": "Bmw X5",
+      "asigurator": "Allianz"
+    }
   }
 ]
