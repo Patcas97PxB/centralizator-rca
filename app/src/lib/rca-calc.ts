@@ -282,6 +282,8 @@ export interface UrgentaDosar {
   cls: 'c-red' | 'c-yellow' | 'c-green' | 'c-albastru'
   /** true daca dosarul e peste termenul de preluare (intra la statistica "Depasite"). */
   depasit: boolean
+  /** true cat timp masina n-a fost predata (bifa „Predat" nepusa si predarea azi sau in viitor). */
+  inaintePredare?: boolean
 }
 
 // Portat din render() (index.html) — logica "numarului mare" care arata cate zile mai
@@ -292,14 +294,21 @@ export function urgentaDosar(d: Dosar): UrgentaDosar {
   const finalizat = d.status === 'finalizat'
   const ramase = zileRamase(rca.dataPreluare)
   const panaLaPredare = zileRamase(d.start) // > 0 => predarea e in viitor
-  const viitor = !finalizat && panaLaPredare !== null && panaLaPredare > 0
+  // Pana nu se bifeaza „Predat": „X zile pana la predare" sau „predare AZI"; zilele de termen apar
+  // abia dupa bifa. Dosarele cu data predarii trecuta (inclusiv cele vechi, dinainte de bifa) arata
+  // zilele normal.
+  const nepredat = !finalizat && !d.predatBifat && panaLaPredare !== null && panaLaPredare >= 0
 
-  if (viitor && panaLaPredare !== null) {
+  if (nepredat && panaLaPredare === 0) {
+    return { bigNum: 'AZI', bigLabel: 'predare AZI', cls: 'c-albastru', depasit: false, inaintePredare: true }
+  }
+  if (nepredat && panaLaPredare !== null) {
     return {
       bigNum: String(panaLaPredare),
       bigLabel: panaLaPredare === 1 ? 'zi până la predare' : 'zile până la predare',
       cls: 'c-albastru',
       depasit: false,
+      inaintePredare: true,
     }
   }
   if (rca.zile === null) {
