@@ -5,6 +5,8 @@ import { Header } from './Header'
 import { LightRay } from './LightRay'
 import { MobileBottomNav } from './MobileBottomNav'
 import { MobileTopNav } from './MobileTopNav'
+import { DemoBanner } from './DemoBanner'
+import { ESTE_DEMO } from '@/lib/demo'
 import type { DeSunat } from '@/lib/rca-calc'
 import type { SectionKey } from './nav-items'
 
@@ -36,6 +38,7 @@ export function AppShell({
       <LightRay />
       <AppSidebar active={active} onSelect={onSelect} badgeDosare={deSunat.length} />
       <SidebarInset>
+        {ESTE_DEMO && <DemoBanner />}
         <Header
           title={headerTitle}
           subtitle={headerSubtitle}

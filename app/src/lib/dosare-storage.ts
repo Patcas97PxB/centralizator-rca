@@ -1,4 +1,5 @@
 import { supabase } from './supabase'
+import { ESTE_DEMO, demoDosare, demoInlocuiesteDosare, demoSalveazaDosar, demoStergeDosar } from './demo'
 import { normalizeazaDosar, type Dosar } from './types'
 
 // Tabelul `dosare` (un rand per dosar, coloana `data` jsonb + `updated_at`) a fost creat
@@ -17,12 +18,14 @@ interface DosarRow {
 }
 
 export async function fetchDosare(): Promise<Dosar[]> {
+  if (ESTE_DEMO) return (await demoDosare()).map(normalizeazaDosar)
   const { data, error } = await supabase.from('dosare').select('id, data, updated_at')
   if (error) throw error
   return (data as DosarRow[]).map((r) => normalizeazaDosar({ ...r.data, id: r.id, updatedAt: r.updated_at }))
 }
 
 export async function saveDosarRemote(d: Dosar): Promise<string> {
+  if (ESTE_DEMO) return demoSalveazaDosar(d)
   const { updatedAt: _updatedAt, ...rest } = d
   const updated_at = new Date().toISOString()
   const { error } = await supabase.from('dosare').upsert({ id: d.id, data: rest, updated_at })
@@ -31,6 +34,7 @@ export async function saveDosarRemote(d: Dosar): Promise<string> {
 }
 
 export async function deleteDosarRemote(id: string): Promise<void> {
+  if (ESTE_DEMO) return demoStergeDosar(id)
   const { error } = await supabase.from('dosare').delete().eq('id', id)
   if (error) throw error
 }
@@ -38,6 +42,7 @@ export async function deleteDosarRemote(id: string): Promise<void> {
 // Import de backup: utilizatorul confirma explicit ca vrea sa inlocuiasca TOT ce e salvat,
 // deci aici (doar aici) e corect sa stergem si randurile ramase care nu mai apar in lista noua.
 export async function inlocuiesteToateDosarele(listaNoua: Dosar[]): Promise<void> {
+  if (ESTE_DEMO) return demoInlocuiesteDosare(listaNoua)
   const { data, error } = await supabase.from('dosare').select('id')
   if (error) throw error
   const idNoi = new Set(listaNoua.map((d) => d.id))
