@@ -1,3 +1,4 @@
+import crypto from 'node:crypto'
 import fs from 'node:fs'
 import path from 'node:path'
 import tailwindcss from '@tailwindcss/vite'
@@ -52,6 +53,17 @@ function servesteResurseExterne(): Plugin[] {
         for (const f of fs.readdirSync(iconsSrc)) {
           this.emitFile({ type: 'asset', fileName: `icons/${f}`, source: fs.readFileSync(path.join(iconsSrc, f)) })
         }
+      },
+      // shared/extractie.js si clase-auto.js au nume fix, deci browserul le tine in cache si dupa
+      // un refresh (utilizatorul vedea versiunea veche a citirii documentelor). Adaugam "?v=<hash>"
+      // din continut: URL-ul se schimba doar cand se schimba fisierul.
+      transformIndexHtml(html) {
+        let out = html
+        for (const f of jsFiles) {
+          const hash = crypto.createHash('sha1').update(fs.readFileSync(path.join(jsSrc, f))).digest('hex').slice(0, 10)
+          out = out.replace(`shared/${f}"`, `shared/${f}?v=${hash}"`)
+        }
+        return out
       },
     },
   ]

@@ -6,7 +6,7 @@ Live: https://patcas97pxb.github.io/centralizator-rca/ · Repo: `Patcas97PxB/cen
 ## Structura repo-ului
 - `app/` — aplicația nouă: Vite + React 19 + TypeScript, Tailwind v4 (config în `app/src/index.css`), shadcn/ui, lucide-react. **Aici se lucrează.**
 - **Rădăcina repo-ului (`index.html`, `assets/`) = build-ul publicat.** GitHub Pages servește rădăcina, nu `app/`.
-- `icons/`, `js/`, `shared/` — resurse folosite și de app (Vite le servește/copiază, vezi `app/vite.config.ts`).
+- `icons/`, `js/`, `shared/` — resurse folosite și de app (Vite le servește/copiază, vezi `app/vite.config.ts`). **`js/extractie.js` se modifică, apoi se copiază în `shared/extractie.js`** (rădăcina `shared/` e ce servește site-ul live). În `index.html` build-ul adaugă `?v=<hash conținut>` la aceste scripturi, ca browserul să nu rămână cu versiunea veche din cache.
 - `supabase/` — migrări. Datele stau în Supabase (tabelul `dosare`, coloana `data` jsonb; câmpuri noi opționale nu cer migrare).
 - `File/` — **în .gitignore** (documente interne, grile asiguratori, poze mașini). Nu ajunge pe GitHub.
 - `Centralizator RCA - site.html` — mockup-ul de design (netrack-uit). Sursa adevărului pentru aspect. Varianta „standalone" era greșită și a fost eliminată.
