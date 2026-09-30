@@ -2,6 +2,7 @@ import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { Plus, X } from 'lucide-react'
 import { useDosareContext } from '@/contexts/DosareContext'
 import { filtreImplicite } from '@/lib/dosare-filter'
+import { mergiLaCardDosar } from '@/lib/mergi-la-dosar'
 import { exportDosareXlsx } from '@/lib/xlsx-export'
 import type { Dosar } from '@/lib/types'
 import type { AnalizaDeviz } from '@/lib/deviz-analiza'
@@ -181,7 +182,13 @@ export function DosarePage() {
             <ScanDevizCard onApply={onDevizScanat} />
             <ModificarPdfCard />
           </div>
-          <ActivitateRecenta dosare={dosare} />
+          <ActivitateRecenta
+            dosare={dosare}
+            onAlege={(id) => {
+              setFiltre(filtreImplicite)
+              mergiLaCardDosar(id)
+            }}
+          />
           <StatisticiRapide dosare={dosare} />
         </div>
       </div>

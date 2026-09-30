@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { filtreImplicite } from '@/lib/dosare-filter'
+import { mergiLaCardDosar } from '@/lib/mergi-la-dosar'
 import { AuthGate } from '@/components/AuthGate'
 import { AppShell } from '@/components/layout/AppShell'
 import { NAV_ITEMS, type SectionKey } from '@/components/layout/nav-items'
@@ -28,20 +29,7 @@ function AppContent() {
   function alegeDosar(id: string) {
     setActive('dosare')
     setFiltre(filtreImplicite)
-    let incercari = 0
-    const cauta = () => {
-      const el = document.getElementById('dosar-' + id)
-      if (el) {
-        el.scrollIntoView({ behavior: 'smooth', block: 'center' })
-        el.classList.remove('dosar-evidentiat')
-        void el.offsetWidth
-        el.classList.add('dosar-evidentiat')
-        window.setTimeout(() => el.classList.remove('dosar-evidentiat'), 2600)
-      } else if (incercari++ < 30) {
-        window.setTimeout(cauta, 50)
-      }
-    }
-    window.setTimeout(cauta, 50)
+    mergiLaCardDosar(id)
   }
 
   return (
