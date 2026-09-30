@@ -161,5 +161,16 @@
       "marcaModel": "Bmw X5",
       "asigurator": "Allianz"
     }
+  },
+  {
+    "id": "asirom-pv-scanat-bilingv-alte-marci",
+    "descriere": "Asirom - proces verbal scanat (OCR): eticheta bilingva 'Nr. dosar/ No. of claim file:', marca 'ALTE MARCI' cu modelul complet in campul Model ('BYD SEAL 5DM-|'); sufixul -I nu intra -> 'BYD SEAL 5DM'",
+    "text": "Claims Department / Departament Daune B-dul Carol |, nr. 31-33, Ne Sige pt ta\nsector 2, RO-020912, Bucuresti A SN 1 | () y | ) A\n021 9146 customer care\ndaune@asirom.ro VIENNA INSURANCE GROUP\nTE —————————————————————————————tntos sete ;\nPROCES VERBAL DE CONSTATARE\ni\nNr. dosar/ No. of claim file: RA23/BH/26/33219865\nData eveniment/ Event date: 20-07-2026\nData avizarii evenimentului la Asigurator: 23-07-2026\nLocul evenimentului/ Event place: Romania BIHOR (BH) CHERESIG Principala\n| | n Pentru a solicita o constatare suplimentară este necesară completarea\n> ate Cerererii de reconstatare online la adresa https://asirom.ro/reconstatare-\n| dauna\nye taieda- tl) Pentru încasarea despagubirii este necesara completarea cerererii de\ndespăgubire online la adresa https://asirom.ro/despagubire-dauna\nnh ON NE od LC TEVI E e TRI EE\nDATE DE IDENTIFICARE ALE BUNULUI AVARIAT\n| sai\nProprietar auto: Ovidiu Cristea Nr. înmatriculare: BH62CRL\nSerie șasiu (VIN): LCOC76C42S0273847 Nr. km înregistrați: 867\nMarca: ALTE MARCI Model: BYD SEAL 5DM-|\nERE ee Gh CEI E E ETC AAR TN, | ro ut hicansni nists",
+    "expected": {
+      "nrDosar": "RA23/BH/26/33219865",
+      "nrAuto": "BH62CRL",
+      "marcaModel": "BYD SEAL 5DM",
+      "asigurator": "Asirom"
+    }
   }
 ]
