@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="ro">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+    <meta name="theme-color" content="#0a0e17" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <link rel="icon" type="image/x-icon" href="/centralizator-rca/demo/icons/favicon.ico" />
+    <link rel="icon" type="image/png" sizes="32x32" href="/centralizator-rca/demo/icons/favicon-32x32.png" />
+    <link rel="icon" type="image/png" sizes="16x16" href="/centralizator-rca/demo/icons/favicon-16x16.png" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/centralizator-rca/demo/icons/apple-touch-icon.png" />
+    <title>Centralizator RCA</title>
+    <!-- xlsx: incarcat din CDN (ca in site-ul actual), nu din npm — pachetul npm "xlsx" are
+         vulnerabilitati fara fix disponibil; varianta CDN e cea recomandata de SheetJS. -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <!-- pdf.js (citire text din PDF) si Tesseract.js (OCR pe poze/PDF-uri scanate) — aceleasi
+         versiuni CDN ca in site-ul actual, pentru citirea devizelor/notelor de constatare/
+         contractelor. -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+    <!-- extractie.js / clase-auto.js: copiate din ../js (sursa unica, vezi vite.config.ts),
+         incarcate ca scripturi globale, la fel ca in site-ul actual. -->
+    <script src="/centralizator-rca/demo/shared/extractie.js?v=c62b28e447"></script>
+    <script src="/centralizator-rca/demo/shared/clase-auto.js?v=f16f70e16b"></script>
+    <script>
+      if (typeof pdfjsLib !== 'undefined') pdfjsLib.GlobalWorkerOptions.workerSrc = '';
+    </script>
+    <script type="module" crossorigin src="/centralizator-rca/demo/assets/index-BrnfeMrk.js"></script>
+    <link rel="modulepreload" crossorigin href="/centralizator-rca/demo/assets/rolldown-runtime-CbXtAM7H.js">
+    <link rel="modulepreload" crossorigin href="/centralizator-rca/demo/assets/dialog-Cw4DKLqP.js">
+    <link rel="modulepreload" crossorigin href="/centralizator-rca/demo/assets/preload-helper-CCI-Vsx0.js">
+    <link rel="stylesheet" crossorigin href="/centralizator-rca/demo/assets/index-Cf7cnIi6.css">
+  </head>
+  <body>
+    <div id="root"></div>
+  </body>
+</html>
