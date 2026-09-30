@@ -4,6 +4,7 @@ import { AppSidebar } from './AppSidebar'
 import { Header } from './Header'
 import { LightRay } from './LightRay'
 import { MobileBottomNav } from './MobileBottomNav'
+import { MobileTopNav } from './MobileTopNav'
 import type { DeSunat } from '@/lib/rca-calc'
 import type { SectionKey } from './nav-items'
 
@@ -14,6 +15,9 @@ export function AppShell({
   headerSubtitle,
   deSunat,
   onAlegeDosar,
+  onNou,
+  onDeviz,
+  onPdf,
   children,
 }: {
   active: SectionKey
@@ -22,6 +26,9 @@ export function AppShell({
   headerSubtitle?: string
   deSunat: DeSunat[]
   onAlegeDosar: (id: string) => void
+  onNou: () => void
+  onDeviz: () => void
+  onPdf: () => void
   children: ReactNode
 }) {
   return (
@@ -35,8 +42,9 @@ export function AppShell({
           deSunat={deSunat}
           onAlegeDosar={onAlegeDosar}
         />
-        <main className="flex-1 pb-[84px] md:pb-0">{children}</main>
-        <MobileBottomNav active={active} onSelect={onSelect} badgeDosare={deSunat.length} />
+        <MobileTopNav active={active} onSelect={onSelect} badgeDosare={deSunat.length} />
+        <main className="flex-1 pb-[96px] md:pb-0">{children}</main>
+        <MobileBottomNav onNou={onNou} onDeviz={onDeviz} onPdf={onPdf} />
       </SidebarInset>
     </SidebarProvider>
   )

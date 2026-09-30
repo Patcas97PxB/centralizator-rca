@@ -19,7 +19,10 @@ import { ModificarPdfCard } from './ModificarPdfCard'
 import { ActivitateRecenta } from '../panel/ActivitateRecenta'
 import { StatisticiRapide } from '../panel/StatisticiRapide'
 
-export function DosarePage() {
+/** Actiune ceruta din bara de jos de pe mobil (id nou la fiecare apasare). */
+export type ActiuneRapida = { id: number; tip: 'nou' } | { id: number; tip: 'deviz'; an: AnalizaDeviz }
+
+export function DosarePage({ actiune }: { actiune?: ActiuneRapida | null }) {
   const {
     dosare, filtrate, servicii, loading, error, filtre, setFiltre,
     salveazaDosar, stergeDosar,
@@ -102,6 +105,16 @@ export function DosarePage() {
     setInitialDraft({ zileDeviz: String(an.total), zileDevizExplicatie: an.explicatie, zileDevizFormula: an.formulaCalcul })
     setModalDeschis(true)
   }
+  // Actiunile din bara de jos de pe mobil (App → aici): se executa o singura data pe id.
+  const ultimaActiune = useRef<number | null>(null)
+  useEffect(() => {
+    if (!actiune || ultimaActiune.current === actiune.id) return
+    ultimaActiune.current = actiune.id
+    if (actiune.tip === 'nou') deschideNou()
+    else onDevizScanat(actiune.an)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [actiune])
+
   function deschideEditare(id: string) {
     setInitialDraft(null)
     setDosarActiv(dosare.find((x) => x.id === id) ?? null)
@@ -178,7 +191,8 @@ export function DosarePage() {
             <Plus className="size-4" aria-hidden="true" />
             Dosar nou
           </Button>
-          <div className="flex flex-col gap-4">
+          {/* Pe mobil acestea sunt in bara de jos (MobileBottomNav). */}
+          <div className="hidden flex-col gap-4 md:flex">
             <ScanDevizCard onApply={onDevizScanat} />
             <ModificarPdfCard />
           </div>
@@ -196,7 +210,7 @@ export function DosarePage() {
       <button
         type="button"
         onClick={deschideNou}
-        className="fixed bottom-[76px] right-4 z-40 flex size-12 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg shadow-primary/30 lg:hidden"
+        className="fixed bottom-6 right-6 z-40 hidden size-12 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg shadow-primary/30 md:flex lg:hidden"
         aria-label="Dosar nou"
       >
         <Plus className="size-6" aria-hidden="true" />

@@ -45,7 +45,7 @@ Comite local oricând, dar **push doar când cere utilizatorul**. Pozele de maș
 ## Design și animații
 - Tokens și `@keyframes` în `app/src/index.css`. Toate animațiile respectă `prefers-reduced-motion`; există comutator „Animații: automat/pornite" în meniul avatarului (`lib/motion-pref.ts`). Pe Windows cu „Efecte de animație" oprite, browserul raportează reduced-motion.
 - Lumina de pe marginea sidebar-ului + header-ului: `components/layout/LightRay.tsx` (un singur traseu SVG, colț drept).
-- Sidebar 245px, header cu gradient; pe mobil (<md) bara de jos înlocuiește sidebar-ul (`MobileBottomNav.tsx`).
+- Sidebar 245px, header cu gradient. **Pe mobil (<md)**: secțiunile (Dosare, Dashboard, Service-uri, Rapoarte) sunt sus, sub header (`MobileTopNav.tsx`, 4 coloane). Bara de jos (`MobileBottomNav.tsx`) are acțiunile rapide: stânga „Zile din deviz” (dialog cu `ScanDevizCard`), centru „+” Dosar nou (buton rotund `btn-brand-gradient`), dreapta „Modificare PDF”. Acțiunile trec prin `App.tsx` (`ActiuneRapida` → `DosarePage`, comută pe Dosare dacă e nevoie). Pe mobil cardurile deviz/PDF din coloana dreaptă sunt ascunse.
 - Mockup-ul nu are variantă de mobil — mobilul e decis separat.
 
 ## Capcane cunoscute
