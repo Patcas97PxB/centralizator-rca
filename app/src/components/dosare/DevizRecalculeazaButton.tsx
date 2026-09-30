@@ -23,7 +23,7 @@ export function DevizRecalculeazaButton({
   /** Calculul pe asigurator (deviz + weekend + 1 zi), afisat sub zilele de reparatie. */
   calcul?: RezultatCalculRCA
 }) {
-  const { stage, result, errorMsg, fileName, run } = useDevizScan()
+  const { stage, result, errorMsg, fileName, progres, run } = useDevizScan()
   const inputRef = useRef<HTMLInputElement>(null)
   const onPatchRef = useRef(onPatch)
   onPatchRef.current = onPatch
@@ -49,10 +49,10 @@ export function DevizRecalculeazaButton({
           ref={inputRef}
           type="file"
           accept="application/pdf,image/*"
+          multiple
           className="hidden"
           onChange={(e) => {
-            const f = e.target.files?.[0]
-            if (f) run(f)
+            run(Array.from(e.target.files ?? []))
             e.target.value = ''
           }}
         />
@@ -97,7 +97,7 @@ export function DevizRecalculeazaButton({
             {stage === 'scanning' && (
               <>
                 <div className="truncate text-sm font-bold" style={{ color: '#7dd3fc' }}>Calculez zilele din deviz…</div>
-                <div className="truncate text-xs text-muted-foreground">{fileName}</div>
+                <div className="truncate text-xs text-muted-foreground">{progres || fileName}</div>
                 <div className="mt-2 h-1 overflow-hidden rounded-full bg-white/10">
                   <div
                     className="h-full origin-left rounded-full animate-[devizProgress_2.6s_cubic-bezier(.4,0,.2,1)_both]"

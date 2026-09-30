@@ -55,11 +55,15 @@ export async function pdfToImageBlobs(file: File, maxPages = 8): Promise<Blob[]>
   return blobs
 }
 
-export async function ocrImageToText(blobOrFile: Blob | Blob[]): Promise<string> {
+export async function ocrImageToText(
+  blobOrFile: Blob | Blob[],
+  onPagina?: (pagina: number, total: number) => void,
+): Promise<string> {
   if (typeof Tesseract === 'undefined') throw { code: 'not_declared' }
   const items = Array.isArray(blobOrFile) ? blobOrFile : [blobOrFile]
   let combined = ''
-  for (const item of items) {
+  for (const [i, item] of items.entries()) {
+    onPagina?.(i + 1, items.length)
     const { data } = await Tesseract.recognize(item as File, 'ron+eng')
     combined += (data && data.text ? data.text : '') + '\n'
   }
@@ -71,4 +75,37 @@ export function mesajEroareOCR(e: unknown): string {
   if (cod === 'not_declared') return 'Citirea automată din poze nu s-a putut încărca (verifică internetul) — încearcă din nou sau completează manual.'
   if (cod === 'image_rejected') return 'Acest fișier nu poate fi citit automat (verifică formatul: JPEG, PNG, WEBP sau GIF).'
   return 'Nu am putut citi automat această poză. Completează manual câmpurile.'
+}
+
+export function estePdf(f: File): boolean {
+  return f.type === 'application/pdf' || /\.pdf$/i.test(f.name)
+}
+
+// Textul din unul sau mai multe fisiere, ca dintr-un singur document (ex. cele 4 poze ale unui deviz):
+// PDF cu text → textul direct; PDF scanat → OCR pe pagini; pozele → OCR, toate odata.
+// `onProgres` primeste un mesaj scurt pentru UI ("Citesc pagina 2 din 4…").
+export async function textDinFisiere(
+  files: File[],
+  onProgres?: (mesaj: string) => void,
+): Promise<{ text: string; ocr: boolean }> {
+  let text = ''
+  let ocr = false
+  const poze = files.filter((f) => !estePdf(f))
+  for (const f of files.filter(estePdf)) {
+    if (!pdfLibDisponibil()) throw new Error('Biblioteca de citire PDF nu s-a încărcat. Verifică internetul și reîncarcă pagina.')
+    onProgres?.('Se citește ' + f.name + '…')
+    const t = await readPdfText(f)
+    if (t.trim().length > 40) {
+      text += t + '\n'
+    } else {
+      ocr = true
+      const imagini = await pdfToImageBlobs(f, 8)
+      text += (await ocrImageToText(imagini, (i, n) => onProgres?.(`Citesc pagina ${i} din ${n}…`))) + '\n'
+    }
+  }
+  if (poze.length) {
+    ocr = true
+    text += await ocrImageToText(poze, (i, n) => onProgres?.(n > 1 ? `Citesc poza ${i} din ${n}…` : 'Citesc poza…'))
+  }
+  return { text, ocr }
 }

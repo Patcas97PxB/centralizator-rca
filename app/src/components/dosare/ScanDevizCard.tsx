@@ -12,7 +12,7 @@ const TILE_BY_STAGE = {
 } as const
 
 export function ScanDevizCard({ onApply }: { onApply: (an: AnalizaDeviz) => void }) {
-  const { stage, result, errorMsg, fileName, run, reset } = useDevizScan()
+  const { stage, result, errorMsg, fileName, progres, run, reset } = useDevizScan()
   const inputRef = useRef<HTMLInputElement>(null)
   const [dragOver, setDragOver] = useState(false)
   const tile = TILE_BY_STAGE[stage]
@@ -33,8 +33,7 @@ export function ScanDevizCard({ onApply }: { onApply: (an: AnalizaDeviz) => void
     e.preventDefault()
     setDragOver(false)
     if (stage === 'scanning') return
-    const f = e.dataTransfer.files?.[0]
-    if (f) run(f)
+    run(Array.from(e.dataTransfer.files ?? []))
   }
 
   return (
@@ -102,13 +101,13 @@ export function ScanDevizCard({ onApply }: { onApply: (an: AnalizaDeviz) => void
           {stage === 'idle' && (
             <>
               <div className="text-[12.5px] font-extrabold text-[#e2e8f5]">Încarcă devizul</div>
-              <div className="text-[10.5px] text-[#8ba3cf]">PDF sau poză</div>
+              <div className="text-[10.5px] text-[#8ba3cf]">PDF sau poze (toate paginile)</div>
             </>
           )}
           {stage === 'scanning' && (
             <>
               <div className="truncate text-sm font-bold" style={{ color: '#7dd3fc' }}>Scanez devizul…</div>
-              <div className="truncate text-xs text-muted-foreground">{fileName}</div>
+              <div className="truncate text-xs text-muted-foreground">{progres || fileName}</div>
               <div className="mt-2 h-1 overflow-hidden rounded-full bg-white/10">
                 <div
                   className="h-full origin-left rounded-full animate-[devizProgress_2.6s_cubic-bezier(.4,0,.2,1)_both]"
@@ -170,10 +169,10 @@ export function ScanDevizCard({ onApply }: { onApply: (an: AnalizaDeviz) => void
         ref={inputRef}
         type="file"
         accept="application/pdf,image/*"
+        multiple
         className="hidden"
         onChange={(e) => {
-          const f = e.target.files?.[0]
-          if (f) run(f)
+          run(Array.from(e.target.files ?? []))
           e.target.value = ''
         }}
       />
