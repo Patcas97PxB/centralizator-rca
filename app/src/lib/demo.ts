@@ -62,6 +62,9 @@ async function op<T>(store: 'kv' | 'docs', mod: IDBTransactionMode, f: (s: IDBOb
 const citeste = <T>(k: string) => op<T | undefined>('kv', 'readonly', (s) => s.get(k))
 const scrie = (k: string, v: unknown) => op('kv', 'readwrite', (s) => s.put(v, k))
 
+// Parola nu tine cont de litere mari/mici („demo” = „DEMO”); la fel in scripts/cripteaza-demo.mjs.
+const normParola = (p: string) => p.trim().toUpperCase()
+
 // ---- Sesiune ----------------------------------------------------------------------------------
 export async function esteDeblocat(): Promise<boolean> {
   return !!(await citeste<boolean>('deblocat'))
@@ -69,7 +72,7 @@ export async function esteDeblocat(): Promise<boolean> {
 export async function deblocheazaDemo(parola: string): Promise<string | null> {
   let copie: CopieDemo
   try {
-    copie = await decripteaza(parola.trim())
+    copie = await decripteaza(normParola(parola))
   } catch {
     return 'Parolă greșită.'
   }
@@ -78,7 +81,7 @@ export async function deblocheazaDemo(parola: string): Promise<string | null> {
     await scrie('dosare', copie.dosare)
     await scrie('servicii', copie.servicii ?? [])
   }
-  await scrie('parola', parola.trim())
+  await scrie('parola', normParola(parola))
   await scrie('deblocat', true)
   return null
 }
@@ -88,7 +91,15 @@ export async function iesiDemo() {
 /** Sterge modificarile testerului si reia copia originala. */
 export async function reseteazaDemo() {
   const parola = await citeste<string>('parola')
-  const copie = await decripteaza(parola ?? '')
+  let copie: CopieDemo
+  try {
+    copie = await decripteaza(parola ?? '')
+  } catch {
+    // Parola salvata nu mai e valida (ex. parola demo s-a schimbat): stergem tot si se cere din nou.
+    await op('kv', 'readwrite', (s) => s.clear())
+    await op('docs', 'readwrite', (s) => s.clear())
+    return
+  }
   await scrie('dosare', copie.dosare)
   await scrie('servicii', copie.servicii ?? [])
   await op('docs', 'readwrite', (s) => s.clear())

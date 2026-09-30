@@ -15,7 +15,7 @@ const continut = JSON.stringify({ dosare: backup.dosare, servicii: backup.servic
 
 const sare = crypto.getRandomValues(new Uint8Array(16))
 const iv = crypto.getRandomValues(new Uint8Array(12))
-const baza = await crypto.subtle.importKey('raw', new TextEncoder().encode(parola.trim()), 'PBKDF2', false, ['deriveKey'])
+const baza = await crypto.subtle.importKey('raw', new TextEncoder().encode(parola.trim().toUpperCase()), 'PBKDF2', false, ['deriveKey'])
 const cheie = await crypto.subtle.deriveKey(
   { name: 'PBKDF2', salt: sare, iterations: 600000, hash: 'SHA-256' },
   baza,
