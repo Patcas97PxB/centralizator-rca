@@ -22,6 +22,7 @@ Live: https://patcas97pxb.github.io/centralizator-rca/ · Repo: `Patcas97PxB/cen
 2. Din rădăcină: `git rm -rq assets && cp -r app/dist/assets assets && cp app/dist/index.html index.html && git add assets index.html`
 3. `git commit` + `git push origin main`
 4. Așteaptă „pages build and deployment" (`gh run list --limit 1`), apoi verifică asset-urile noi (curl 200).
+**Adresa de test** (înainte de publicare, când utilizatorul vrea să verifice): `cd app && npx vite build --base=/centralizator-rca/preview/ --outDir dist-preview --emptyOutDir`, apoi din rădăcină `rm -rf preview && cp -r app/dist-preview preview && rm -rf app/dist-preview`, commit + push pe `main` → https://patcas97pxb.github.io/centralizator-rca/preview/ (site-ul principal neschimbat; aceeași bază de date).
 Comite local oricând, dar **push doar când cere utilizatorul**. Pozele de mașini ajung pe site doar prin acest build local.
 
 ## Reguli de business stabilite
