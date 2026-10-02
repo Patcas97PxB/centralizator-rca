@@ -60,8 +60,8 @@ export const DOCUMENTE_LEGALE: Record<DocLegal, { titlu: string; continut: React
         />
         <H>4. Unde sunt stocate și cine are acces</H>
         <P>
-          Datele sunt stocate în baza de date și spațiul de fișiere Supabase (furnizor de infrastructură cloud), iar aplicația este
-          găzduită pe GitHub Pages. Accesul este permis doar utilizatorilor autorizați, pe bază de parolă. Datele pot fi transmise,
+          Datele sunt stocate la furnizori specializați de infrastructură cloud (bază de date, spațiu de fișiere și găzduire web),
+          care acționează ca persoane împuternicite și aplică măsuri de securitate adecvate. Accesul este permis doar utilizatorilor autorizați, pe bază de parolă. Datele pot fi transmise,
           strict în scopul dosarului, asiguratorilor, service-urilor și autorităților, când legea o cere. Datele nu se vând și nu se
           folosesc în scop de marketing.
         </P>
@@ -171,8 +171,8 @@ export const DOCUMENTE_LEGALE: Record<DocLegal, { titlu: string; continut: React
           ]}
         />
         <P>
-          Pentru citirea PDF-urilor, a pozelor și pentru export, aplicația încarcă biblioteci de pe rețele publice de distribuție
-          (cdnjs.cloudflare.com, cdn.jsdelivr.net), care pot vedea adresa IP, ca orice site vizitat. Documentele tale nu sunt trimise
+          Pentru citirea PDF-urilor, a pozelor și pentru export, aplicația încarcă biblioteci de pe rețele publice de distribuție,
+          care pot vedea adresa IP, ca orice site vizitat. Documentele tale nu sunt trimise
           acestor servicii.
         </P>
         <P>Le poți șterge oricând din setările browserului; după ștergere va trebui să te autentifici din nou.</P>
