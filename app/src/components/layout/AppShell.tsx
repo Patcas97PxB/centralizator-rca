@@ -4,6 +4,7 @@ import { AppSidebar } from './AppSidebar'
 import { Header } from './Header'
 import { LightRay } from './LightRay'
 import { MobileBottomNav } from './MobileBottomNav'
+import { StareSistem } from './StareSistem'
 import type { DeSunat } from '@/lib/rca-calc'
 import type { SectionKey } from './nav-items'
 
@@ -35,6 +36,7 @@ export function AppShell({
           deSunat={deSunat}
           onAlegeDosar={onAlegeDosar}
         />
+        <StareSistem />
         <main className="flex-1 pb-[84px] md:pb-0">{children}</main>
         <MobileBottomNav active={active} onSelect={onSelect} badgeDosare={deSunat.length} />
       </SidebarInset>

@@ -3,7 +3,7 @@ import { useDosare } from '@/hooks/useDosare'
 import { useServicii } from '@/hooks/useServicii'
 import { filtreImplicite, filtreazaSiSorteazaDosare, type DosareFiltre } from '@/lib/dosare-filter'
 import { dosareDeSunat, urgentaDosar, type DeSunat } from '@/lib/rca-calc'
-import { inlocuiesteToateDosarele } from '@/lib/dosare-storage'
+import { ConflictSalvare, inlocuiesteToateDosarele } from '@/lib/dosare-storage'
 import { inlocuiesteToateServiciile } from '@/lib/servicii-storage'
 import type { BackupPayload } from '@/lib/backup'
 import type { Dosar, Serviciu } from '@/lib/types'
@@ -19,7 +19,15 @@ interface DosareContextValue {
   arataDoarDepasite: () => void
   depasiteCount: number
   deSunat: DeSunat[]
-  salveazaDosar: (d: Dosar) => Promise<void>
+  /** Arunca ConflictSalvare daca dosarul s-a schimbat in alta parte; `forteaza` suprascrie oricum. */
+  salveazaDosar: (d: Dosar, forteaza?: boolean) => Promise<string>
+  /** Pentru actiunile rapide (bife, status, comision): la eroare/conflict arata avertizarea si reincarca lista. */
+  salveazaRapid: (d: Dosar) => Promise<void>
+  /** Reincarca lista (dupa o restaurare / un conflict). */
+  reimprospateaza: () => Promise<void>
+  /** Mesaj de avertizare afisat sus (ex. o salvare rapida a esuat). */
+  avertizare: string
+  setAvertizare: (m: string) => void
   stergeDosar: (id: string) => Promise<void>
   salveazaServiciu: (s: Serviciu) => Promise<void>
   stergeServiciu: (id: string) => Promise<void>
@@ -33,7 +41,8 @@ const DosareContext = createContext<DosareContextValue | null>(null)
 // dosare depasite) citesc din acelasi loc, in loc sa se transmita valori intre ele in
 // timpul randarii.
 export function DosareProvider({ enabled, children }: { enabled: boolean; children: ReactNode }) {
-  const { dosare, loading, error, reload: reloadDosare, salveazaDosar, stergeDosar } = useDosare(enabled)
+  const { dosare, loading, error, reload: reloadDosare, reimprospateaza, salveazaDosar, stergeDosar } = useDosare(enabled)
+  const [avertizare, setAvertizare] = useState('')
   const { servicii, reload: reloadServicii, salveazaServiciu, stergeServiciu } = useServicii(enabled)
   const [filtre, setFiltre] = useState<DosareFiltre>(filtreImplicite)
 
@@ -46,6 +55,20 @@ export function DosareProvider({ enabled, children }: { enabled: boolean; childr
 
   function arataDoarDepasite() {
     setFiltre({ ...filtreImplicite, doarDepasite: true, sortare: 'urgenta' })
+  }
+
+  async function salveazaRapid(d: Dosar) {
+    try {
+      await salveazaDosar(d)
+      setAvertizare('')
+    } catch (e) {
+      if (e instanceof ConflictSalvare) {
+        await reimprospateaza()
+        setAvertizare('Dosarul a fost modificat în altă parte, așa că modificarea ta nu s-a salvat. Am reîncărcat versiunea nouă — refă modificarea.')
+      } else {
+        setAvertizare('Nu s-a putut salva: ' + (e instanceof Error ? e.message : 'eroare necunoscută') + '. Verifică conexiunea și încearcă din nou.')
+      }
+    }
   }
 
   async function importaBackup(payload: BackupPayload) {
@@ -66,6 +89,10 @@ export function DosareProvider({ enabled, children }: { enabled: boolean; childr
     depasiteCount,
     deSunat,
     salveazaDosar,
+    salveazaRapid,
+    reimprospateaza,
+    avertizare,
+    setAvertizare,
     stergeDosar,
     salveazaServiciu,
     stergeServiciu,

@@ -10,6 +10,7 @@ import {
   lipsuriFinalizare,
 } from '@/lib/documente'
 import { citesteContractFinal } from '@/lib/contract-final-import'
+import { ConflictSalvare } from '@/lib/dosare-storage'
 import { incarcaDocument, mesajEroareAsset, stergeDocumentStocare } from '@/lib/documente-storage'
 import type { Dosar, DocumentDosar } from '@/lib/types'
 import { cn } from '@/lib/utils'
@@ -26,7 +27,7 @@ export function DocumenteModal({
   open: boolean
   dosar: Dosar | null
   onClose: () => void
-  onSave: (d: Dosar) => Promise<void>
+  onSave: (d: Dosar) => Promise<unknown>
 }) {
   const [draft, setDraft] = useState<Dosar | null>(dosar)
   const latest = useRef<Dosar | null>(dosar)
@@ -63,7 +64,14 @@ export function DocumenteModal({
     const next = { ...(latest.current as Dosar), ...p }
     latest.current = next
     setDraft(next)
-    onSave(next).catch((e) => setStatus(e instanceof Error ? e.message : 'Eroare la salvare.'))
+    onSave(next).catch((e) =>
+      setStatus(
+        e instanceof ConflictSalvare
+          ? 'Dosarul a fost modificat în altă parte — închide fereastra și redeschide-l, apoi refă modificarea.'
+          : e instanceof Error ? e.message : 'Eroare la salvare.',
+        true,
+      ),
+    )
   }
 
   async function incarca(files: FileList | File[], eticheta?: string | null) {
