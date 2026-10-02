@@ -33,6 +33,8 @@ import { suggestClasaFromModel, vehicleClasses } from '@/lib/clase-auto'
 import { lipsuriFinalizare } from '@/lib/documente'
 import { calculRCA, todayStr } from '@/lib/rca-calc'
 import { ConflictSalvare } from '@/lib/dosare-storage'
+import { gasesteDuplicat } from '@/lib/dosar-duplicat'
+import { useDosareContext } from '@/contexts/DosareContext'
 import { STATUS_META, dosarGol, type Dosar, type StatusDosar, type Vehicul } from '@/lib/types'
 import { PreluareDateSection } from './PreluareDateSection'
 import { DevizRecalculeazaButton } from './DevizRecalculeazaButton'
@@ -61,6 +63,8 @@ export function DosarFormModal({
   const [eroare, setEroare] = useState('')
   const [confirmStergere, setConfirmStergere] = useState(false)
   const [conflict, setConflict] = useState<Dosar | null>(null)
+  const { dosare: toateDosarele } = useDosareContext()
+  const [duplicat, setDuplicat] = useState<{ existent: Dosar; de: Dosar } | null>(null)
   const [shakeKey, setShakeKey] = useState(0)
 
   useEffect(() => {
@@ -136,7 +140,13 @@ export function DosarFormModal({
       return
     }
     if (blocheazaFinalizare(draft)) return
-    await salveaza(cuStatusImplicit(draft))
+    const deSalvat = cuStatusImplicit(draft)
+    const existent = gasesteDuplicat(deSalvat, toateDosarele)
+    if (existent) {
+      setDuplicat({ existent, de: deSalvat })
+      return
+    }
+    await salveaza(deSalvat)
   }
 
   const rcaPreview = calculRCA(draft)
@@ -385,6 +395,30 @@ export function DosarFormModal({
           </div>
         </div>
       </DialogContent>
+
+      <AlertDialog open={!!duplicat} onOpenChange={(o) => !o && setDuplicat(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Există deja dosarul {duplicat?.existent.nrDosar}</AlertDialogTitle>
+            <AlertDialogDescription>
+              {[duplicat?.existent.asigurator, duplicat?.existent.nrAutoPagubit, duplicat?.existent.marcaModel].filter(Boolean).join(' · ') || 'Alt dosar'} are
+              același număr. Salvezi totuși?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Anulează</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                const d = duplicat?.de
+                setDuplicat(null)
+                if (d) void salveaza(d)
+              }}
+            >
+              Salvează oricum
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       <AlertDialog open={!!conflict} onOpenChange={(o) => !o && setConflict(null)}>
         <AlertDialogContent>
