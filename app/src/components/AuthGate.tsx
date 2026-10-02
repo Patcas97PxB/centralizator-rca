@@ -5,6 +5,7 @@ import { assetUrl } from '@/lib/asset-url'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { ESTE_DEMO } from '@/lib/demo'
+import { SiteFooter } from '@/components/layout/SiteFooter'
 
 export function AuthGate({ children }: { children: ReactNode }) {
   const { isLoading, isAuthenticated, login } = useAuth()
@@ -35,7 +36,7 @@ export function AuthGate({ children }: { children: ReactNode }) {
   }
 
   return (
-    <div className="flex min-h-svh items-center justify-center bg-background px-4">
+    <div className="flex min-h-svh flex-col items-center justify-center bg-background px-4">
       <form
         onSubmit={handleSubmit}
         className="w-full max-w-sm rounded-2xl border border-border bg-card p-8 shadow-xl"
@@ -69,6 +70,7 @@ export function AuthGate({ children }: { children: ReactNode }) {
           {submitting ? 'Se verifică…' : 'Intră'}
         </Button>
       </form>
+      <SiteFooter className="mt-6" />
     </div>
   )
 }

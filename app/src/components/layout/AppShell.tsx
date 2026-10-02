@@ -6,6 +6,7 @@ import { LightRay } from './LightRay'
 import { MobileBottomNav } from './MobileBottomNav'
 import { MobileTopNav } from './MobileTopNav'
 import { DemoBanner } from './DemoBanner'
+import { SiteFooter } from './SiteFooter'
 import { ESTE_DEMO } from '@/lib/demo'
 import type { DeSunat } from '@/lib/rca-calc'
 import type { SectionKey } from './nav-items'
@@ -46,7 +47,8 @@ export function AppShell({
           onAlegeDosar={onAlegeDosar}
         />
         <MobileTopNav active={active} onSelect={onSelect} badgeDosare={deSunat.length} />
-        <main className="flex-1 pb-[96px] md:pb-0">{children}</main>
+        <main className="flex-1">{children}</main>
+        <SiteFooter className="pb-[104px] md:pb-4" />
         <MobileBottomNav onNou={onNou} onDeviz={onDeviz} onPdf={onPdf} />
       </SidebarInset>
     </SidebarProvider>
