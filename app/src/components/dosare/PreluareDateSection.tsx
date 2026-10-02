@@ -7,9 +7,9 @@ import {
   PopoverTrigger,
 } from '@/components/ui/popover'
 import { extractFromText, type RezultatExtractie } from '@/lib/extractie'
-import { analizaDeviz, type AnalizaDeviz } from '@/lib/deviz-analiza'
+import type { AnalizaDeviz } from '@/lib/deviz-analiza'
 import { suggestClasaFromModel } from '@/lib/clase-auto'
-import { mesajEroareOCR, textDinFisiere } from '@/lib/pdf-ocr'
+import { citesteDeviz, mesajEroareOCR } from '@/lib/pdf-ocr'
 import type { Dosar } from '@/lib/types'
 
 // Portat din handleFileUpload()/handleDevizOnly() (index.html): PDF cu text -> citire directa;
@@ -85,10 +85,9 @@ export function PreluareDateSection({
     setStatus('')
     setChips([])
     try {
-      const { text, ocr } = await textDinFisiere(files, setStatus)
+      const { text, ocr, analiza: an } = await citesteDeviz(files, setStatus)
       if (text.trim().length > 20) {
         aplicaExtractie(extractFromText(text))
-        const an = analizaDeviz(text)
         aplicaAnaliza(an)
         const sursa = !ocr ? 'Deviz analizat' : files.length > 1 ? `Deviz citit din ${files.length} fișiere` : 'Deviz citit din scanare/poză'
         setStatus(an ? `${sursa} — zilele de reparație au fost calculate automat.` : 'Date detectate — verifică și completează câmpurile de mai jos.')

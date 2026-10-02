@@ -133,17 +133,21 @@ function oreVerificateAudatex(raw: string): { ore: number; randuri: number[] } |
   const reRand = /(\d{1,3}[.,]\d{1,2})\s*(ORE|UL|UT)\s*[,.]?\s*[xX×]\s*(\d{1,4}[.,]\d{2})\s*RON\s*\/\s*\S*\s+(\d{1,3}(?:\s\d{3})*[.,]\d{2})/i
   const mBaza = raw.match(/(\d+)\s*(?:UL|UT)\s*=\s*1\s*ORA/i)
   const bazaUl = mBaza ? parseFloat(mBaza[1]) : 10
+  // Pretul orei apare si in alte locuri („PRET ORA MANOPERA 250.00 RON/ORA”, „PRET =250.00 RON/ORA”):
+  // daca OCR-ul greseste o cifra din pretul de pe rand (250 → 350), verificam si cu acesta.
+  const preturiOra = [...raw.matchAll(/PRET[^\d\n]{0,30}?(\d{2,4}[.,]\d{2})\s*R[O0][NM]\s*\/\s*O/gi)].map((m) => numarOcr(m[1]))
   let suplimentare = false
   const randuri: number[] = []
   for (const l of linii) {
     if (/COSTURI\s*SU[PB]L/i.test(l)) suplimentare = !/TOTAL\s*COSTURI/i.test(l)
     else if (/V\s*O\s*P\s*S|PIESE/i.test(l)) suplimentare = false
-    const m = l.match(reRand)
+    const m = l.replace(/[|[\]]/g, ' ').match(reRand)
     if (!m || suplimentare) continue
     const cant = numarOcr(m[1])
     const pret = numarOcr(m[3])
     const suma = numarOcr(m[4])
-    if (!cant || !pret || Math.abs(cant * pret - suma) > Math.max(1, suma * 0.01)) continue
+    const sePotriveste = (p: number) => Math.abs(cant * p - suma) <= Math.max(1, suma * 0.01)
+    if (!cant || !pret || !(sePotriveste(pret) || preturiOra.some(sePotriveste))) continue
     randuri.push(/ORE/i.test(m[2]) ? cant : cant / bazaUl)
   }
   if (!randuri.length) return null
@@ -153,12 +157,25 @@ function oreVerificateAudatex(raw: string): { ore: number; randuri: number[] } |
 function analizaAudatexPoza(raw: string): AnalizaDeviz | null {
   const v = oreVerificateAudatex(raw)
   if (!v) return null
-  const t = raw.replace(/\s+/g, ' ')
+  // OCR pe poze de ecran: „VORSITORIE”, bare „|” intre coloane, „ORAL” in loc de „ORA :”.
+  const t = raw.replace(/\|/g, ' ').replace(/\s+/g, ' ')
   let oreVopsitorie = 0
-  const mVop2 = t.match(/TOTAL VOPSITORIE\s+1\s*ORA\s*[:;]?\s*([\d.,]+)\s*ORE/i)
-  const mVop = t.match(/TOTAL VOPSITORIE\s+(\d+)\s*(?:UL|UT)\s*\/\s*OR[EA]\s*[:;+]?\s*([\d.,]+)/i)
+  const mVop2 = t.match(/TOTAL VO[PR]SITORIE\s+1\s*ORA\w?\s*[:;]?\s*([\d.,]+)\s*ORE/i)
+  const mVop = t.match(/TOTAL VO[PR]SITORIE\s+(\d+)\s*(?:UL|UT)\s*\/\s*OR[EA]\s*[:;+]?\s*([\d.,]+)/i)
   if (mVop2) oreVopsitorie = numarOcr(mVop2[1])
   else if (mVop) oreVopsitorie = numarOcr(mVop[2]) / parseFloat(mVop[1])
+  else {
+    // Poza de ecran: eticheta iese stalcita („VORSITORIE II [MI ORA 7.5 ORE”), dar pe randul
+    // totalului de vopsitorie orele apar ca „X.Y ORE” (cu zecimala — „10UL/ORE” nu se potriveste).
+    for (const l of raw.split(/\r?\n/)) {
+      if (!/VO\w{0,3}TORIE/i.test(l) || /MATERIAL|COST/i.test(l)) continue
+      const m = l.match(/(\d{1,3}[.,]\d)\s*ORE\b/i)
+      if (m) {
+        oreVopsitorie = numarOcr(m[1])
+        break
+      }
+    }
+  }
   const ore = v.ore + oreVopsitorie
   const total = Math.round(ore / 4)
   const f = (n: number, d = 1) => n.toFixed(d).replace('.', ',')

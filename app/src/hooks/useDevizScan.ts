@@ -1,6 +1,6 @@
 import { useState } from 'react'
-import { analizaDeviz, type AnalizaDeviz } from '@/lib/deviz-analiza'
-import { mesajEroareOCR, textDinFisiere } from '@/lib/pdf-ocr'
+import type { AnalizaDeviz } from '@/lib/deviz-analiza'
+import { citesteDeviz, mesajEroareOCR } from '@/lib/pdf-ocr'
 
 export type DevizScanStage = 'idle' | 'scanning' | 'done' | 'error'
 
@@ -19,8 +19,7 @@ export function useDevizScan() {
     setErrorMsg('')
     setResult(null)
     try {
-      const { text } = await textDinFisiere(files, setProgres)
-      const an = text.trim().length > 20 ? analizaDeviz(text) : null
+      const { analiza: an } = await citesteDeviz(files, setProgres)
       if (an) {
         setResult(an)
         setStage('done')
