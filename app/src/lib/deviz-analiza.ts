@@ -9,6 +9,8 @@ export interface AnalizaDeviz {
   explicatie: string
   formulaCalcul: string
   detalii: string[]
+  /** Citire din poza fara orele de vopsitorie, desi devizul are vopsitorie — de verificat. */
+  incomplet?: boolean
 }
 
 export function analizaDeviz(rawText: string): AnalizaDeviz | null {
@@ -128,7 +130,7 @@ function numarOcr(x: string): number {
   return parseFloat(x.replace(/\s+/g, '').replace(',', '.')) || 0
 }
 
-function oreVerificateAudatex(raw: string): { ore: number; randuri: number[] } | null {
+function oreVerificateAudatex(raw: string): { ore: number; randuri: number[]; preturi: number[] } | null {
   const linii = raw.split(/\r?\n/)
   const reRand = /(\d{1,3}[.,]\d{1,2})\s*(ORE|UL|UT)\s*[,.]?\s*[xX×]\s*(\d{1,4}[.,]\d{2})\s*RON\s*\/\s*\S*\s+(\d{1,3}(?:\s\d{3})*[.,]\d{2})/i
   const mBaza = raw.match(/(\d+)\s*(?:UL|UT)\s*=\s*1\s*ORA/i)
@@ -147,11 +149,14 @@ function oreVerificateAudatex(raw: string): { ore: number; randuri: number[] } |
     const pret = numarOcr(m[3])
     const suma = numarOcr(m[4])
     const sePotriveste = (p: number) => Math.abs(cant * p - suma) <= Math.max(1, suma * 0.01)
-    if (!cant || !pret || !(sePotriveste(pret) || preturiOra.some(sePotriveste))) continue
+    if (!cant || !pret) continue
+    const pretBun = sePotriveste(pret) ? pret : preturiOra.find(sePotriveste)
+    if (!pretBun) continue
     randuri.push(/ORE/i.test(m[2]) ? cant : cant / bazaUl)
+    if (/ORE/i.test(m[2])) preturiOra.unshift(pretBun)
   }
   if (!randuri.length) return null
-  return { ore: randuri.reduce((a, b) => a + b, 0), randuri }
+  return { ore: randuri.reduce((a, b) => a + b, 0), randuri, preturi: preturiOra }
 }
 
 function analizaAudatexPoza(raw: string): AnalizaDeviz | null {
@@ -176,19 +181,49 @@ function analizaAudatexPoza(raw: string): AnalizaDeviz | null {
       }
     }
   }
+  // Orele nu s-au citit: le scoatem din costul manoperei de vopsitorie ÷ pretul orei
+  // („TOTAL VOPSITORIE 1 ORA : 7.5 ORE 1875.00” → 1875 ÷ 250, sau „COST MANOPERA 1 875.00” din
+  // sectiunea Vopsitorie a calculatiei finale). Se accepta doar un rezultat cu o zecimala (7,5 h).
+  let dinCost = false
+  if (!oreVopsitorie && v.preturi.length) {
+    const linii = raw.split(/\r?\n/).map((l) => l.replace(/[|[\]]/g, ' '))
+    const costuri: number[] = []
+    linii.forEach((l, i) => {
+      const suma = l.match(/(\d{1,3}(?:\s?\d{3})*[.,]\d{2})\s*$/)
+      if (!suma) return
+      const randVop = /VO\w{0,3}TORIE/i.test(l) && /\bOR[AE]\w?\b/i.test(l) && !/MATERIAL/i.test(l)
+      const costManVop = /COST\s*MANOPERA/i.test(l) && linii.slice(Math.max(0, i - 3), i).some((x) => /V\s*O\s*P\s*S/i.test(x))
+      if (randVop || costManVop) costuri.push(numarOcr(suma[1]))
+    })
+    for (const c of costuri) {
+      const h = c / v.preturi[0]
+      if (h > 0 && h < 200 && Math.abs(h * 10 - Math.round(h * 10)) < 0.02) {
+        oreVopsitorie = Math.round(h * 10) / 10
+        dinCost = true
+        break
+      }
+    }
+  }
+  const areVopsitorie = raw.split(/\r?\n/).some((l) => /VO\w{0,3}TORIE/i.test(l) && /\d[.,]\d{2}/.test(l))
+  const incomplet = !oreVopsitorie && areVopsitorie
   const ore = v.ore + oreVopsitorie
   const total = Math.round(ore / 4)
   const f = (n: number, d = 1) => n.toFixed(d).replace('.', ',')
   return {
+    incomplet,
     ul: v.ore,
     ore,
     total,
     unitate: 'ORE',
     explicatie: `${f(v.ore)} ore manoperă + ${f(oreVopsitorie)} ore vopsitorie = ${f(ore)} ore (citit din poză)`,
-    formulaCalcul: `${f(ore)} ore ÷ 4 = ${f(ore / 4, 2)} → ${total} ${total === 1 ? 'zi' : 'zile'}`,
+    formulaCalcul:
+      `${f(ore)} ore ÷ 4 = ${f(ore / 4, 2)} → ${total} ${total === 1 ? 'zi' : 'zile'}` +
+      (incomplet ? ' — vopsitoria nu s-a putut citi, verifică' : ''),
     detalii: [
       `Manoperă: ${v.randuri.map((r) => f(r)).join(' + ')} = ${f(v.ore)} ore (rânduri verificate ore × preț = sumă)`,
-      `Vopsitorie: ${f(oreVopsitorie)} ore`,
+      incomplet
+        ? 'Vopsitorie: nu s-a putut citi din poză — verifică devizul'
+        : `Vopsitorie: ${f(oreVopsitorie)} ore${dinCost ? ` (din cost ÷ ${f(v.preturi[0], 2)} RON/oră)` : ''}`,
       `Total ore normate: ${f(ore)} ore ÷ 4 = ${total} ${total === 1 ? 'zi' : 'zile'} (Norma ASF nr. 20/2017, art. 25 alin. 4)`,
     ],
   }

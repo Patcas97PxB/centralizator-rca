@@ -124,7 +124,13 @@ export function ScanDevizCard({ onApply }: { onApply: (an: AnalizaDeviz) => void
                 </span>
                 <span className="text-xs font-bold" style={{ color: '#00f5a0' }}>ZILE</span>
               </div>
-              <div className="text-xs text-muted-foreground">reies din deviz</div>
+              {result.incomplet ? (
+                <div className="text-[11px] font-bold leading-snug" style={{ color: 'var(--warning)' }}>
+                  Vopsitoria nu s-a putut citi — verifică
+                </div>
+              ) : (
+                <div className="text-xs text-muted-foreground">reies din deviz</div>
+              )}
             </div>
           )}
           {stage === 'error' && (

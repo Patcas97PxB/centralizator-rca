@@ -268,8 +268,12 @@ export async function citesteDeviz(
 ): Promise<{ text: string; ocr: boolean; analiza: AnalizaDeviz | null }> {
   const { text, ocr } = await textDinFisiere(files, onProgres)
   const analiza = text.trim().length > 20 ? analizaDeviz(text) : null
-  if (analiza || !ocr) return { text, ocr, analiza }
+  if ((analiza && !analiza.incomplet) || !ocr) return { text, ocr, analiza }
+  // Nimic gasit sau doar o parte (ex. manopera fara vopsitorie): a doua citire, cu imaginile curatate.
   onProgres?.('Imagine neclară — o recitesc cu contrast mărit…')
   const aDoua = await textDinFisiere(files, (m) => onProgres?.(m + ' (a doua citire)'), true)
-  return { text, ocr, analiza: analizaDeviz(aDoua.text) }
+  const a2 = analizaDeviz(aDoua.text)
+  let best = a2 ?? analiza
+  if (analiza && a2 && a2.incomplet) best = a2.ore > analiza.ore ? a2 : analiza
+  return { text, ocr, analiza: best }
 }
