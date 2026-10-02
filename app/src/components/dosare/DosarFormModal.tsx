@@ -34,6 +34,8 @@ import { lipsuriFinalizare } from '@/lib/documente'
 import { calculRCA, todayStr } from '@/lib/rca-calc'
 import { STATUS_META, dosarGol, type Dosar, type StatusDosar, type Vehicul } from '@/lib/types'
 import { majuscule } from '@/lib/majuscule'
+import { normDosar } from '@/lib/contract-final'
+import { useDosareContext } from '@/contexts/DosareContext'
 import { PreluareDateSection } from './PreluareDateSection'
 import { DevizRecalculeazaButton } from './DevizRecalculeazaButton'
 import { ServiceCombobox } from './ServiceCombobox'
@@ -60,6 +62,9 @@ export function DosarFormModal({
   const [saving, setSaving] = useState(false)
   const [eroare, setEroare] = useState('')
   const [confirmStergere, setConfirmStergere] = useState(false)
+  // Alt dosar cu acelasi nr. (normalizat: spatii, cratime, sufixul Hellas) — avertizare, nu blocare.
+  const { dosare } = useDosareContext()
+  const [duplicat, setDuplicat] = useState<Dosar | null>(null)
   const [shakeKey, setShakeKey] = useState(0)
   // Data preluare se completeaza automat din calcul (deviz + weekend + 1 zi) cat timp nu a fost
   // scrisa de mana. La un dosar existent cu data deja completata, se actualizeaza doar dupa
@@ -110,7 +115,7 @@ export function DosarFormModal({
     if (gasit) set('telService', gasit.telefon)
   }
 
-  async function handleSubmit() {
+  async function handleSubmit(fortat = false) {
     if (!draft.nrDosar.trim()) {
       setEroare('Introdu numărul dosarului.')
       return
@@ -120,6 +125,14 @@ export function DosarFormModal({
       return
     }
     if (blocheazaFinalizare(draft)) return
+    if (!fortat) {
+      const nr = normDosar(draft.nrDosar)
+      const alt = dosare.find((x) => x.id !== draft.id && normDosar(x.nrDosar) === nr)
+      if (alt) {
+        setDuplicat(alt)
+        return
+      }
+    }
     setSaving(true)
     setEroare('')
     try {
@@ -391,7 +404,7 @@ export function DosarFormModal({
             </button>
             <button
               type="button"
-              onClick={handleSubmit}
+              onClick={() => handleSubmit()}
               disabled={saving}
               className="h-9 rounded-[10px] border border-[#3b82f6] bg-[#2563eb] px-[18px] text-[12.5px] font-extrabold text-white shadow-[0_10px_24px_-14px_#2563eb] transition-colors hover:bg-[#2563eb]/90 disabled:opacity-60"
             >
@@ -418,6 +431,29 @@ export function DosarFormModal({
               }}
             >
               Șterge
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog open={!!duplicat} onOpenChange={(o) => !o && setDuplicat(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Există deja dosarul {duplicat?.nrDosar}</AlertDialogTitle>
+            <AlertDialogDescription>
+              {[duplicat?.nrAutoPagubit, duplicat?.asigurator, duplicat && STATUS_META[duplicat.status]?.label].filter(Boolean).join(' · ')}
+              {' — '}dacă îl salvezi și pe acesta, sumele din Rapoarte se pot dubla. Salvezi totuși?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Anulează</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                setDuplicat(null)
+                void handleSubmit(true)
+              }}
+            >
+              Salvează oricum
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

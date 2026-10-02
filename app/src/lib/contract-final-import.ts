@@ -1,5 +1,6 @@
 import { aproapeLaFel, detectContractGresit, normDosar, normPlate, parseContractFinalText } from '@/lib/contract-final'
 import { mesajEroareOCR, ocrImageToText, pdfLibDisponibil, pdfToImageBlobs, readPdfText } from '@/lib/pdf-ocr'
+import { monedaDosar } from '@/lib/financiar'
 import type { Dosar } from '@/lib/types'
 
 export interface RezultatContractFinal {
@@ -69,8 +70,8 @@ export async function citesteContractFinal(
     if (ex.nrContract && !dosar.nrRezervare) { patch.nrRezervare = ex.nrContract; gasite.push('nr. contract') }
     if (ex.zile) { patch.zileContractFinal = ex.zile; gasite.push(`zile totale contract: ${ex.zile}${ex.pretZi ? ' (' + ex.pretZi + '/zi)' : ''}`) }
     if (ex.clasa) { patch.clasaAuto = ex.clasa; gasite.push('clasă auto (rezervată): ' + ex.clasa) }
-    if (ex.valoare) { patch.valoareContract = ex.valoare; gasite.push('valoare contract: ' + ex.valoare + ' EUR (fără TVA)') }
-    if (ex.valoareCuTVA) { patch.valoareContractCuTVA = ex.valoareCuTVA; gasite.push('valoare cu TVA: ' + ex.valoareCuTVA + ' EUR') }
+    if (ex.valoare) { patch.valoareContract = ex.valoare; gasite.push('valoare contract: ' + ex.valoare + ' ' + monedaDosar(dosar) + ' (fără TVA)') }
+    if (ex.valoareCuTVA) { patch.valoareContractCuTVA = ex.valoareCuTVA; gasite.push('valoare cu TVA: ' + ex.valoareCuTVA + ' ' + monedaDosar(dosar)) }
 
     if (ex.asigurator) {
       if (!dosar.asigurator) { patch.asigurator = ex.asigurator; gasite.push('asigurator') }

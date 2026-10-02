@@ -77,6 +77,8 @@ export interface TarifGrila {
   moneda: string
   sursa: string
   palier: string
+  /** Doar Allianz: totalul pe tariful extern (contractele reale pot fi pe intern sau extern). */
+  totalExtern?: number
 }
 
 // Calculeaza tariful/zi si totalul estimat conform grilei, pentru un dosar
@@ -92,7 +94,7 @@ export function calcTarifGrila(dosar: Pick<Dosar, 'clasaAuto' | 'asigurator' | '
   if (asig === 'allianz') {
     const grp = allianzGroupForClasa(clasa)
     if (!grp) return null
-    return { pretZi: grp.intern, total: grp.intern * zile, moneda: 'lei', sursa: grp.nume, palier: grp.nume }
+    return { pretZi: grp.intern, total: grp.intern * zile, totalExtern: grp.extern * zile, moneda: 'lei', sursa: grp.nume, palier: grp.nume }
   }
   if (asig === 'groupama') {
     const g = GROUPAMA_TARIFE[clasa]
