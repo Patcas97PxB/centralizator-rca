@@ -1,5 +1,5 @@
 import { Fragment, useMemo, useState } from 'react'
-import { Download, FileSpreadsheet } from 'lucide-react'
+import { Download, FileSpreadsheet, Search } from 'lucide-react'
 import { useDosareContext } from '@/contexts/DosareContext'
 import { dosareFinanciarFiltrate, filtruFinanciarImplicit, formatSuma, formatSumePeMoneda, grupeazaPeService, sumeGoale, type FiltruFinanciar } from '@/lib/financiar'
 import { exportFinanciarCSV, exportFinanciarXLSX } from '@/lib/financiar-export'
@@ -65,6 +65,19 @@ export function RapoartePage() {
       </div>
 
       <div className="flex flex-wrap items-end gap-3 rounded-[20px] border border-[#253150] bg-[#10172a] p-3.5">
+        <div className="min-w-[220px] flex-1 basis-full sm:basis-auto">
+          <Label htmlFor="finSearch" className={LABEL}>Caută</Label>
+          <div className="relative">
+            <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-[#94a3b8]" aria-hidden="true" />
+            <Input
+              id="finSearch"
+              value={filtru.search}
+              onChange={(e) => setFiltru({ ...filtru, search: e.target.value })}
+              placeholder="Nr. auto, RBH, dosar, asigurator, sumă…"
+              className={cn(FIELD, 'w-full pl-9 pr-3')}
+            />
+          </div>
+        </div>
         <div>
           <Label htmlFor="finFrom" className={LABEL}>Predare de la</Label>
           <Input id="finFrom" type="date" className={cn(FIELD, 'px-2.5 [color-scheme:dark]')} value={filtru.dataFrom} onChange={(e) => setFiltru({ ...filtru, dataFrom: e.target.value })} />
@@ -103,7 +116,7 @@ export function RapoartePage() {
 
       {filtrate.length === 0 ? (
         <div className="rounded-[20px] border border-dashed border-[#253150] p-10 text-center text-sm text-muted-foreground">
-          Niciun dosar în acest interval / service.
+          Niciun dosar pentru această căutare / interval / service.
         </div>
       ) : (
         <>

@@ -40,11 +40,32 @@ export interface FiltruFinanciar {
   dataFrom: string
   dataTo: string
   service: string
+  search: string
 }
-export const filtruFinanciarImplicit: FiltruFinanciar = { dataFrom: '', dataTo: '', service: '' }
+export const filtruFinanciarImplicit: FiltruFinanciar = { dataFrom: '', dataTo: '', service: '', search: '' }
+
+const fara = (s: string) => s.replace(/[\s\-./]/g, '')
+
+// Cautare libera, ca la Dosare: nr. auto, RBH, nr. dosar, asigurator, service, clasa, marca — si suma
+// („4375”, „4.375,00”, „128,00”, „154.88”), cu sau fara spatii/cratime/puncte.
+function corespundeCautarii(d: Dosar, search: string): boolean {
+  const s = search.trim().toLowerCase()
+  if (!s) return true
+  const moneda = monedaDosar(d)
+  const sume = [d.valoareContract, d.valoareContractCuTVA]
+    .map(parseSuma)
+    .filter(Boolean)
+    .flatMap((n) => [n.toFixed(2), formatSuma(n, moneda), String(Math.round(n))])
+  const hay = [d.nrDosar, d.nrRezervare, d.nrAutoPagubit, d.nrAutoInlocuire, d.asigurator, d.service, d.clasaAuto,
+    d.marcaModel, d.marcaModelInlocuire, d.valoareContract, d.valoareContractCuTVA, ...sume]
+    .join(' ')
+    .toLowerCase()
+  return hay.includes(s) || fara(hay).includes(fara(s))
+}
 
 export function dosareFinanciarFiltrate(dosare: Dosar[], f: FiltruFinanciar): Dosar[] {
   return dosare.filter((d) => {
+    if (!corespundeCautarii(d, f.search || '')) return false
     if (f.dataFrom && (!d.start || d.start < f.dataFrom)) return false
     if (f.dataTo && (!d.start || d.start > f.dataTo)) return false
     if (f.service && d.service !== f.service) return false
