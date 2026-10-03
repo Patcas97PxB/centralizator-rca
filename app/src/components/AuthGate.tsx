@@ -4,6 +4,8 @@ import { useAuth } from '@/hooks/useAuth'
 import { assetUrl } from '@/lib/asset-url'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { ESTE_DEMO } from '@/lib/demo'
+import { SiteFooter } from '@/components/layout/SiteFooter'
 
 export function AuthGate({ children }: { children: ReactNode }) {
   const { isLoading, isAuthenticated, login } = useAuth()
@@ -34,7 +36,7 @@ export function AuthGate({ children }: { children: ReactNode }) {
   }
 
   return (
-    <div className="flex min-h-svh items-center justify-center bg-background px-4">
+    <div className="flex min-h-svh flex-col items-center justify-center bg-background px-4">
       <form
         onSubmit={handleSubmit}
         className="w-full max-w-sm rounded-2xl border border-border bg-card p-8 shadow-xl"
@@ -45,6 +47,11 @@ export function AuthGate({ children }: { children: ReactNode }) {
             <Lock className="size-4 text-muted-foreground" aria-hidden="true" />
             Centralizator RCA
           </div>
+          {ESTE_DEMO && (
+            <span className="rounded-full border border-[#f59e0b]/45 bg-[#f59e0b]/15 px-2.5 py-0.5 text-[11px] font-extrabold text-[#fde68a]">
+              VARIANTĂ DE TEST
+            </span>
+          )}
         </div>
         <label htmlFor="authPassword" className="mb-1.5 block text-sm text-muted-foreground">
           Parolă
@@ -63,6 +70,7 @@ export function AuthGate({ children }: { children: ReactNode }) {
           {submitting ? 'Se verifică…' : 'Intră'}
         </Button>
       </form>
+      <SiteFooter className="mt-6" />
     </div>
   )
 }

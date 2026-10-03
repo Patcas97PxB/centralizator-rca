@@ -14,10 +14,13 @@ import {
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import type { DeSunat } from '@/lib/rca-calc'
 import { BackupButtons } from './BackupButtons'
+import { ESTE_DEMO } from '@/lib/demo'
 
 // Aplicatia are un singur cont partajat (nu login individual) — numele afisat e
 // hardcodat, ca in mockup-ul primit de la utilizator.
-const NUME_UTILIZATOR = 'Pătcaș Bogdan'
+// In varianta de test (/demo/) nu apare numele real.
+const NUME_UTILIZATOR = ESTE_DEMO ? 'DEMO' : 'Pătcaș Bogdan'
+const INITIALE_UTILIZATOR = ESTE_DEMO ? 'D' : 'PB'
 const ROL_UTILIZATOR = 'Autonom'
 
 export function Header({
@@ -148,7 +151,7 @@ export function Header({
             <button type="button" className="flex items-center gap-[9px] rounded-xl py-[5px] pl-[5px] pr-2 transition-colors hover:bg-white/5">
               <Avatar className="size-[34px] ring-1 ring-[#60a5fa]/45">
                 <AvatarFallback className="bg-[#2563eb] text-xs font-extrabold text-white">
-                  PB
+                  {INITIALE_UTILIZATOR}
                 </AvatarFallback>
               </Avatar>
               <span className="hidden text-left leading-[1.2] sm:block">

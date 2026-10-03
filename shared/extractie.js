@@ -44,7 +44,9 @@ function extractFromText(text) {
       .replace(/([A-Za-z0-9])\s*-\s*([A-Za-z0-9])/g, '$1-$2');
     // Acoperă "nr. dosar", "dosar nr.", "dosar daune:" / "dosar daună nr." (Groupama și alții, fără "nr" explicit)
     // (?!daun) previne capturarea cuvântului "daună/daune" ca valoare, atunci când eticheta nu îl consumă
-    let m = compact.match(new RegExp('(?:nr\\.?\\s*dosar(?:\\s*(?:de\\s*)?daun[' + RO_WORD + ']*)?|dosar\\s*(?:de\\s*)?daun[' + RO_WORD + ']*(?:\\s*nr\\.?)?|dosar\\s*nr\\.?|num[ăa]r\\s*dosar(?:\\s*(?:de\\s*)?daun[' + RO_WORD + ']*)?)\\s*[:\\-]?\\s*(?!daun)([A-Z0-9][A-Z0-9\\/\\-\\.]{2,24})', 'i'));
+    // Asirom (si alte formulare bilingve): "Nr. dosar/ No. of claim file: RA23/BH/26/33219865"
+    const mBilingv = compact.match(/nr\.?\s*dosar\s*\/?\s*No\.?\s*of\s*claim\s*file\s*[:\-]?\s*([A-Z0-9][A-Z0-9\/\-\.]{2,30})/i);
+    let m = mBilingv || compact.match(new RegExp('(?:nr\\.?\\s*dosar(?:\\s*(?:de\\s*)?daun[' + RO_WORD + ']*)?|dosar\\s*(?:de\\s*)?daun[' + RO_WORD + ']*(?:\\s*nr\\.?)?|dosar\\s*nr\\.?|num[ăa]r\\s*dosar(?:\\s*(?:de\\s*)?daun[' + RO_WORD + ']*)?)\\s*[:\\-]?\\s*(?!daun)(?=[A-Z0-9\\/\\-\\.]*\\d)([A-Z0-9][A-Z0-9\\/\\-\\.]{2,24})', 'i'));
     if (m) result.nrDosar = m[1].trim();
     else {
       // Fallback pt. formulare tip "SERIE: BH NR: U21201994394" (proces-verbal Groupama)
@@ -54,6 +56,12 @@ function extractFromText(text) {
         // Fallback pt. formulare Grawe: eticheta vine DUPA valoare — "Seria: BH-...-2025 (nr. dosar)"
         const mSeriaDupa = compact.match(/Seria:?\s*([A-Z0-9][A-Z0-9\/\-\.]{2,24})\s*\(\s*nr\.?\s*dosar/i);
         if (mSeriaDupa) result.nrDosar = mSeriaDupa[1].trim();
+        else if (result.asigurator === 'Allianz') {
+          // Allianz, nota de constatare cu etichetele sus si valorile jos: dupa "Dosar de dauna Nr." urmeaza
+          // alta eticheta, iar numarul apare separat ca "ZB856348 / BU" (nr. dosar / regiune).
+          const mAllianz = norm.match(/\b([A-Z]{2}\d{5,8})\s*\/\s*[A-Z]{2}\b/);
+          if (mAllianz) result.nrDosar = mAllianz[1];
+        }
       }
     }
   }
@@ -67,7 +75,7 @@ function extractFromText(text) {
   const BRANDS = ['Dacia','Ford','Renault','Opel','Volkswagen','VW','Skoda','Škoda','Toyota','Hyundai','Kia',
     'BMW','Audi','Mercedes-Benz','Mercedes','Peugeot','Citroen','Citroën','Fiat','Seat','SEAT','Nissan','Honda',
     'Mazda','Suzuki','Mitsubishi','Chevrolet','Volvo','Land Rover','Range Rover','Jeep','Mini','Smart',
-    'Alfa Romeo','Lancia','Subaru','Jaguar','Porsche','Tesla','Chrysler','Dodge','Iveco','Isuzu'];
+    'Alfa Romeo','Lancia','Subaru','Jaguar','Porsche','Tesla','Chrysler','Dodge','Iveco','Isuzu','BYD'];
   // Modele uzuale — ajută la extragerea corectă a modelului, nu doar a mărcii
   const MODELS = ['Kuga','Focus','Fiesta','Mondeo','Puma','Transit','EcoSport','S-Max','C-Max','Ranger',
     'Logan','Sandero','Duster','Dokker','Lodgy','Spring','Jogger',
@@ -95,7 +103,9 @@ function extractFromText(text) {
     'Giulia','Giulietta','Stelvio','Tonale','MiTo',
     '911','Cayenne','Macan','Panamera','Taycan',
     'Defender','Discovery','Evoque','Velar','Freelander','Range Rover Sport',
-    'Model 3','Model Y','Model S','Model X'];
+    'Model 3','Model Y','Model S','Model X',
+    // BYD
+    'Seal U','Seal','Sealion','Dolphin','Atto\\s?3','Han','Tang'];
   const brandAlt = BRANDS.map(b => b.replace(/\s/g,'\\s+')).join('|');
   const modelAlt = MODELS.map(m => m.replace(/[-]/g,'[-\\s]?')).join('|');
 
@@ -103,9 +113,18 @@ function extractFromText(text) {
   // "VOLVO/XC40" (fara spatii) sau "VOLKSWAGEN, PASSAT" (cu virgula) — acceptam pe toate.
   const SEP = '[\\s,\\/]+';
 
+  // 0) Asirom: "Marca: ALTE MARCI   Model: BYD SEAL 5DM-I" — marca reala e scrisa in campul Model,
+  //    deci luam campul Model intreg (de pe randul lui).
+  const mAlteMarci = text.match(/marc[ăa]\s*[:\-]?\s*ALT[EĂA]\s+MARC[IĂA][^\n]*?\bmodel\s*[:\-]?\s*([^\n]{2,40})/i);
+  if (mAlteMarci) {
+    // Sufixul de versiune "-I" (BYD "5DM-i", citit de OCR si ca "-|") nu intra: "BYD SEAL 5DM-I" -> "BYD SEAL 5DM".
+    result.marcaModel = mAlteMarci[1].split(/\s{2,}/)[0].trim().split(/\s+/).slice(0, 5).join(' ').replace(/-[I|l1]$/i, '');
+  }
   // 1) marcă urmată direct de un model cunoscut (accepta si conectorul "Clasa"/"Class", ex: Mercedes-Benz Clasa GLS)
-  m = norm.match(new RegExp('\\b(' + brandAlt + ')' + SEP + '(?:Clasa' + SEP + '|Class' + SEP + ')?(' + modelAlt + ')\\b', 'i'));
-  if (m) {
+  m = result.marcaModel ? null : norm.match(new RegExp('\\b(' + brandAlt + ')' + SEP + '(?:Clasa' + SEP + '|Class' + SEP + ')?(' + modelAlt + ')\\b', 'i'));
+  if (result.marcaModel) {
+    // deja gasit la pasul 0
+  } else if (m) {
     result.marcaModel = `${m[1]} ${m[2]}`.replace(/\s+/g, ' ').trim();
   } else {
     // 2) câmpuri explicite tip "Marca: X Model: Y"

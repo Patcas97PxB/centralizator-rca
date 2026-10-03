@@ -5,6 +5,10 @@ import { Header } from './Header'
 import { LightRay } from './LightRay'
 import { MobileBottomNav } from './MobileBottomNav'
 import { StareSistem } from './StareSistem'
+import { MobileTopNav } from './MobileTopNav'
+import { DemoBanner } from './DemoBanner'
+import { SiteFooter } from './SiteFooter'
+import { ESTE_DEMO } from '@/lib/demo'
 import type { DeSunat } from '@/lib/rca-calc'
 import type { SectionKey } from './nav-items'
 
@@ -15,6 +19,9 @@ export function AppShell({
   headerSubtitle,
   deSunat,
   onAlegeDosar,
+  onNou,
+  onDeviz,
+  onPdf,
   children,
 }: {
   active: SectionKey
@@ -23,6 +30,9 @@ export function AppShell({
   headerSubtitle?: string
   deSunat: DeSunat[]
   onAlegeDosar: (id: string) => void
+  onNou: () => void
+  onDeviz: () => void
+  onPdf: () => void
   children: ReactNode
 }) {
   return (
@@ -30,15 +40,18 @@ export function AppShell({
       <LightRay />
       <AppSidebar active={active} onSelect={onSelect} badgeDosare={deSunat.length} />
       <SidebarInset>
+        {ESTE_DEMO && <DemoBanner />}
         <Header
           title={headerTitle}
           subtitle={headerSubtitle}
           deSunat={deSunat}
           onAlegeDosar={onAlegeDosar}
         />
+        <MobileTopNav active={active} onSelect={onSelect} badgeDosare={deSunat.length} />
         <StareSistem />
-        <main className="flex-1 pb-[84px] md:pb-0">{children}</main>
-        <MobileBottomNav active={active} onSelect={onSelect} badgeDosare={deSunat.length} />
+        <main className="flex-1">{children}</main>
+        <SiteFooter className="pb-[104px] md:pb-4" />
+        <MobileBottomNav onNou={onNou} onDeviz={onDeviz} onPdf={onPdf} />
       </SidebarInset>
     </SidebarProvider>
   )

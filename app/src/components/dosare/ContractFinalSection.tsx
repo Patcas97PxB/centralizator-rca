@@ -20,7 +20,7 @@ export function ContractFinalSection({
   async function handleFile(file: File) {
     setSeIncarca(true)
     setStatus({ text: 'Se citește contractul final…', eroare: false })
-    const r = await citesteContractFinal(file, draft)
+    const r = await citesteContractFinal(file, draft, (text) => setStatus({ text, eroare: false }))
     if (r.valid) onPatch({ ...r.patch, contractFinalIncarcat: true })
     setStatus({ text: r.mesaj, eroare: r.eroare })
     setSeIncarca(false)
@@ -39,7 +39,7 @@ export function ContractFinalSection({
         <input
           ref={inputRef}
           type="file"
-          accept="application/pdf"
+          accept="application/pdf,image/*"
           className="hidden"
           onChange={(e) => {
             const f = e.target.files?.[0]
@@ -48,7 +48,7 @@ export function ContractFinalSection({
           }}
         />
       </div>
-      <p className="text-xs text-muted-foreground">Exportul final (winMentor) — verifică și completează valoarea, zilele și durata contractului.</p>
+      <p className="text-xs text-muted-foreground">Exportul final (winMentor), PDF sau scanat/poză — verifică și completează valoarea, zilele și durata contractului.</p>
       {status && <p className={'text-xs ' + (status.eroare ? 'text-destructive font-medium' : 'text-foreground')}>{status.text}</p>}
     </div>
   )

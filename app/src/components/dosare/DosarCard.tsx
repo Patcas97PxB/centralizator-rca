@@ -52,13 +52,13 @@ export function DosarCard({
 
   const predatFacut = !!dosar.predatBifat
   const preluatFacut = !!dosar.preluatBifat
-  const viitor = urgenta.cls === 'c-albastru' && /până la predare/.test(urgenta.bigLabel)
+  const viitor = !!urgenta.inaintePredare
   const scurse = zileScurseDeLaPredare(dosar.start)
   const total = rca.zile
   const pct = finalizat ? 100 : scurse !== null && total ? Math.max(0, Math.min(100, (scurse / total) * 100)) : 0
   const urgColor = cardColor
   const subStanga = finalizat ? 'închis' : viitor ? 'nepredată' : scurse !== null && total ? `ziua ${scurse} / ${total}` : ''
-  const subDreapta = finalizat ? 'preluată' : viitor ? 'așteaptă predarea' : urgenta.depasit ? 'termen depășit' : 'termen'
+  const subDreapta = finalizat || preluatFacut ? 'preluată' : viitor ? 'așteaptă predarea' : urgenta.depasit ? 'termen depășit' : 'termen'
 
   const prevStatusRef = useRef(dosar.status)
   const [celebrating, setCelebrating] = useState(false)

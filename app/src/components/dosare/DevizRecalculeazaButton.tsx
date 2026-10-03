@@ -2,6 +2,7 @@ import { useEffect, useRef } from 'react'
 import { AlertTriangle, Calculator, Check, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { useDevizScan } from '@/hooks/useDevizScan'
+import type { RezultatCalculRCA } from '@/lib/rca-calc'
 import type { Dosar } from '@/lib/types'
 import { cn } from '@/lib/utils'
 
@@ -16,10 +17,13 @@ const TILE = {
 // cu aceeasi animatie ca la cardul "Zile din deviz" de pe ecranul principal.
 export function DevizRecalculeazaButton({
   onPatch,
+  calcul,
 }: {
   onPatch: (patch: Partial<Dosar>) => void
+  /** Calculul pe asigurator (deviz + weekend + 1 zi), afisat sub zilele de reparatie. */
+  calcul?: RezultatCalculRCA
 }) {
-  const { stage, result, errorMsg, fileName, run } = useDevizScan()
+  const { stage, result, errorMsg, fileName, progres, run } = useDevizScan()
   const inputRef = useRef<HTMLInputElement>(null)
   const onPatchRef = useRef(onPatch)
   onPatchRef.current = onPatch
@@ -45,10 +49,10 @@ export function DevizRecalculeazaButton({
           ref={inputRef}
           type="file"
           accept="application/pdf,image/*"
+          multiple
           className="hidden"
           onChange={(e) => {
-            const f = e.target.files?.[0]
-            if (f) run(f)
+            run(Array.from(e.target.files ?? []))
             e.target.value = ''
           }}
         />
@@ -93,7 +97,7 @@ export function DevizRecalculeazaButton({
             {stage === 'scanning' && (
               <>
                 <div className="truncate text-sm font-bold" style={{ color: '#7dd3fc' }}>Calculez zilele din deviz…</div>
-                <div className="truncate text-xs text-muted-foreground">{fileName}</div>
+                <div className="truncate text-xs text-muted-foreground">{progres || fileName}</div>
                 <div className="mt-2 h-1 overflow-hidden rounded-full bg-white/10">
                   <div
                     className="h-full origin-left rounded-full animate-[devizProgress_2.6s_cubic-bezier(.4,0,.2,1)_both]"
@@ -111,7 +115,15 @@ export function DevizRecalculeazaButton({
                   <span className="text-xs font-bold" style={{ color: '#00f5a0' }}>ZILE DE REPARAȚIE</span>
                 </div>
                 <p className="mt-1 text-xs text-muted-foreground">{result.formulaCalcul}</p>
-                <p className="mt-0.5 text-[11px] text-[#3ddc97]">Zilele au fost completate. Restul câmpurilor nu au fost modificate.</p>
+                {calcul && (
+                  <p className="mt-1 text-xs font-semibold text-foreground">
+                    {calcul.zile != null ? `${calcul.formula} = ${calcul.zile} zile` : calcul.formula}
+                    {calcul.dataPreluare && ` — preluare ${calcul.dataPreluare.split('-').reverse().join('.')}`}
+                  </p>
+                )}
+                <p className="mt-0.5 text-[11px] text-[#3ddc97]">
+                  Zilele{calcul?.dataPreluare ? ' și data preluării au' : ' au'} fost completate. Restul câmpurilor nu au fost modificate.
+                </p>
               </div>
             )}
             {stage === 'error' && (

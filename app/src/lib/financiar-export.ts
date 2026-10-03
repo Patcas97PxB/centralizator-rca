@@ -20,16 +20,16 @@ function descarcaBlob(blob: Blob, numeFisier: string) {
 // (site-ul vechi avea si o cale de rezerva pentru rulare intr-un iframe restrictionat, care
 // nu se aplica aici, aplicatia noua ruleaza mereu ca pagina web normala).
 export function exportFinanciarCSV(dosare: Dosar[]) {
-  let csv = 'Status;Nr RBH;Nr dosar;Service;Nr auto pagubit;Asigurator;Clasa auto;Valoare (EUR, fara TVA);Comision %;Comision (EUR);Tarif grila estimat;Zile contract;Zile decontabil;Alerta\n'
+  let csv = 'Status;Nr RBH;Nr dosar;Service;Nr auto pagubit;Asigurator;Clasa auto;Valoare (fara TVA);Moneda;Comision %;Comision;Tarif grila estimat;Zile contract;Zile decontabil;Alerta\n'
   dosare.forEach((d) => {
     const r = randFinanciar(d)
     const alerte: string[] = []
-    if (r.alerte.some((a) => a.includes('TARIF GREȘIT'))) alerte.push('TARIF GRESIT')
+    if (r.alerte.some((a) => a.includes('TARIF GREȘIT') || a.includes('TARIF DE VERIFICAT'))) alerte.push('TARIF GRESIT')
     if (r.alerte.some((a) => a.includes('ZILE DIFERITE'))) alerte.push('ZILE DIFERITE')
     if (!r.finalizat) alerte.push('NEFINALIZAT')
     csv += [
       r.finalizat ? 'finalizat' : 'in curs', d.nrRezervare || '', d.nrDosar || '', d.service || '', d.nrAutoPagubit || '', d.asigurator || '', d.clasaAuto || '',
-      r.valoare.toFixed(2), r.procent + '%', r.comision.toFixed(2), r.tarifAsteptat ? r.tarifAsteptat.total.toFixed(2) + ' ' + r.tarifAsteptat.moneda : '',
+      r.valoare.toFixed(2), r.moneda, r.procent + '%', r.comision.toFixed(2), r.tarifAsteptat ? r.tarifAsteptat.total.toFixed(2) + ' ' + r.tarifAsteptat.moneda : '',
       d.zileContractFinal || '', r.zilePentruTarif || '', alerte.join(' + '),
     ].join(';') + '\n'
   })
@@ -37,12 +37,12 @@ export function exportFinanciarCSV(dosare: Dosar[]) {
 }
 
 export function exportFinanciarXLSX(dosare: Dosar[]) {
-  const header = ['Status', 'Nr RBH', 'Nr dosar', 'Service', 'Nr auto pagubit', 'Asigurator', 'Clasa auto', 'Valoare EUR', 'Comision %', 'Comision EUR', 'Tarif grila estimat', 'Zile contract', 'Zile decontabil']
+  const header = ['Status', 'Nr RBH', 'Nr dosar', 'Service', 'Nr auto pagubit', 'Asigurator', 'Clasa auto', 'Valoare', 'Moneda', 'Comision %', 'Comision', 'Tarif grila estimat', 'Zile contract', 'Zile decontabil']
   const rows = dosare.map((d) => {
     const r = randFinanciar(d)
     return [
       r.finalizat ? 'finalizat' : 'in curs', d.nrRezervare, d.nrDosar, d.service, d.nrAutoPagubit, d.asigurator, d.clasaAuto,
-      r.valoare, r.procent, r.comision, r.tarifAsteptat ? `${r.tarifAsteptat.total.toFixed(2)} ${r.tarifAsteptat.moneda}` : '',
+      r.valoare, r.moneda, r.procent, r.comision, r.tarifAsteptat ? `${r.tarifAsteptat.total.toFixed(2)} ${r.tarifAsteptat.moneda}` : '',
       d.zileContractFinal, r.zilePentruTarif,
     ]
   })

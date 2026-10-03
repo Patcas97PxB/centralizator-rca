@@ -7,9 +7,9 @@ import {
   PopoverTrigger,
 } from '@/components/ui/popover'
 import { extractFromText, type RezultatExtractie } from '@/lib/extractie'
-import { analizaDeviz, type AnalizaDeviz } from '@/lib/deviz-analiza'
+import type { AnalizaDeviz } from '@/lib/deviz-analiza'
 import { suggestClasaFromModel } from '@/lib/clase-auto'
-import { mesajEroareOCR, ocrImageToText, pdfLibDisponibil, pdfToImageBlobs, readPdfText } from '@/lib/pdf-ocr'
+import { citesteDeviz, mesajEroareOCR } from '@/lib/pdf-ocr'
 import type { Dosar } from '@/lib/types'
 
 // Portat din handleFileUpload()/handleDevizOnly() (index.html): PDF cu text -> citire directa;
@@ -79,53 +79,24 @@ export function PreluareDateSection({
     }
   }
 
-  async function handleFile(file: File) {
+  async function handleFiles(files: File[]) {
+    if (files.length === 0) return
     setSeIncarca(true)
     setStatus('')
     setChips([])
-    const isPdf = file.type === 'application/pdf' || /\.pdf$/i.test(file.name)
     try {
-      if (isPdf) {
-        if (!pdfLibDisponibil()) {
-          setStatus('Biblioteca de citire PDF nu s-a încărcat. Verifică internetul și reîncarcă pagina.')
-          return
-        }
-        setStatus('Se citește PDF-ul…')
-        const fullText = await readPdfText(file)
-        if (fullText.trim().length > 40) {
-          aplicaExtractie(extractFromText(fullText))
-          const an = analizaDeviz(fullText)
-          aplicaAnaliza(an)
-          setStatus(an ? 'Deviz analizat — zilele de reparație au fost calculate automat.' : 'Date detectate — verifică și completează câmpurile de mai jos.')
-          return
-        }
-        // PDF scanat (fara text) — OCR pe toate paginile, in limita platformei
-        setStatus('Se scanează imaginea…')
-        const imgBlobs = await pdfToImageBlobs(file, 8)
-        const ocrText = await ocrImageToText(imgBlobs)
-        if (ocrText.trim().length > 20) {
-          aplicaExtractie(extractFromText(ocrText))
-          const an = analizaDeviz(ocrText)
-          aplicaAnaliza(an)
-          setStatus(an ? 'Deviz citit din scanare — zilele de reparație au fost calculate automat.' : 'Date citite din scanare — verifică și completează câmpurile de mai jos.')
-        } else {
-          setStatus('Nu am putut citi text din acest PDF scanat. Completează manual câmpurile.')
-        }
+      const { text, ocr, analiza: an } = await citesteDeviz(files, setStatus)
+      if (text.trim().length > 20) {
+        aplicaExtractie(extractFromText(text))
+        aplicaAnaliza(an)
+        const sursa = !ocr ? 'Deviz analizat' : files.length > 1 ? `Deviz citit din ${files.length} fișiere` : 'Deviz citit din scanare/poză'
+        setStatus(an ? `${sursa} — zilele de reparație au fost calculate automat.` : 'Date detectate — verifică și completează câmpurile de mai jos.')
       } else {
-        setStatus('Se scanează imaginea…')
-        const ocrText = await ocrImageToText(file)
-        if (ocrText.trim().length > 20) {
-          aplicaExtractie(extractFromText(ocrText))
-          const an = analizaDeviz(ocrText)
-          aplicaAnaliza(an)
-          setStatus(an ? 'Deviz citit din poză — zilele de reparație au fost calculate automat.' : 'Date citite din poză — verifică și completează câmpurile de mai jos.')
-        } else {
-          setStatus('Nu am putut citi text din această poză. Completează manual câmpurile.')
-        }
+        setStatus('Nu am putut citi text din acest document. Completează manual câmpurile.')
       }
     } catch (e) {
       console.error(e)
-      setStatus(mesajEroareOCR(e))
+      setStatus(e instanceof Error && e.message ? e.message : mesajEroareOCR(e))
     } finally {
       setSeIncarca(false)
     }
@@ -156,10 +127,10 @@ export function PreluareDateSection({
           ref={inputRef}
           type="file"
           accept="application/pdf,image/*"
+          multiple
           className="hidden"
           onChange={(e) => {
-            const f = e.target.files?.[0]
-            if (f) handleFile(f)
+            handleFiles(Array.from(e.target.files ?? []))
             e.target.value = ''
           }}
         />

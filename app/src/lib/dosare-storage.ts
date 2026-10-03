@@ -1,4 +1,5 @@
 import { supabase } from './supabase'
+import { ESTE_DEMO, demoDosare, demoInlocuiesteDosare, demoSalveazaDosar, demoStergeDosar } from './demo'
 import { normalizeazaDosar, type Dosar } from './types'
 
 // Tabelul `dosare` (un rand per dosar, coloana `data` jsonb + `updated_at`) a fost creat
@@ -24,6 +25,7 @@ export class ConflictSalvare extends Error {
 }
 
 export async function fetchDosare(): Promise<Dosar[]> {
+  if (ESTE_DEMO) return (await demoDosare()).map(normalizeazaDosar)
   const { data, error } = await supabase.from('dosare').select('id, data, updated_at')
   if (error) throw error
   return (data as DosarRow[]).map((r) => normalizeazaDosar({ ...r.data, id: r.id, updatedAt: r.updated_at }))
@@ -34,6 +36,7 @@ export async function fetchDosare(): Promise<Dosar[]> {
  * `forteaza` = suprascrie oricum (alegerea explicita a utilizatorului, sau restaurare).
  */
 export async function saveDosarRemote(d: Dosar, baza: string | undefined, forteaza = false): Promise<string> {
+  if (ESTE_DEMO) return demoSalveazaDosar(d)
   const { updatedAt: _updatedAt, ...rest } = d
   const updated_at = new Date().toISOString()
   if (forteaza) {
@@ -56,6 +59,7 @@ export async function saveDosarRemote(d: Dosar, baza: string | undefined, fortea
 }
 
 export async function deleteDosarRemote(id: string): Promise<void> {
+  if (ESTE_DEMO) return demoStergeDosar(id)
   const { error } = await supabase.from('dosare').delete().eq('id', id)
   if (error) throw error
 }
@@ -64,6 +68,7 @@ export async function deleteDosarRemote(id: string): Promise<void> {
 // deci aici (doar aici) e corect sa stergem si randurile ramase care nu mai apar in lista noua.
 // Dosarele sterse/suprascrise raman recuperabile din „Recuperare" (istoric din baza de date).
 export async function inlocuiesteToateDosarele(listaNoua: Dosar[]): Promise<void> {
+  if (ESTE_DEMO) return demoInlocuiesteDosare(listaNoua)
   const { data, error } = await supabase.from('dosare').select('id')
   if (error) throw error
   const idNoi = new Set(listaNoua.map((d) => d.id))
@@ -86,6 +91,7 @@ export interface IntrareIstoric {
 // Citeste istoricul (tabelul `dosare_istoric`, umplut de trigger — vezi migrarea
 // 20261003120000_dosare_istoric.sql). `sters` = dosarul nu mai exista in tabelul `dosare`.
 export async function fetchIstoric(): Promise<{ intrari: IntrareIstoric[]; idExistente: Set<string> }> {
+  if (ESTE_DEMO) return { intrari: [], idExistente: new Set() }
   const [ist, ex] = await Promise.all([
     supabase.from('dosare_istoric').select('id, dosar_id, op, data, created_at').order('id', { ascending: false }).limit(400),
     supabase.from('dosare').select('id'),

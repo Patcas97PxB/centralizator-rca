@@ -40,7 +40,7 @@ export function ModificarPdfCard() {
           </span>
           <div className="min-w-0 flex-1">
             <div className="text-[12.5px] font-extrabold text-[#e2e8f5]">Încarcă PDF-ul</div>
-            <div className="text-[10.5px] text-[#8ba3cf]">date, ore, nr. auto</div>
+            <div className="text-[10.5px] text-[#8ba3cf]">date, ore, nr. auto, pagini</div>
           </div>
         </div>
       </button>

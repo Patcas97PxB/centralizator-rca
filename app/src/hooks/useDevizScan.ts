@@ -1,6 +1,6 @@
 import { useState } from 'react'
-import { analizaDeviz, type AnalizaDeviz } from '@/lib/deviz-analiza'
-import { mesajEroareOCR, ocrImageToText, pdfLibDisponibil, pdfToImageBlobs, readPdfText } from '@/lib/pdf-ocr'
+import type { AnalizaDeviz } from '@/lib/deviz-analiza'
+import { citesteDeviz, mesajEroareOCR } from '@/lib/pdf-ocr'
 
 export type DevizScanStage = 'idle' | 'scanning' | 'done' | 'error'
 
@@ -9,42 +9,29 @@ export function useDevizScan() {
   const [result, setResult] = useState<AnalizaDeviz | null>(null)
   const [errorMsg, setErrorMsg] = useState('')
   const [fileName, setFileName] = useState('')
+  const [progres, setProgres] = useState('')
 
-  async function run(file: File) {
+  async function run(files: File[]) {
+    if (files.length === 0) return
     setStage('scanning')
-    setFileName(file.name)
+    setFileName(files.length === 1 ? files[0].name : `${files.length} fișiere`)
+    setProgres('')
     setErrorMsg('')
     setResult(null)
-    const isPdf = file.type === 'application/pdf' || /\.pdf$/i.test(file.name)
     try {
-      let an: AnalizaDeviz | null = null
-      if (!isPdf) {
-        const ocrText = await ocrImageToText(file)
-        an = ocrText.trim().length > 20 ? analizaDeviz(ocrText) : null
-      } else {
-        if (!pdfLibDisponibil()) {
-          setErrorMsg('Biblioteca de citire PDF nu s-a încărcat. Verifică internetul și reîncarcă pagina.')
-          setStage('error')
-          return
-        }
-        const fullText = await readPdfText(file)
-        an = analizaDeviz(fullText)
-        if (!an && fullText.trim().length < 40) {
-          const imgBlobs = await pdfToImageBlobs(file, 8)
-          const ocrText = await ocrImageToText(imgBlobs)
-          an = ocrText.trim().length > 20 ? analizaDeviz(ocrText) : null
-        }
-      }
+      const { analiza: an } = await citesteDeviz(files, setProgres)
       if (an) {
         setResult(an)
         setStage('done')
       } else {
-        setErrorMsg('Nu am găsit manopera în acest document — verifică claritatea sau introdu zilele manual.')
+        setErrorMsg(
+          'Nu am găsit orele de manoperă. La poze, selectează odată toate paginile devizului (inclusiv cea cu totalurile), clare și drepte — sau introdu zilele manual.',
+        )
         setStage('error')
       }
     } catch (e) {
       console.error(e)
-      setErrorMsg(mesajEroareOCR(e))
+      setErrorMsg(e instanceof Error && e.message ? e.message : mesajEroareOCR(e))
       setStage('error')
     }
   }
@@ -54,7 +41,8 @@ export function useDevizScan() {
     setResult(null)
     setErrorMsg('')
     setFileName('')
+    setProgres('')
   }
 
-  return { stage, result, errorMsg, fileName, run, reset }
+  return { stage, result, errorMsg, fileName, progres, run, reset }
 }

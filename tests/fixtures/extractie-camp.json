@@ -150,5 +150,27 @@
       "marcaModel": "DACIA",
       "asigurator": "Allianz"
     }
+  },
+  {
+    "id": "allianz-nc-etichete-sus-valori-jos",
+    "descriere": "Allianz - nota de constatare PDF cu etichetele sus si valorile jos: dupa 'Dosar de dauna Nr.' urmeaza eticheta 'Auto marca/model', nr. dosar apare separat ca 'ZB856348 / BU'",
+    "text": "NOTĂ DE CONSTATARE RCA  Dosar de dauna Nr.  Auto marcă/model  Număr de  inmatriculare  Număr de identificare  Data producerii evenimentului  Număr poliță  Regres:   Da   Nu   X  Țară/Județ/Localitate/Stradă/ Număr/ în intersecția  Romania,jud.Bihor,loc.Sanmartin,str.Dn76,nr.1  Păgubit   Bt Leasing Transilvania Ifn Sa Punct De Lucru  BH11JPE  WBA11EV0X09S46912  23.sep.2026 08:45  128135291  Bmw X5 (G05n)(04.2023->)  Culpă comună:   Da   Nu   X  ZB856348 / BU  Call Center 021 20 19 180, 021 20 19 181  S-au constatat urmatoarele daune:  Dată avizare daune:   25.sep.2026 25.sep.2026   Dată constatare:  Nr. Crt   Cod intern Ax   Denumire reper avariat   Soluție tehnologică   Timp (ore)  1   0283   Bara Protectie Fata   Inlocuire ( vopsire )   -  2   0303   Ornament Mijl Bara F   Inlocuire   -  3   0305   Grila Bara Fata   Inlocuire   -  4   0324   Grila Dr Bara Fata   Inlocuire   -  5   0562   Far Dreapta Fara Unitati Control   Inlocuire   -  6   0742   Aripa Fata Dreapta   Inlocuire   -  7   0788   Ornam Pas Roata F Dr   Inlocuire ( vopsire )   -  8   9900   Vehicul Complet Masurare Cu Reglare   Geometrie   -  Pagina -1-  Nr. înregistrare: 206129176/9/25/2026\nAllianz Țiriac Asigurări",
+    "expected": {
+      "nrDosar": "ZB856348",
+      "nrAuto": "BH11JPE",
+      "marcaModel": "Bmw X5",
+      "asigurator": "Allianz"
+    }
+  },
+  {
+    "id": "asirom-pv-scanat-bilingv-alte-marci",
+    "descriere": "Asirom - proces verbal scanat (OCR): eticheta bilingva 'Nr. dosar/ No. of claim file:', marca 'ALTE MARCI' cu modelul complet in campul Model ('BYD SEAL 5DM-|'); sufixul -I nu intra -> 'BYD SEAL 5DM'",
+    "text": "Claims Department / Departament Daune B-dul Carol |, nr. 31-33, Ne Sige pt ta\nsector 2, RO-020912, Bucuresti A SN 1 | () y | ) A\n021 9146 customer care\ndaune@asirom.ro VIENNA INSURANCE GROUP\nTE —————————————————————————————tntos sete ;\nPROCES VERBAL DE CONSTATARE\ni\nNr. dosar/ No. of claim file: RA23/BH/26/33219865\nData eveniment/ Event date: 20-07-2026\nData avizarii evenimentului la Asigurator: 23-07-2026\nLocul evenimentului/ Event place: Romania BIHOR (BH) CHERESIG Principala\n| | n Pentru a solicita o constatare suplimentară este necesară completarea\n> ate Cerererii de reconstatare online la adresa https://asirom.ro/reconstatare-\n| dauna\nye taieda- tl) Pentru încasarea despagubirii este necesara completarea cerererii de\ndespăgubire online la adresa https://asirom.ro/despagubire-dauna\nnh ON NE od LC TEVI E e TRI EE\nDATE DE IDENTIFICARE ALE BUNULUI AVARIAT\n| sai\nProprietar auto: Ovidiu Cristea Nr. înmatriculare: BH62CRL\nSerie șasiu (VIN): LCOC76C42S0273847 Nr. km înregistrați: 867\nMarca: ALTE MARCI Model: BYD SEAL 5DM-|\nERE ee Gh CEI E E ETC AAR TN, | ro ut hicansni nists",
+    "expected": {
+      "nrDosar": "RA23/BH/26/33219865",
+      "nrAuto": "BH62CRL",
+      "marcaModel": "BYD SEAL 5DM",
+      "asigurator": "Asirom"
+    }
   }
 ]

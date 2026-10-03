@@ -75,13 +75,16 @@ export function LightRay() {
     const h: Seg = { line: hl, grad: hg, stops: Array.from(hg.querySelectorAll('stop')) }
 
     const x0 = SIDEBAR_W - 1
-    const y0 = geo.hdr - 0.5
-    const V = geo.h - y0
-    const total = V + (geo.w - x0)
+    // Marginea de jos a header-ului se citeste la fiecare cadru: in varianta de test banda de sus
+    // impinge header-ul in jos, iar la derulare header-ul (sticky) urca pana sus.
+    const header = document.querySelector('header')
 
     let raf = 0
     const start = performance.now()
     const frame = (now: number) => {
+      const y0 = (header ? header.getBoundingClientRect().bottom : geo.hdr) - 0.5
+      const V = geo.h - y0
+      const total = V + (geo.w - x0)
       const t = (now - start) % CYCLE_MS
       if (t > TRAVEL_MS) {
         v.line.setAttribute('visibility', 'hidden')

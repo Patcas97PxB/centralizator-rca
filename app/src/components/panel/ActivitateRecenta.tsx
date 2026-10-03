@@ -12,7 +12,16 @@ function timpRelativ(iso: string): string {
   return `acum ${zile} ${zile === 1 ? 'zi' : 'zile'}`
 }
 
-export function ActivitateRecenta({ dosare, limit = 5 }: { dosare: Dosar[]; limit?: number }) {
+export function ActivitateRecenta({
+  dosare,
+  limit = 5,
+  onAlege,
+}: {
+  dosare: Dosar[]
+  limit?: number
+  /** Click pe un rand: te duce la cardul dosarului. */
+  onAlege?: (id: string) => void
+}) {
   const recente = dosare
     .filter((d) => d.updatedAt)
     .slice()
@@ -28,20 +37,27 @@ export function ActivitateRecenta({ dosare, limit = 5 }: { dosare: Dosar[]; limi
       {recente.length === 0 ? (
         <p className="text-xs text-muted-foreground">Nicio modificare încă.</p>
       ) : (
-        <ul className="m-0 flex list-none flex-col gap-3 p-0">
+        <ul className="m-0 flex list-none flex-col gap-1 p-0">
           {recente.map((d) => {
             const c = STATUS_META[d.status]?.color ?? '#94a3b8'
             return (
-              <li key={d.id} className="flex items-start gap-2.5 text-[11.5px]">
-                <span
-                  className="mt-[5px] size-2 shrink-0 rounded-full"
-                  style={{ background: c, boxShadow: `0 0 9px 1px ${c}bb` }}
-                  aria-hidden="true"
-                />
-                <div className="min-w-0">
-                  <div className="truncate font-bold text-[#e2e8f5]">Dosar {d.nrAutoPagubit || d.nrDosar || '—'} actualizat</div>
-                  <div className="mt-px text-[#8b9ab5]">{timpRelativ(d.updatedAt as string)}</div>
-                </div>
+              <li key={d.id}>
+                <button
+                  type="button"
+                  onClick={() => onAlege?.(d.id)}
+                  title="Mergi la dosar"
+                  className="-mx-2 flex w-[calc(100%+1rem)] items-start gap-2.5 rounded-[10px] px-2 py-1 text-left text-[11.5px] transition-colors hover:bg-white/[.05] focus-visible:bg-white/[.05] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#3b82f6]"
+                >
+                  <span
+                    className="mt-[5px] size-2 shrink-0 rounded-full"
+                    style={{ background: c, boxShadow: `0 0 9px 1px ${c}bb` }}
+                    aria-hidden="true"
+                  />
+                  <div className="min-w-0">
+                    <div className="truncate font-bold text-[#e2e8f5]">Dosar {d.nrAutoPagubit || d.nrDosar || '—'} actualizat</div>
+                    <div className="mt-px text-[#8b9ab5]">{timpRelativ(d.updatedAt as string)}</div>
+                  </div>
+                </button>
               </li>
             )
           })}

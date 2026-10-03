@@ -1,7 +1,7 @@
 import { Fragment, useMemo, useState } from 'react'
-import { Download, FileSpreadsheet } from 'lucide-react'
+import { Download, FileSpreadsheet, Search } from 'lucide-react'
 import { useDosareContext } from '@/contexts/DosareContext'
-import { dosareFinanciarFiltrate, filtruFinanciarImplicit, grupeazaPeService, type FiltruFinanciar } from '@/lib/financiar'
+import { dosareFinanciarFiltrate, filtruFinanciarImplicit, formatSuma, formatSumePeMoneda, grupeazaPeService, sumeGoale, type FiltruFinanciar } from '@/lib/financiar'
 import { exportFinanciarCSV, exportFinanciarXLSX } from '@/lib/financiar-export'
 import { staggerDelay } from '@/lib/motion'
 import { cn } from '@/lib/utils'
@@ -41,8 +41,14 @@ export function RapoartePage() {
   const grupuri = useMemo(() => grupeazaPeService(filtrate), [filtrate])
 
   const totalFinalizate = filtrate.filter((d) => d.status === 'finalizat').length
-  const totalGeneral = grupuri.reduce((s, g) => s + g.subtotal, 0)
-  const totalGeneralComision = grupuri.reduce((s, g) => s + g.subtotalComision, 0)
+  const totalGeneral = sumeGoale()
+  const totalGeneralComision = sumeGoale()
+  for (const g of grupuri) {
+    totalGeneral.EUR += g.subtotal.EUR
+    totalGeneral.lei += g.subtotal.lei
+    totalGeneralComision.EUR += g.subtotalComision.EUR
+    totalGeneralComision.lei += g.subtotalComision.lei
+  }
 
   async function onComisionChange(dosarId: string, val: string) {
     const d = dosare.find((x) => x.id === dosarId)
@@ -59,6 +65,19 @@ export function RapoartePage() {
       </div>
 
       <div className="flex flex-wrap items-end gap-3 rounded-[20px] border border-[#253150] bg-[#10172a] p-3.5">
+        <div className="min-w-[220px] flex-1 basis-full sm:basis-auto">
+          <Label htmlFor="finSearch" className={LABEL}>Caută</Label>
+          <div className="relative">
+            <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-[#94a3b8]" aria-hidden="true" />
+            <Input
+              id="finSearch"
+              value={filtru.search}
+              onChange={(e) => setFiltru({ ...filtru, search: e.target.value })}
+              placeholder="Nr. auto, RBH, dosar, asigurator, sumă…"
+              className={cn(FIELD, 'w-full pl-9 pr-3')}
+            />
+          </div>
+        </div>
         <div>
           <Label htmlFor="finFrom" className={LABEL}>Predare de la</Label>
           <Input id="finFrom" type="date" className={cn(FIELD, 'px-2.5 [color-scheme:dark]')} value={filtru.dataFrom} onChange={(e) => setFiltru({ ...filtru, dataFrom: e.target.value })} />
@@ -97,7 +116,7 @@ export function RapoartePage() {
 
       {filtrate.length === 0 ? (
         <div className="rounded-[20px] border border-dashed border-[#253150] p-10 text-center text-sm text-muted-foreground">
-          Niciun dosar în acest interval / service.
+          Niciun dosar pentru această căutare / interval / service.
         </div>
       ) : (
         <>
@@ -106,7 +125,7 @@ export function RapoartePage() {
               <div className="flex flex-wrap items-center justify-between gap-2.5 border-b border-[#1e2a45] px-4 py-[11px]">
                 <span className="text-[13.5px] font-extrabold text-[#f1f5f9]">{g.service}</span>
                 <span className="text-[11.5px] text-[#8b9ab5]">
-                  {g.nrFinalizate}/{g.randuri.length} finalizate · {g.subtotal.toFixed(2)} EUR · comision: {g.subtotalComision.toFixed(2)} EUR
+                  {g.nrFinalizate}/{g.randuri.length} finalizate · {formatSumePeMoneda(g.subtotal)} · comision: {formatSumePeMoneda(g.subtotalComision)}
                 </span>
               </div>
               <div className="overflow-x-auto">
@@ -131,7 +150,7 @@ export function RapoartePage() {
                           <td className="whitespace-nowrap px-3 py-[9px] font-bold text-[#f1f5f9]">{r.dosar.nrAutoPagubit || '—'}</td>
                           <td className={TD}>{r.dosar.asigurator || '—'}</td>
                           <td className={TD}>{r.dosar.clasaAuto || '—'}</td>
-                          <td className="whitespace-nowrap px-3 py-[9px] text-right tabular-nums text-[#f1f5f9]">{r.valoare.toFixed(2)} EUR</td>
+                          <td className="whitespace-nowrap px-3 py-[9px] text-right tabular-nums text-[#f1f5f9]">{formatSuma(r.valoare, r.moneda)}</td>
                           <td className="px-3 py-[9px] text-right tabular-nums text-[#cbd5e1]">
                             <Input
                               type="number"
@@ -142,7 +161,7 @@ export function RapoartePage() {
                               onBlur={(e) => onComisionChange(r.dosar.id, e.target.value)}
                             />
                           </td>
-                          <td className="whitespace-nowrap px-3 py-[9px] text-right font-bold tabular-nums text-[#3ddc97]">{r.comision.toFixed(2)} EUR</td>
+                          <td className="whitespace-nowrap px-3 py-[9px] text-right font-bold tabular-nums text-[#3ddc97]">{formatSuma(r.comision, r.moneda)}</td>
                           <td className={TD}>{r.dosar.nrDosar}</td>
                           <td className={cn('whitespace-nowrap px-3 py-[9px] font-bold', r.areContract ? 'text-[#3ddc97]' : 'text-[#ff4d6d]')}>
                             {r.areContract ? 'Încărcat' : 'Lipsă'}
@@ -174,7 +193,7 @@ export function RapoartePage() {
             className="rounded-[20px] border border-[#2563eb]/45 p-4 text-right text-sm font-extrabold text-[#f1f5f9]"
             style={{ background: 'linear-gradient(120deg, rgba(37,99,235,.18), rgba(37,99,235,.06))' }}
           >
-            TOTAL GENERAL: {totalFinalizate}/{filtrate.length} finalizate · {totalGeneral.toFixed(2)} EUR · comision: {totalGeneralComision.toFixed(2)} EUR
+            TOTAL GENERAL: {totalFinalizate}/{filtrate.length} finalizate · {formatSumePeMoneda(totalGeneral)} · comision: {formatSumePeMoneda(totalGeneralComision)}
           </div>
         </>
       )}
