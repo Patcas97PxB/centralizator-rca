@@ -2,7 +2,8 @@ import { useRef, useState } from 'react'
 import { Download, History, Upload } from 'lucide-react'
 import { RecuperareModal } from './RecuperareModal'
 import { useDosareContext } from '@/contexts/DosareContext'
-import { exportaBackup, parseazaBackup } from '@/lib/backup'
+import { exportaBackup, parseazaBackup, zileDeLaBackup } from '@/lib/backup'
+import { cn } from '@/lib/utils'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -14,12 +15,17 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
 
+const ZILE_BACKUP = 3
+
 export function BackupButtons() {
   const { dosare, servicii, importaBackup } = useDosareContext()
   const inputRef = useRef<HTMLInputElement>(null)
   const [pending, setPending] = useState<{ dosare: number; servicii: number; deSters: number; noi: number; run: () => void } | null>(null)
   const [eroare, setEroare] = useState('')
   const [recuperare, setRecuperare] = useState(false)
+  // Butonul de export straluceste cand au trecut 3+ zile de la ultimul backup (sau niciodata).
+  const [zileBackup, setZileBackup] = useState(zileDeLaBackup)
+  const deBackup = dosare.length > 0 && (zileBackup === null || zileBackup >= ZILE_BACKUP)
 
   async function onFile(file: File) {
     setEroare('')
@@ -42,7 +48,10 @@ export function BackupButtons() {
 
   return (
     <>
-      <button type="button" className="flex size-[34px] items-center justify-center rounded-[10px] border border-[#253150] bg-[#253150]/[.28] text-[#cbd5e1] transition-colors hover:bg-[#253150]/60 hover:text-white" onClick={() => exportaBackup(dosare, servicii)} title="Exportă backup" aria-label="Exportă backup">
+      <button type="button" className={cn('flex size-[34px] items-center justify-center rounded-[10px] border border-[#253150] bg-[#253150]/[.28] text-[#cbd5e1] transition-colors hover:bg-[#253150]/60 hover:text-white', deBackup && 'backup-glow')} onClick={() => {
+          exportaBackup(dosare, servicii)
+          setZileBackup(zileDeLaBackup())
+        }} title={deBackup ? (zileBackup === null ? 'Exportă backup — nu ai făcut încă niciunul' : `Exportă backup — ultimul acum ${zileBackup} zile`) : 'Exportă backup'} aria-label="Exportă backup">
         <Download className="size-4" aria-hidden="true" />
       </button>
       <button type="button" className="flex size-[34px] items-center justify-center rounded-[10px] border border-[#253150] bg-[#253150]/[.28] text-[#cbd5e1] transition-colors hover:bg-[#253150]/60 hover:text-white" onClick={() => inputRef.current?.click()} title="Importă backup" aria-label="Importă backup">

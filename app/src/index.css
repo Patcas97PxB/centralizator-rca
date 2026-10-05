@@ -124,6 +124,7 @@
     }
 }
 
+@keyframes backupGlow { 0%, 100% { box-shadow: 0 0 0 1px rgba(56, 189, 248, .55), 0 0 6px 0 rgba(56, 189, 248, .25); } 50% { box-shadow: 0 0 0 1px rgba(56, 189, 248, .95), 0 0 16px 3px rgba(56, 189, 248, .55); } }
 @keyframes pulseDot { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: .45; transform: scale(.82); } }
 @keyframes railBreathe { 0%, 100% { opacity: 1; } 50% { opacity: .72; } }
 @keyframes fadeUp { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
@@ -205,3 +206,12 @@
   20%, 70% { box-shadow: 0 0 0 3px rgba(125,211,252,.85), 0 0 34px 4px rgba(96,165,250,.55); }
 }
 .dosar-evidentiat { animation: dosarEvidentiat 2.6s ease-out both; }
+
+/* Butonul de export backup cand au trecut 3+ zile: inel albastru static (vizibil si fara
+   animatii) + pulsatie lenta. */
+.backup-glow {
+  border-color: rgba(56, 189, 248, .7) !important;
+  color: #e0f2fe !important;
+  box-shadow: 0 0 0 1px rgba(56, 189, 248, .55), 0 0 8px 0 rgba(56, 189, 248, .35);
+  animation: backupGlow 2.4s ease-in-out infinite;
+}
