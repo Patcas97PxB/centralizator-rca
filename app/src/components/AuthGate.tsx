@@ -7,18 +7,15 @@ import { Input } from '@/components/ui/input'
 import { ESTE_DEMO } from '@/lib/demo'
 import { SiteFooter } from '@/components/layout/SiteFooter'
 import { DOMENIU_PERMIS } from '@/lib/autentificare'
-import { cn } from '@/lib/utils'
-import baza from '@/assets/login/baza.webp'
-import bazaMic from '@/assets/login/baza-mic.webp'
-import emailImg from '@/assets/login/email.webp'
-import emailMic from '@/assets/login/email-mic.webp'
-import parolaImg from '@/assets/login/parola.webp'
-import parolaMic from '@/assets/login/parola-mic.webp'
+import atelier1080 from '@/assets/login/atelier-1080.mp4'
+import atelier720 from '@/assets/login/atelier-720.mp4'
+import atelierPoster from '@/assets/login/atelier-poster.webp'
 
-// Pagina de login: atelierul (mecanic, tinichigiu, vopsitor — generat cu GPT Image 2.5, File/Login/)
-// in fundal, formularul din sticla mata in dreapta. Trei variante ale ACELEIASI scene se schimba lin:
-// la Email mecanicul se uita spre formular, la Parola vopsitorul isi pune masca. Dupa intrare, o usa
-// de garaj se ridica peste aplicatie. Fara animatii cand utilizatorul le-a oprit (reduced motion).
+// Pagina de login: video in bucla cu atelierul (mecanic la bara, tinichigiu cu flexul si scantei,
+// vopsitor in cabina cu ceata de vopsea) pe tot ecranul — scena GPT Image 2.5 animata cu Seedance 1.5
+// Pro prin kie.ai (originalele in File/Login/). Bucla e fara salt: ultimele cadre trec lin in primele.
+// Formularul din sticla mata in dreapta; dupa intrare o usa de garaj se ridica peste aplicatie.
+// Cu animatiile oprite (reduced motion): doar primul cadru, fara usa.
 
 const CHEIE_EMAIL = 'rca-ultim-email'
 function emailSalvat(): string {
@@ -29,13 +26,6 @@ function emailSalvat(): string {
   }
 }
 
-type Focus = 'email' | 'parola' | null
-
-const SCENE: { cheie: Focus; mare: string; mic: string }[] = [
-  { cheie: null, mare: baza, mic: bazaMic },
-  { cheie: 'email', mare: emailImg, mic: emailMic },
-  { cheie: 'parola', mare: parolaImg, mic: parolaMic },
-]
 
 export function AuthGate({ children }: { children: ReactNode }) {
   const { isLoading, isAuthenticated, login } = useAuth()
@@ -44,7 +34,8 @@ export function AuthGate({ children }: { children: ReactNode }) {
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
   const [submitting, setSubmitting] = useState(false)
-  const [focus, setFocus] = useState<Focus>(null)
+  // Telefon / ecran mic: varianta 720p (1,5 MB) in loc de 1080p (5 MB).
+  const [video] = useState(() => (typeof window !== 'undefined' && window.innerWidth < 1000 ? atelier720 : atelier1080))
   const [usa, setUsa] = useState(false)
 
   if (isLoading) {
@@ -96,24 +87,23 @@ export function AuthGate({ children }: { children: ReactNode }) {
 
   return (
     <div className="relative flex min-h-svh flex-col overflow-hidden bg-[#050a18]">
-      {/* Fundal: scena pe tot ecranul, la rezolutie mare. Baza ramane mereu dedesubt; varianta
-          (email/parola) apare lin peste ea, deci nu se vede niciodata un gol intre imagini. */}
+      {/* Fundal: video-ul pe tot ecranul, la rezolutie mare. Pana se incarca, primul cadru (poster). */}
       <div className="fixed inset-0" aria-hidden="true">
-        {SCENE.map((s) => (
-          <img
-            key={s.cheie ?? 'baza'}
-            src={s.mare}
-            srcSet={`${s.mic} 1280w, ${s.mare} 2736w`}
-            sizes="100vw"
-            alt=""
-            decoding="async"
-            className={cn(
-              'absolute inset-0 h-full w-full object-cover object-[42%_center] md:object-[30%_center]',
-              !fara && 'transition-opacity duration-700 ease-out',
-              s.cheie === null || s.cheie === focus ? 'opacity-100' : 'opacity-0',
-            )}
+        {fara ? (
+          <img src={atelierPoster} alt="" className="absolute inset-0 h-full w-full object-cover" />
+        ) : (
+          <video
+            src={video}
+            poster={atelierPoster}
+            autoPlay
+            muted
+            loop
+            playsInline
+            preload="auto"
+            disablePictureInPicture
+            className="absolute inset-0 h-full w-full object-cover"
           />
-        ))}
+        )}
         {/* Umbrire doar cat sa se citeasca formularul: spre dreapta pe ecran lat, uniform pe telefon. */}
         <div className="absolute inset-0 bg-gradient-to-l from-[#050a18]/75 via-[#050a18]/15 to-transparent max-md:bg-[#050a18]/35" />
         <div className="absolute inset-x-0 bottom-0 h-32 bg-gradient-to-t from-[#050a18]/85 to-transparent" />
@@ -155,8 +145,6 @@ export function AuthGate({ children }: { children: ReactNode }) {
                 placeholder={'nume.prenume' + DOMENIU_PERMIS}
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                onFocus={() => setFocus('email')}
-                onBlur={() => setFocus(null)}
                 aria-invalid={!!error && !email.trim()}
                 className={campCls}
               />
@@ -173,8 +161,6 @@ export function AuthGate({ children }: { children: ReactNode }) {
             placeholder="Introdu parola"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            onFocus={() => setFocus('parola')}
-            onBlur={() => setFocus(null)}
             className={campCls}
           />
           <p role="alert" className="min-h-5 pt-2 text-[13px] font-medium text-[#fca5a5]">
