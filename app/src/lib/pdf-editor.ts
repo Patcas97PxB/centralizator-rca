@@ -209,6 +209,40 @@ function uniuneRect(cuvinte: Cuvant[]): [number, number, number, number] {
   ]
 }
 
+// Doar miezul literelor: intre ~55% din marimea fontului deasupra liniei de baza si putin deasupra ei
+// (acolo sunt literele mici), in latimea cuvintelor. Nu mai atinge randurile vecine.
+function miezRect(cuvinte: Cuvant[]): [number, number, number, number] {
+  const [x0, y0, x1, y1] = uniuneRect(cuvinte)
+  const baza = cuvinte[0].origin[1]
+  const size = cuvinte[0].size
+  return [x0, Math.max(y0, baza - 0.55 * size), x1, Math.min(y1, baza - 0.1 * size)]
+}
+
+// Sterge textul din zonele date pe o copie a PDF-ului; intoarce copia si cuvintele inainte/dupa.
+function stergeZone(
+  mupdf: Mupdf,
+  bytes: Uint8Array,
+  pagina: number,
+  rects: [number, number, number, number][],
+): { bytes: Uint8Array; inainte: Cuvant[]; dupa: Cuvant[] } {
+  const doc = mupdf.Document.openDocument(bytes, 'application/pdf').asPDF()
+  if (!doc) throw new Error('Fișierul nu este un PDF valid.')
+  try {
+    const page = doc.loadPage(pagina) as import('mupdf').PDFPage
+    const inainte = extrageCuvinte(mupdf, page)
+    for (const r of rects) page.createAnnotation('Redact').setRect(r)
+    page.applyRedactions(false, mupdf.PDFPage.REDACT_IMAGE_NONE, mupdf.PDFPage.REDACT_LINE_ART_NONE, mupdf.PDFPage.REDACT_TEXT_REMOVE)
+    const dupa = extrageCuvinte(mupdf, page)
+    page.destroy()
+    const buf = doc.saveToBuffer('garbage=compact,compress')
+    const out = new Uint8Array(buf.asUint8Array())
+    buf.destroy()
+    return { bytes: out, inainte, dupa }
+  } finally {
+    doc.destroy()
+  }
+}
+
 function acelasiCuvant(a: Cuvant, b: Cuvant): boolean {
   return a.text === b.text && a.rect.every((v, i) => Math.abs(v - b.rect[i]) < 0.6)
 }
@@ -227,43 +261,49 @@ export async function aplicaModificare(
   const mupdf = await incarcaMotor()
   const avertizari: string[] = []
 
-  // 1) stergere curata cu MuPDF
-  const doc = mupdf.Document.openDocument(bytes, 'application/pdf').asPDF()
-  if (!doc) throw new Error('Fișierul nu este un PDF valid.')
-  let dupaStergere: Uint8Array
-  let inainte: Cuvant[]
-  let dupa: Cuvant[]
-  let tonOriginal: number | null = null
-  try {
-    const page = doc.loadPage(pagina) as import('mupdf').PDFPage
-    inainte = extrageCuvinte(mupdf, page)
-    const rect = uniuneRect(alese)
-    tonOriginal = tonZona(mupdf, page, rect)
-    const annot = page.createAnnotation('Redact')
-    annot.setRect(rect)
-    page.applyRedactions(false, mupdf.PDFPage.REDACT_IMAGE_NONE, mupdf.PDFPage.REDACT_LINE_ART_NONE, mupdf.PDFPage.REDACT_TEXT_REMOVE)
-    dupa = extrageCuvinte(mupdf, page)
-    page.destroy()
-    const buf = doc.saveToBuffer('garbage=compact,compress')
-    dupaStergere = new Uint8Array(buf.asUint8Array())
-    buf.destroy()
-  } finally {
-    doc.destroy()
-  }
-
-  // 2) verificare: tot ce nu am ales trebuie sa fi ramas neatins, iar ce am ales sa fi disparut
+  // 1) stergere curata cu MuPDF + 2) verificare: tot ce nu am ales trebuie sa fi ramas neatins, iar
+  // ce am ales sa fi disparut. Dreptunghiul cuvintelor include tot spatiul literelor (urcare/coborare);
+  // la randuri dese el atinge literele randului de deasupra/dedesubt si MuPDF le-ar sterge si pe ele.
+  // De aceea, daca prima incercare atinge alt text, reincercam cu dreptunghiuri ingustate la miezul
+  // literelor (in jurul liniei de baza), apoi cuvant cu cuvant. Verificarea ramane aceeasi la fiecare.
+  const tonOriginal = await (async () => {
+    const d = mupdf.Document.openDocument(bytes, 'application/pdf')
+    try {
+      const p = d.loadPage(pagina)
+      const t = tonZona(mupdf, p, uniuneRect(alese))
+      p.destroy()
+      return t
+    } finally {
+      d.destroy()
+    }
+  })()
+  const variante: [number, number, number, number][][] = [
+    [uniuneRect(alese)],
+    [miezRect(alese)],
+    alese.map((c) => miezRect([c])),
+  ]
   const idsAlese = new Set(alese.map((c) => c.id))
-  const ramase = inainte.filter((c) => !idsAlese.has(c.id))
-  const lipsa = ramase.filter((c) => !dupa.some((d) => acelasiCuvant(c, d)))
-  if (lipsa.length > 0) {
-    throw new Error(
-      'Modificarea ar fi șters și alt text („' + lipsa.slice(0, 4).map((c) => c.text).join('”, „') + '”). N-am aplicat nimic.',
-    )
+  let sters: Uint8Array | null = null
+  let inainte: Cuvant[] = []
+  let primaEroare = ''
+  for (const rects of variante) {
+    const r = stergeZone(mupdf, bytes, pagina, rects)
+    inainte = r.inainte
+    const lipsa = r.inainte.filter((c) => !idsAlese.has(c.id)).filter((c) => !r.dupa.some((d) => acelasiCuvant(c, d)))
+    const raman = alese.filter((c) => r.dupa.some((d) => acelasiCuvant(c, d)))
+    if (lipsa.length === 0 && raman.length === 0) {
+      sters = r.bytes
+      break
+    }
+    if (!primaEroare) {
+      primaEroare =
+        lipsa.length > 0
+          ? 'Modificarea ar fi șters și alt text („' + lipsa.slice(0, 4).map((c) => c.text).join('”, „') + '”). N-am aplicat nimic.'
+          : 'Textul ales n-a putut fi șters din fișier (poate face parte dintr-o imagine). N-am aplicat nimic.'
+    }
   }
-  const raman = alese.filter((c) => dupa.some((d) => acelasiCuvant(c, d)))
-  if (raman.length > 0) {
-    throw new Error('Textul ales n-a putut fi șters din fișier (poate face parte dintr-o imagine). N-am aplicat nimic.')
-  }
+  if (!sters) throw new Error(primaEroare)
+  const dupaStergere = sters
 
   // 3) scrie textul nou exact in acelasi loc
   if (textNou.length === 0) return { bytes: dupaStergere, avertizari }
