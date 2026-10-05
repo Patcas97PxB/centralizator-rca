@@ -172,5 +172,27 @@
       "marcaModel": "BYD SEAL 5DM",
       "asigurator": "Asirom"
     }
+  },
+  {
+    "id": "eazy-nc-poza-dacia-duster-2x",
+    "descriere": "EazyInsure, NC fotografiat pe birou (poza 1125 px, OCR pe imaginea marita 2x): antet 'eazy.insure' cu punct, nr. auto citit 'B1045MM' (S->5)",
+    "text": "i mr, Sar re — ECS — Ee —— = = wma\n| E == ee ———— Ee E St —\nSup Lui hea 08: [0 : —C\neazy.insure =\nva —\ne PROCES VERBAL DE CONSTATARE DAUNE of ==\nNr. dosar: EZ-RCA-B-9325-2026 Data: 03/09/2026 fas ebt-oF-o] ES\nde BUCURESTI + / nN\nInspector Daune: XXXX XXXX Locul constatarii: ha pu CEE p Pk\nData avizării: 02/09/2026 RS\n3 Data constatarii: 03/09/2026 ome\nData producerii accidentului: 01/09/2026 ora 18:30\n| Locul producerii accidentului: ROMANIA , BIHOR , ORADEA E\nOD Date privind identificarea autovehiculului: ihr ş. NUT o a\n| Păgubit  JRCILEASING ROMANIA IFN SA E\n1 STR. XXXX, NR. 1, BUCURESTI SECTORUL 6, BUCURESTI, / —\nAdresă / Telefon =\n| Marcă, model |Dacia, DUSTER =\nNr. înmatriculare [B1045MM =\n| serie Sasiu |XXXXXXXXXXXXXXXXX =\n| Număr Km. (înregistrați la data constatării, oT Fa\n— | 1 [EXTENSIE ARIPA F ST =\n= | 2 [cARENAI ROATA F STF =\n== [9 [GEOMETRIE FATA E\n",
+    "expected": {
+      "nrDosar": "EZ-RCA-B-9325-2026",
+      "nrAuto": "B104SMM",
+      "marcaModel": "Dacia DUSTER",
+      "asigurator": "EazyInsure"
+    }
+  },
+  {
+    "id": "eazy-nc-poza-dacia-duster-1x",
+    "descriere": "Aceeasi NC la marimea originala: nr. auto ilizibil (nu se inventeaza), restul campurilor se citesc",
+    "text": "A pa RS TEL ez = Se\neazy.insure =\ne PROCES VERBAL DE CONSTATARE DAUNE : =\nNr. dosar: EZ-RCA-B-9325-2026 Data: 031092026 0, 0, [nel kos] E\nInspector Daune: XXXX XXXX Locul constatării: ha pele {esp Yok\n| Locul producerii accidentului: ROMANIA , BIHOR , ORADEA E\n| |STR. XXXX, NR. 1, BUCURESTI SECTORUL 6, BUCURESTI, / ~\n| Dacia, DUSTER =\n[Nr înmatriculare |Btoasu =\n| [serie Sasiu |XXXXXXXXXXXXXXXX =\n",
+    "expected": {
+      "nrDosar": "EZ-RCA-B-9325-2026",
+      "nrAuto": "",
+      "marcaModel": "Dacia DUSTER",
+      "asigurator": "EazyInsure"
+    }
   }
 ]

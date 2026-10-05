@@ -5,6 +5,23 @@
 // Cand apare un format nou de document care nu se completeaza corect:
 // vezi skill-ul .claude/skills/extractie-camp-deviz/SKILL.md pentru workflow.
 
+// Nr. auto citit prin OCR, cu confuziile tipice cifra/litera reparate dupa pozitie:
+// judet (litere) + 2-3 cifre + 3 litere. "B1045MM" -> "B104SMM". '' daca nu arata a nr. RO.
+function plateDinOcr(s) {
+  const t = s.toUpperCase().replace(/[^A-Z0-9]/g, '');
+  const LIT = { '0': 'O', '1': 'I', '2': 'Z', '4': 'A', '5': 'S', '6': 'G', '8': 'B' };
+  const CIF = { 'O': '0', 'Q': '0', 'D': '0', 'I': '1', 'L': '1', 'Z': '2', 'S': '5', 'B': '8' };
+  const m = t.match(/^([A-Z]{1,2})([0-9A-Z]{2,3})([0-9A-Z]{3})$/);
+  if (!m) return '';
+  const judet = m[1];
+  // Bucuresti are 2-3 cifre; celelalte judete 2 cifre.
+  if (judet !== 'B' && m[2].length !== 2) return '';
+  const cifre = m[2].split('').map(c => CIF[c] || c).join('');
+  const litere = m[3].split('').map(c => LIT[c] || c).join('');
+  if (!/^\d+$/.test(cifre) || !/^[A-Z]{3}$/.test(litere)) return '';
+  return judet + cifre + litere;
+}
+
 function extractFromText(text) {
   const norm = text.replace(/\s+/g, ' ');
   const result = { nrDosar: '', nrAuto: '', marcaModel: '', asigurator: '', extraPlates: [], extraDates: [], extraPhones: [] };
@@ -14,7 +31,7 @@ function extractFromText(text) {
     'Allianz': /allianz/i,
     'Asirom': /asirom/i,
     'Axeria': /axeria/i,
-    'EazyInsure': /eazy\s*(asigurari|insure)/i,
+    'EazyInsure': /eazy[\s.\-]*(asigurari|insure)/i, // si "eazy.insure" (antetul NC-ului)
     'Generali': /generali/i,
     'Gothaer': /gothaer/i,
     'Grawe': /grawe/i,
@@ -66,10 +83,20 @@ function extractFromText(text) {
     }
   }
 
+  // EazyInsure: nr. de dosar "EZ-RCA-B-9325-2026" — util cand sigla din antet nu se citeste.
+  if (!result.asigurator && /^EZ-RCA-/i.test(result.nrDosar)) result.asigurator = 'EazyInsure';
+
   // Plate numbers (Romanian format)
   const plateRe = /\b[A-Z]{1,2}[\s\-]?\d{2,3}[\s\-]?[A-Z]{3}\b/g;
   const plates = [...new Set((norm.match(plateRe) || []).map(p => p.replace(/\s+/g,'-').toUpperCase()))];
   if (plates.length) { result.nrAuto = plates[0]; result.extraPlates = plates; }
+  else {
+    // Poze (OCR): valoarea de langa eticheta "Nr. inmatriculare" poate avea confuzii cifra/litera
+    // (EazyInsure: "[B1045MM" pentru B104SMM). Doar langa eticheta, ca sa nu prindem orice cuvant.
+    const mEt = norm.match(/(?:nr|num[aă]r)\.?\s*[îi]nmatricular[ea]\S*\s*[:|\[\](){}]*\s*([A-Z0-9]{1,2}[\s\-]?[A-Z0-9]{2,3}[\s\-]?[A-Z0-9]{3})(?![A-Z0-9])/i);
+    const p = mEt ? plateDinOcr(mEt[1]) : '';
+    if (p) { result.nrAuto = p; result.extraPlates = [p]; }
+  }
 
   // Marcă + model auto păgubit
   const BRANDS = ['Dacia','Ford','Renault','Opel','Volkswagen','VW','Skoda','Škoda','Toyota','Hyundai','Kia',

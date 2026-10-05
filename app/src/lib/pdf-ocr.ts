@@ -201,6 +201,32 @@ async function pregatestePentruOcr(item: Blob): Promise<HTMLCanvasElement | Blob
   return out
 }
 
+// Pozele mici (ex. trimise prin WhatsApp/chat, ~1100 px latime) au litere de ~12 px, prea mici
+// pentru Tesseract: NC-ul EazyInsure dadea nr. auto "Btoasu" la marimea originala si "B1045MM"
+// marita 2x. Le marim pana la ~2400 px (cel mult 2,5x); pozele mari raman neatinse.
+const LATIME_MINIMA_OCR = 1600
+async function marestePozaMica(item: Blob): Promise<HTMLCanvasElement | Blob> {
+  let bmp: ImageBitmap
+  try {
+    bmp = await createImageBitmap(item)
+  } catch {
+    return item
+  }
+  if (bmp.width >= LATIME_MINIMA_OCR) {
+    bmp.close()
+    return item
+  }
+  const f = Math.min(2.5, 2400 / bmp.width)
+  const c = document.createElement('canvas')
+  c.width = Math.round(bmp.width * f)
+  c.height = Math.round(bmp.height * f)
+  const ctx = c.getContext('2d')!
+  ctx.imageSmoothingQuality = 'high'
+  ctx.drawImage(bmp, 0, 0, c.width, c.height)
+  bmp.close()
+  return c
+}
+
 export async function ocrImageToText(
   blobOrFile: Blob | Blob[],
   onPagina?: (pagina: number, total: number) => void,
@@ -211,7 +237,7 @@ export async function ocrImageToText(
   let combined = ''
   for (const [i, item] of items.entries()) {
     onPagina?.(i + 1, items.length)
-    const { data } = await Tesseract.recognize(pregatire ? await pregatestePentruOcr(item) : item, 'ron+eng')
+    const { data } = await Tesseract.recognize(pregatire ? await pregatestePentruOcr(item) : await marestePozaMica(item), 'ron+eng')
     combined += (data && data.text ? data.text : '') + '\n'
   }
   return combined
