@@ -4,6 +4,7 @@ import { AppSidebar } from './AppSidebar'
 import { Header } from './Header'
 import { LightRay } from './LightRay'
 import { MobileBottomNav } from './MobileBottomNav'
+import { StareSistem } from './StareSistem'
 import { MobileTopNav } from './MobileTopNav'
 import { DemoBanner } from './DemoBanner'
 import { SiteFooter } from './SiteFooter'
@@ -47,6 +48,7 @@ export function AppShell({
           onAlegeDosar={onAlegeDosar}
         />
         <MobileTopNav active={active} onSelect={onSelect} badgeDosare={deSunat.length} />
+        <StareSistem />
         <main className="flex-1">{children}</main>
         <SiteFooter className="pb-[104px] md:pb-4" />
         <MobileBottomNav onNou={onNou} onDeviz={onDeviz} onPdf={onPdf} />

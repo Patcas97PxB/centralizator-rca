@@ -34,7 +34,7 @@ const HEADERS: [string, boolean][] = [
 ]
 
 export function RapoartePage() {
-  const { dosare, servicii, salveazaDosar } = useDosareContext()
+  const { dosare, servicii, salveazaRapid } = useDosareContext()
   const [filtru, setFiltru] = useState<FiltruFinanciar>(filtruFinanciarImplicit)
 
   const filtrate = useMemo(() => dosareFinanciarFiltrate(dosare, filtru), [dosare, filtru])
@@ -54,7 +54,7 @@ export function RapoartePage() {
     const d = dosare.find((x) => x.id === dosarId)
     if (!d) return
     const n = Math.max(0, Math.min(100, Number(val) || 0))
-    await salveazaDosar({ ...d, comisionProcent: n })
+    await salveazaRapid({ ...d, comisionProcent: n })
   }
 
   return (

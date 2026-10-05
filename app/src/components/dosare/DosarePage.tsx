@@ -25,7 +25,7 @@ export type ActiuneRapida = { id: number; tip: 'nou' } | { id: number; tip: 'dev
 export function DosarePage({ actiune }: { actiune?: ActiuneRapida | null }) {
   const {
     dosare, filtrate, servicii, loading, error, filtre, setFiltre,
-    salveazaDosar, stergeDosar,
+    salveazaDosar, salveazaRapid, stergeDosar,
   } = useDosareContext()
   const [modalDeschis, setModalDeschis] = useState(false)
   const [dosarActiv, setDosarActiv] = useState<Dosar | null>(null)
@@ -122,11 +122,11 @@ export function DosarePage({ actiune }: { actiune?: ActiuneRapida | null }) {
   }
   async function onPatch(id: string, patch: Partial<Dosar>) {
     const d = dosare.find((x) => x.id === id)
-    if (d) await salveazaDosar({ ...d, ...patch })
+    if (d) await salveazaRapid({ ...d, ...patch })
   }
   async function onStatusChange(id: string, status: Dosar['status']) {
     const d = dosare.find((x) => x.id === id)
-    if (d) await salveazaDosar({ ...d, status })
+    if (d) await salveazaRapid({ ...d, status })
   }
 
   return (

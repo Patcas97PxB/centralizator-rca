@@ -22,6 +22,23 @@ export function exportaBackup(dosare: Dosar[], servicii: Serviciu[]) {
   a.download = `rca-backup-${todayStr()}.json`
   a.click()
   URL.revokeObjectURL(url)
+  try {
+    localStorage.setItem(CHEIE_ULTIM_BACKUP, String(Date.now()))
+  } catch {
+    /* fara localStorage — memento-ul va aparea mereu */
+  }
+}
+
+const CHEIE_ULTIM_BACKUP = 'rca-ultim-backup'
+
+/** Zile de la ultimul backup exportat din acest browser; null = niciodata. */
+export function zileDeLaBackup(): number | null {
+  try {
+    const t = Number(localStorage.getItem(CHEIE_ULTIM_BACKUP))
+    return t ? Math.floor((Date.now() - t) / 86_400_000) : null
+  } catch {
+    return null
+  }
 }
 
 export function parseazaBackup(text: string): BackupPayload {

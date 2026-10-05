@@ -32,10 +32,11 @@ import { imagineMasina } from '@/lib/cars'
 import { suggestClasaFromModel, vehicleClasses } from '@/lib/clase-auto'
 import { lipsuriFinalizare } from '@/lib/documente'
 import { calculRCA, todayStr } from '@/lib/rca-calc'
+import { ConflictSalvare } from '@/lib/dosare-storage'
+import { useDosareContext } from '@/contexts/DosareContext'
 import { STATUS_META, dosarGol, type Dosar, type StatusDosar, type Vehicul } from '@/lib/types'
 import { majuscule } from '@/lib/majuscule'
 import { normDosar } from '@/lib/contract-final'
-import { useDosareContext } from '@/contexts/DosareContext'
 import { PreluareDateSection } from './PreluareDateSection'
 import { DevizRecalculeazaButton } from './DevizRecalculeazaButton'
 import { ServiceCombobox } from './ServiceCombobox'
@@ -55,13 +56,14 @@ export function DosarFormModal({
   initialDraft?: Partial<Dosar> | null
   servicii: { id: string; nume: string; telefon: string }[]
   onClose: () => void
-  onSave: (d: Dosar) => Promise<void>
+  onSave: (d: Dosar, forteaza?: boolean) => Promise<unknown>
   onDelete: (id: string) => Promise<void>
 }) {
   const [draft, setDraft] = useState<Dosar>(() => dosar ?? dosarGol())
   const [saving, setSaving] = useState(false)
   const [eroare, setEroare] = useState('')
   const [confirmStergere, setConfirmStergere] = useState(false)
+  const [conflict, setConflict] = useState<Dosar | null>(null)
   // Alt dosar cu acelasi nr. (normalizat: spatii, cratime, sufixul Hellas) — avertizare, nu blocare.
   const { dosare } = useDosareContext()
   const [duplicat, setDuplicat] = useState<Dosar | null>(null)
@@ -95,6 +97,12 @@ export function DosarFormModal({
     return true
   }
 
+  // Dosar nou cu predare in viitor → starea porneste direct „DE PREDAT" (daca n-a fost aleasa alta).
+  function cuStatusImplicit(d: Dosar): Dosar {
+    if (!dosar && d.status === 'in_asteptare' && d.start > todayStr()) return { ...d, status: 'de_predat' }
+    return d
+  }
+
   function onStatusChange(v: StatusDosar) {
     const next = { ...draft, status: v }
     if (blocheazaFinalizare(next)) return
@@ -115,6 +123,20 @@ export function DosarFormModal({
     if (gasit) set('telService', gasit.telefon)
   }
 
+  async function salveaza(d: Dosar, forteaza = false) {
+    setSaving(true)
+    setEroare('')
+    try {
+      await onSave(d, forteaza)
+      onClose()
+    } catch (e) {
+      if (e instanceof ConflictSalvare) setConflict(d)
+      else setEroare(e instanceof Error ? e.message : 'Eroare la salvare.')
+    } finally {
+      setSaving(false)
+    }
+  }
+
   async function handleSubmit(fortat = false) {
     if (!draft.nrDosar.trim()) {
       setEroare('Introdu numărul dosarului.')
@@ -133,16 +155,7 @@ export function DosarFormModal({
         return
       }
     }
-    setSaving(true)
-    setEroare('')
-    try {
-      await onSave(majuscule(draft))
-      onClose()
-    } catch (e) {
-      setEroare(e instanceof Error ? e.message : 'Eroare la salvare.')
-    } finally {
-      setSaving(false)
-    }
+    await salveaza(majuscule(cuStatusImplicit(draft)))
   }
 
   const rcaPreview = calculRCA(draft)
@@ -322,7 +335,7 @@ export function DosarFormModal({
 
           <div className="space-y-1.5">
             <Label htmlFor="fStart">Data predare</Label>
-            <Input id="fStart" type="date" value={draft.start} onChange={(e) => set('start', e.target.value)} />
+            <Input id="fStart" type="date" value={draft.start} onChange={(e) => setDraft((d) => cuStatusImplicit({ ...d, start: e.target.value }))} />
           </div>
           <div className="space-y-1.5">
             <Label htmlFor="fEnd">Data preluare</Label>
@@ -414,11 +427,35 @@ export function DosarFormModal({
         </div>
       </DialogContent>
 
+      <AlertDialog open={!!conflict} onOpenChange={(o) => !o && setConflict(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Dosarul a fost modificat în altă parte</AlertDialogTitle>
+            <AlertDialogDescription>
+              După ce l-ai deschis, cineva (alt dispozitiv sau altă filă) a salvat o versiune nouă. Dacă salvezi acum, modificările
+              acelea se înlocuiesc cu ce ai scris tu — dar rămân în „Recuperare", de unde le poți readuce.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Renunță</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                const d = conflict
+                setConflict(null)
+                if (d) void salveaza(d, true)
+              }}
+            >
+              Salvează oricum
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
       <AlertDialog open={confirmStergere} onOpenChange={setConfirmStergere}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Ștergi acest dosar?</AlertDialogTitle>
-            <AlertDialogDescription>Acțiunea nu poate fi anulată.</AlertDialogDescription>
+            <AlertDialogDescription>Dosarul se poate recupera 180 de zile din „Recuperare” (butonul cu ceas din antet).</AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Renunță</AlertDialogCancel>
