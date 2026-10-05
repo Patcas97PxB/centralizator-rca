@@ -15,12 +15,10 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import type { DeSunat } from '@/lib/rca-calc'
 import { BackupButtons } from './BackupButtons'
 import { ESTE_DEMO } from '@/lib/demo'
+import { initiale, numeDinEmail } from '@/lib/autentificare'
 
-// Aplicatia are un singur cont partajat (nu login individual) — numele afisat e
-// hardcodat, ca in mockup-ul primit de la utilizator.
-// In varianta de test (/demo/) nu apare numele real.
-const NUME_UTILIZATOR = ESTE_DEMO ? 'DEMO' : 'Pătcaș Bogdan'
-const INITIALE_UTILIZATOR = ESTE_DEMO ? 'D' : 'PB'
+// Numele celui logat (din adresa Autonom, vezi lib/autentificare.ts). In varianta de test (/demo/)
+// nu apare un nume real.
 const ROL_UTILIZATOR = 'Autonom'
 
 export function Header({
@@ -36,7 +34,9 @@ export function Header({
 }) {
   const [deschis, setDeschis] = useState(false)
   const { time, date } = useClock()
-  const { logout } = useAuth()
+  const { logout, email } = useAuth()
+  const NUME_UTILIZATOR = ESTE_DEMO ? 'DEMO' : numeDinEmail(email)
+  const INITIALE_UTILIZATOR = ESTE_DEMO ? 'D' : initiale(NUME_UTILIZATOR)
   const motionPref = useMotionPref()
   const headerRef = useRef<HTMLElement>(null)
 

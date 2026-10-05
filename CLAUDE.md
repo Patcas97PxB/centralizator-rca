@@ -15,7 +15,7 @@ Live: https://patcas97pxb.github.io/centralizator-rca/ · Repo: `Patcas97PxB/cen
 - Typecheck: `npx tsc --noEmit -p tsconfig.app.json`
 - Build: `npm run build`
 - Dev: în Claude Code, `preview_start` cu `rca-app-nou` (port 5180, vezi `.claude/launch.json`); `rca-site` (5175) servește mockup-ul.
-- Aplicația cere parolă la intrare. **Nu introduce parola** — cere utilizatorului să se logheze în panoul Browser.
+- Aplicația cere **email Autonom + parolă** la intrare. **Nu introduce parola** — cere utilizatorului să se logheze în panoul Browser.
 
 ## Publicare pe live (IMPORTANT — nu ajunge un simplu push)
 1. `cd app && npm run build`
@@ -55,8 +55,15 @@ Comite local oricând, dar **push doar când cere utilizatorul**. Pozele de maș
 - Reguli noi în `js/extractie.js`: Generali `BH/20261950354-C`; Allianz nr. dosar în căsuțe → `CJ/CR988911` (și „BU /ZB774639” pe rândul de deasupra); Grawe „Seria: BH.10-…” → `BH-10-00-…`; `HDR` lipit („DAUNEHDR122920”); nr. auto **fără cratime** („B83ATM”, confirmat de utilizator) și reparat după poziție doar lângă eticheta „Nr. înmatriculare” (O↔0, S↔5, coduri de județ valide); marcă lipită („SKODAOCTAVIA”, „MeganeIVB9”); marcă greșită de OCR urmată de model cunoscut („Dada Logan” → Dacia). Modelele se caută de la cel mai lung (GLS înainte de GL).
 - Exemplele din `tests/fixtures/extractie-camp.json` sunt **anonimizate** (nume, CNP, telefoane, emailuri, VIN → XXXX). Repo-ul e public: nu adăuga text brut cu date personale.
 
+## Login (conturi individuale, doar @autonom.com)
+- Fiecare persoană are cont propriu (email + parolă), **creat de administrator în Supabase** (Authentication → Users → Add user, „Auto Confirm User”); înregistrarea liberă trebuie oprită (Authentication → Sign In / Providers → „Allow new users to sign up” off). Fără „Am uitat parola” deocamdată (decizia utilizatorului).
+- Regula e dublă: în aplicație (`lib/autentificare.ts`, `emailPermis`; o sesiune rămasă de la un cont non-Autonom se închide) **și în baza de date** — migrarea `20261005120000_doar_autonom.sql` (`public.e_utilizator_autonom()` în toate politicile RLS: dosare, servicii, istoric, app_storage, documente). Un cont care nu e @autonom.com nu vede nimic, chiar dacă există.
+- Numele din antet vine din email (`numeDinEmail`: prenume.nume → „Nume Prenume”; `bogdan.patcas@autonom.com` → „Pătcaș Bogdan”). Demo rămâne doar cu parola „DEMO”.
+- Contul utilizatorului: `bogdan.patcas@autonom.com` (vechiul `patcas99@gmail.com` nu mai are acces după migrare).
+- **Ordinea pe live** (altfel utilizatorul rămâne pe dinafară): 1) creează contul Autonom în proiectul live, 2) rulează migrarea pe live, 3) oprește înregistrarea liberă, 4) publică site-ul.
+
 ## Siguranța datelor și mediu de test
-- **Mediu de test**: proiect Supabase separat `rca-test` (ref `oicsohcnmiwlappcnagc`), configurat în `app/.env.development.local` (ignorat de git; model în `app/.env.test.example`). `npm run dev`/`preview_start` îl folosesc automat și arată banda „MEDIU DE TEST"; build-ul pentru live nu citește acel fișier. Contul de test: același email, altă parolă (utilizatorul se loghează singur). Schema se recreează cu `supabase/setup-proiect-test.sql` (= toate migrările concatenate, regenerează-l cu `cat supabase/migrations/*.sql`).
+- **Mediu de test**: proiect Supabase separat `rca-test` (ref `oicsohcnmiwlappcnagc`), configurat în `app/.env.development.local` (ignorat de git; model în `app/.env.test.example`). `npm run dev`/`preview_start` îl folosesc automat și arată banda „MEDIU DE TEST"; build-ul pentru live nu citește acel fișier. Contul de test: `bogdan.patcas@autonom.com` creat în proiectul de test (utilizatorul se loghează singur); migrarea „doar Autonom” e aplicată acolo. Schema se recreează cu `supabase/setup-proiect-test.sql` (= toate migrările concatenate, regenerează-l cu `cat supabase/migrations/*.sql`).
 - **Istoric / coș de gunoi**: migrarea `20261003120000_dosare_istoric.sql` (trigger → `dosare_istoric`: ultimele 20 versiuni/dosar + dosare șterse 180 zile). UI: butonul cu ceas din antet = „Recuperare" (`RecuperareModal.tsx`). **Migrarea trebuie rulată și pe baza de pe live înainte de publicare** (altfel „Recuperare" dă eroare, iar textele despre recuperare nu sunt adevărate).
 - **Conflicte la salvare**: `saveDosarRemote` face update doar dacă `updated_at` e cel văzut de aplicație (`ConflictSalvare`); `useDosare` serializează salvările per dosar și nu socotește conflict propriile salvări. Formularul oferă „Salvează oricum"; acțiunile rapide (`salveazaRapid`) arată banda roșie și reîncarcă. Lista se reîmprospătează la revenirea în filă.
 - **Backup**: butonul „Exportă backup” din antet strălucește (inel albastru + pulsație, clasa `backup-glow`) dacă au trecut ≥3 zile de la ultimul export din acest browser sau nu s-a făcut niciunul (`zileDeLaBackup`, localStorage `rca-ultim-backup`). Fără bandă/mesaj — utilizatorul nu vrea. Backup-ul JSON nu conține documentele din storage.
