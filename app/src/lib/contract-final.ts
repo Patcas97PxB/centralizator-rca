@@ -26,7 +26,7 @@ export function normDosar(raw?: string | null): string {
 export function acelasiDosar(a: string | null | undefined, b: string | null | undefined, dinOcr = false): boolean {
   const eq = dinOcr ? aproapeLaFel : (x: string, y: string) => x === y
   if (eq(normDosar(a), normDosar(b))) return true
-  const faraSufix = (x?: string | null) => normDosar((x || '').replace(/\/\s*\d+\s*$/, ''))
+  const faraSufix = (x?: string | null) => normDosar((x || '').replace(/[^A-Za-z0-9]+$/, '').replace(/\/\s*\d+$/, ''))
   return eq(faraSufix(a), faraSufix(b))
 }
 
