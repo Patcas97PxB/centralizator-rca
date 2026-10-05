@@ -359,5 +359,60 @@
       "marcaModel": "SKODA OCTAVIA",
       "asigurator": "Generali"
     }
+  },
+  {
+    "id": "hellas-nc-poza-b165alk-browser",
+    "descriere": "Hellas NC poza (PaddleOCR in browser): \"DAUNEHDR122920-bd39\" lipit, model \"MasterIll\"",
+    "text": "Hellas\nDirect\nPROCESVERBALDECONSTATARE/RECONSTATARE\nDAUNEHDR122920-bd39\nDate generale privind dosarul de dauna:\nData Evenimentului: 14.09.2026\nDateprivind identificarea autovehiculului:\nPersoanaPAGUBITA: XXXX\nAutovehicul (Tip,Marca,Model): Cat.N1,Renault,MasterIll（EV/UV/HV\nNumar deinmatriculare: B165ALK\nNumarde identificare-seria ViN: XXXXXXXXXXXXXXXXX\nHD Insurance Plc Nicosia-Sucursala Bucuresti",
+    "expected": {
+      "nrDosar": "HDR 122920",
+      "nrAuto": "B165ALK",
+      "marcaModel": "Renault Master",
+      "asigurator": "Hellas"
+    }
+  },
+  {
+    "id": "axeria-pv-poza-browser-dada-logan",
+    "descriere": "Axeria PV poza (PaddleOCR in browser): marca citita \"Dada Logan\", antet cu www.omniasig.ro (administrator)",
+    "text": "149o.olncm Jomnihoig ro. www.omniasig.ro I cod Unic Inregistrar\nAxeria lard SA Lyon- Sucursala Bucuresti\naxeria office@axeria-iardro\nDOSAR DE DAUNA NR:BH26R04017 DATA AVIZARIl:31.07.2026\nLOCUL CONSTATARIl: ORADEA BIhor\nPROCES-VERBAL SUPLIMENTAR DE CONSTATAREAAVARILORNr.[1]\nMarci/Modol: Dada Logan ll (3K An fabrlcalo:2020Culoaroa:\nNr.auto:BH77MFE ALBASTRU\nSorlo gaslu: XXXXXXXXXXXXXXXXX Proprlotar/Utllzator: XXXX\nCNP/CUI:0000000000000 Nr.km afgatl:24756 Obsorval",
+    "expected": {
+      "nrDosar": "BH26R04017",
+      "nrAuto": "BH77MFE",
+      "marcaModel": "Dacia Logan",
+      "asigurator": "Axeria"
+    }
+  },
+  {
+    "id": "allianz-nc-poza-bh89szj-browser",
+    "descriere": "Allianz NC poza (PaddleOCR in browser): \"BU /ZB774639\" pe randul de deasupra etichetei \"Dosar de dauna Nr. 21.09\"",
+    "text": "Allianz Tiriac NOTA DE CONSTATARE RCA\ntoe.2109\nCallCenter0212019180,0212019181\nBU /ZB774639\nDosar de dauna Nr. 21.09\nXXXX 24\nPagubit Dacia Duster li Pick-Up (10.2020->)\nAuto marci/model\nNumar de BH89SZJ\ninmatriculare\nNumar de identificare XXXXXXXXXXXXXXXXX",
+    "expected": {
+      "nrDosar": "BU/ZB774639",
+      "nrAuto": "BH89SZJ",
+      "marcaModel": "Dacia Duster",
+      "asigurator": "Allianz"
+    }
+  },
+  {
+    "id": "allianz-nc-poza-bh05mrc-browser",
+    "descriere": "Allianz NC poza (PaddleOCR in browser): nr. auto \"BHO5MRC\" (O in loc de 0) intre \"Numar de\" si \"inmatriculare\"",
+    "text": "AllianzTiriac NOTA DE CONSTATARE RCA\nCall Center 02120 19 180.021 20 19 181\nDosar de dauna Nr. BU/ZB422640 He\nXXXX\nPagubit\nAuto marci/model Dacia Logan li (11.2012->) Duati\nNumar de BHO5MRC\ninmatriculare\nNumar de identificare XXXXXXXXXXXXXXXXX\nData producerii evenimentului 17.apr.202616:30",
+    "expected": {
+      "nrDosar": "BU/ZB422640",
+      "nrAuto": "BH05MRC",
+      "marcaModel": "Dacia Logan",
+      "asigurator": "Allianz"
+    }
+  },
+  {
+    "id": "generali-pv-scanat-200dpi-browser",
+    "descriere": "Generali PV scanat (PaddleOCR in browser, 200 DPI): nr. auto citit \"BHI7HAZ\" (I in loc de 1), tiparit deasupra etichetei",
+    "text": "Numar Call Center: +40372010202\nPROCESVERBALDE CONSTATAREADAUNELOR\nBH 20261950354-C\nSerie unica (judet/ numar dosar):\n29.07.2026 SKODA OCTAVIA\nData eveniment: Auto (marca, model):\n26.08.2026 BHI7HAZ\nData deschidere: Numar inmatriculare:\n26.082026 XXXXXXXXXXXXXXXXX\nData constatare: Serie sasiu:\nGENERALI",
+    "expected": {
+      "nrDosar": "BH/20261950354-C",
+      "nrAuto": "BH17HAZ",
+      "marcaModel": "SKODA OCTAVIA",
+      "asigurator": "Generali"
+    }
   }
 ]

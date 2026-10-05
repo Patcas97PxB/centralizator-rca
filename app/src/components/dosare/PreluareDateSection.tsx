@@ -6,15 +6,15 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from '@/components/ui/popover'
-import { extractFromText, type RezultatExtractie } from '@/lib/extractie'
+import type { RezultatExtractie } from '@/lib/extractie'
 import type { AnalizaDeviz } from '@/lib/deviz-analiza'
 import { suggestClasaFromModel } from '@/lib/clase-auto'
-import { citesteDeviz, mesajEroareOCR } from '@/lib/pdf-ocr'
+import { citesteDocument } from '@/lib/citeste-document'
+import { mesajEroareOCR } from '@/lib/pdf-ocr'
 import type { Dosar } from '@/lib/types'
 
-// Portat din handleFileUpload()/handleDevizOnly() (index.html): PDF cu text -> citire directa;
-// PDF scanat sau poza -> OCR (Tesseract.js). Acelasi text extras alimenteaza si extragerea de
-// campuri (extractFromText) si analiza devizului (analizaDeviz) — un singur pipeline, nu doua.
+// PDF cu text -> citire directa; poze/PDF scanat -> PaddleOCR (sau Tesseract fara placa video), vezi
+// lib/citeste-document.ts. Portat initial din handleFileUpload()/handleDevizOnly() (index.html).
 function toIsoDate(d: string): string {
   const parts = d.split(/[./]/)
   if (parts.length !== 3) return ''
@@ -85,9 +85,9 @@ export function PreluareDateSection({
     setStatus('')
     setChips([])
     try {
-      const { text, ocr, analiza: an } = await citesteDeviz(files, setStatus)
+      const { text, ocr, analiza: an, extras } = await citesteDocument(files, setStatus)
       if (text.trim().length > 20) {
-        aplicaExtractie(extractFromText(text))
+        aplicaExtractie(extras)
         aplicaAnaliza(an)
         const sursa = !ocr ? 'Deviz analizat' : files.length > 1 ? `Deviz citit din ${files.length} fișiere` : 'Deviz citit din scanare/poză'
         setStatus(an ? `${sursa} — zilele de reparație au fost calculate automat.` : 'Date detectate — verifică și completează câmpurile de mai jos.')

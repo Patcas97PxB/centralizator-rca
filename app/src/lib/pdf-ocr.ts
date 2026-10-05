@@ -39,14 +39,14 @@ export async function readPdfText(file: File): Promise<string> {
 // Randeaza paginile unui PDF scanat (fara text) ca imagini, pentru OCR. Devizele Audatex au
 // uneori mai multe pagini (totalul de ore poate fi pe alta pagina decat prima) — trimitem
 // toate, in limita platformei (8 — vezi getImageLimits in index.html, acelasi plafon).
-export async function pdfToImageBlobs(file: File, maxPages = 8): Promise<Blob[]> {
+export async function pdfToImageBlobs(file: File, maxPages = 8, scale = 4): Promise<Blob[]> {
   const buf = await file.arrayBuffer()
   const pdf = await pdfjsLib.getDocument({ data: buf, disableWorker: true }).promise
   const n = Math.min(pdf.numPages, maxPages)
   const blobs: Blob[] = []
   for (let i = 1; i <= n; i++) {
     const page = await pdf.getPage(i)
-    const viewport = page.getViewport({ scale: 4 })
+    const viewport = page.getViewport({ scale })
     const canvas = document.createElement('canvas')
     canvas.width = viewport.width
     canvas.height = viewport.height

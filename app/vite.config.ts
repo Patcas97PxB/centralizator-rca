@@ -36,6 +36,8 @@ function servesteResurseExterne(): Plugin[] {
           else if (url.startsWith('/shared/')) filePath = path.join(jsSrc, url.slice('/shared/'.length))
           if (filePath && fs.existsSync(filePath) && fs.statSync(filePath).isFile()) {
             res.setHeader('Content-Type', MIME[path.extname(filePath)] ?? 'application/octet-stream')
+            // fara cache in dev: altfel dupa o modificare in js/extractie.js browserul ruleaza versiunea veche
+            res.setHeader('Cache-Control', 'no-store')
             fs.createReadStream(filePath).pipe(res)
             return
           }
@@ -69,6 +71,16 @@ function servesteResurseExterne(): Plugin[] {
   ]
 }
 
+// js-clipper (folosit de PaddleOCR, @gutenye/ocr-browser) are in comentarii caractere Latin-1
+// ("x¹,y¹"), nu UTF-8 — bundler-ul refuza fisierul. Il citim ca Latin-1.
+const CLIPPER = /js-clipper[\\/]clipper\.js$/
+const clipperLatin1: Plugin = {
+  name: 'js-clipper-latin1',
+  load(id) {
+    if (CLIPPER.test(id)) return fs.readFileSync(id, 'latin1')
+  },
+}
+
 // https://vite.dev/config/
 export default defineConfig(({ mode }) => ({
   // Site-ul e o "project page" GitHub Pages (patcas97pxb.github.io/centralizator-rca/),
@@ -77,11 +89,11 @@ export default defineConfig(({ mode }) => ({
   // Cheia e `mode`, nu `command`: `vite preview` raporteaza command:'serve' la fel ca
   // dev-serverul, dar mode ramane 'production' (ca la build) — asta chiar distinge intre ele.
   base: mode === 'production' ? '/centralizator-rca/' : '/',
-  plugins: [react(), tailwindcss(), ...servesteResurseExterne()],
+  plugins: [clipperLatin1, react(), tailwindcss(), ...servesteResurseExterne()],
   // Pozele de masini sunt in ../File/Cars/car_nobg, in afara proiectului Vite.
   server: { fs: { allow: ['..'] } },
   // MuPDF (editare PDF) foloseste await la nivel de modul si un fisier WASM.
-  optimizeDeps: { exclude: ['mupdf'] },
+  optimizeDeps: { exclude: ['mupdf'], rolldownOptions: { plugins: [clipperLatin1] } },
   build: { target: 'esnext' },
   resolve: {
     alias: {
