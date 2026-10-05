@@ -27,8 +27,8 @@ function ocr(): Promise<OcrInstanta> {
     const [esearch, ort, dic] = await Promise.all([
       import('esearch-ocr'),
       import('onnxruntime-web'),
-      // fara : un checkout Windows (CRLF) ar strica dictionarul
-      fetch(assetUrl('/ocr-models/ppocr_keys_v1.txt')).then((r) => r.text()).then((t) => t.replace(//g, '')),
+      // fara caracterul CR: un checkout Windows (CRLF) ar strica dictionarul
+      fetch(assetUrl('/ocr-models/ppocr_keys_v1.txt')).then((r) => r.text()).then((t) => t.replace(/\r/g, '')),
     ])
     const providers = (typeof navigator !== 'undefined' && 'gpu' in navigator ? ['webgpu', 'wasm'] : ['wasm']) as ('webgpu' | 'wasm')[]
     const o = (await esearch.init({
