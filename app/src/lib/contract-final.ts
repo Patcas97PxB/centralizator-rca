@@ -21,6 +21,15 @@ export function normDosar(raw?: string | null): string {
   return hdr ? 'HDR' + hdr[1] : n.replace(/[^A-Z0-9]/g, '')
 }
 
+// Acelasi dosar, chiar daca pe contract lipseste sufixul de ordine „/1” (Generali: dosar „202650518271-R/1”,
+// pe contract „202650518271R”). normDosar ramane neschimbat (la duplicate „-R/1” ≠ „-R/2”).
+export function acelasiDosar(a: string | null | undefined, b: string | null | undefined, dinOcr = false): boolean {
+  const eq = dinOcr ? aproapeLaFel : (x: string, y: string) => x === y
+  if (eq(normDosar(a), normDosar(b))) return true
+  const faraSufix = (x?: string | null) => normDosar((x || '').replace(/\/\s*\d+\s*$/, ''))
+  return eq(faraSufix(a), faraSufix(b))
+}
+
 const RE_NR_RO = /^[A-Z]{1,2}\d{2,3}[A-Z]{3}$/
 
 // La scanari OCR-ul confunda litere/cifre (8↔B↔S↔E, 0↔O↔D, 1↔I↔L…). Doua valori de aceeasi lungime
@@ -194,7 +203,7 @@ export function detectContractGresit(ex: ContractFinalExtras, curent: DosarPentr
   if (ex.nrAutoPagubit && curent.nrAutoPagubit && difera(normPlate(ex.nrAutoPagubit), normPlate(curent.nrAutoPagubit))) {
     return `⛔ CONTRACT GREȘIT — ați încărcat contractul mașinii păgubite ${ex.nrAutoPagubit} (acest dosar e ${curent.nrAutoPagubit}).`
   }
-  if (ex.nrDosar && curent.nrDosar && difera(normDosar(ex.nrDosar), normDosar(curent.nrDosar))) {
+  if (ex.nrDosar && curent.nrDosar && !acelasiDosar(ex.nrDosar, curent.nrDosar, dinOcr)) {
     return `⛔ CONTRACT GREȘIT — ați încărcat contractul dosarului ${ex.nrDosar} (acest dosar e ${curent.nrDosar}).`
   }
   if (ex.nrInmatriculare && curent.nrAutoInlocuire && difera(normPlate(ex.nrInmatriculare), normPlate(curent.nrAutoInlocuire))) {
