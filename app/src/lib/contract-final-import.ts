@@ -1,4 +1,4 @@
-import { aproapeLaFel, detectContractGresit, normDosar, normPlate, parseContractFinalText } from '@/lib/contract-final'
+import { acelasiDosar, aproapeLaFel, detectContractGresit, normPlate, parseContractFinalText } from '@/lib/contract-final'
 import { mesajEroareOCR, ocrImageToText, pdfLibDisponibil, pdfToImageBlobs, readPdfText } from '@/lib/pdf-ocr'
 import { monedaDosar } from '@/lib/financiar'
 import type { Dosar } from '@/lib/types'
@@ -91,7 +91,7 @@ export async function citesteContractFinal(
     }
     if (ex.nrDosar) {
       if (!dosar.nrDosar) { patch.nrDosar = ex.nrDosar; gasite.push('nr. dosar') }
-      else if (!(ocr ? aproapeLaFel : (a: string, b: string) => a === b)(normDosar(dosar.nrDosar), normDosar(ex.nrDosar))) {
+      else if (!acelasiDosar(dosar.nrDosar, ex.nrDosar, ocr)) {
         gasite.push(`⚠️ nr. dosar pe contract ("${ex.nrDosar}") diferă de cel de pe dosar ("${dosar.nrDosar}")`)
       }
     }
