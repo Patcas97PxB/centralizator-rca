@@ -1,6 +1,6 @@
-// Fundalul paginii de login: acelasi decor ca meniul lateral (SidebarDecor din AppSidebar.tsx) —
-// degrade inchis, grila de puncte, lumini turcoaz/albastre/mov care plutesc, valuri fine (una
-// punctata care curge) si stele care sclipesc — intins pe tot ecranul. Peste el sta ReteaDosare.
+// Fundalul paginii de login: decorul din meniul lateral (SidebarDecor din AppSidebar.tsx) — degrade
+// inchis, grila de puncte, lumini turcoaz/albastre/mov care plutesc si stele care sclipesc — intins pe
+// tot ecranul. Liniile (albastru, mov, verde punctat) sunt acum legaturile dintre dosare (ReteaDosare).
 
 const STELE = [
   { left: '7%', top: '22%', size: 2, delay: '2.3s' },
@@ -40,40 +40,6 @@ export function FundalLogin({ reduced }: { reduced: boolean }) {
         className="absolute -bottom-[25vh] -right-[15vw] size-[60vmax] animate-[orbDrift_18s_ease-in-out_-6s_infinite_reverse] rounded-full"
         style={{ background: 'radial-gradient(circle, rgba(124,58,237,.38) 0%, rgba(124,58,237,0) 64%)' }}
       />
-      <svg viewBox="0 0 1440 900" preserveAspectRatio="none" className="absolute inset-0 size-full">
-        <defs>
-          <linearGradient id="lgL1" x1="0" x2="1">
-            <stop offset="0" stopColor="#3d8bff" stopOpacity="0" />
-            <stop offset=".5" stopColor="#3d8bff" stopOpacity=".7" />
-            <stop offset="1" stopColor="#b26bff" stopOpacity="0" />
-          </linearGradient>
-          <linearGradient id="lgL2" x1="0" x2="1">
-            <stop offset="0" stopColor="#b26bff" stopOpacity="0" />
-            <stop offset=".5" stopColor="#b26bff" stopOpacity=".6" />
-            <stop offset="1" stopColor="#00f5a0" stopOpacity="0" />
-          </linearGradient>
-        </defs>
-        <path d="M-20 560 C 300 470, 700 690, 1460 520" fill="none" stroke="url(#lgL1)" strokeWidth="1.4" />
-        <path d="M-20 620 C 360 540, 820 760, 1460 590" fill="none" stroke="url(#lgL2)" strokeWidth="1.2" />
-        <path
-          d="M-20 690 C 420 610, 900 830, 1460 660"
-          fill="none"
-          stroke="rgba(0,245,160,.35)"
-          strokeWidth="1.2"
-          strokeDasharray="4 8"
-          style={{ animation: 'dashFlow 3s linear infinite' }}
-        />
-        <path
-          d="M-20 750 C 460 690, 860 880, 1460 730"
-          fill="none"
-          stroke="rgba(96,165,250,.3)"
-          strokeWidth="1"
-          strokeDasharray="2 10"
-          style={{ animation: 'dashFlow 4.5s linear infinite reverse' }}
-        />
-        <path d="M-20 820 C 320 780, 960 900, 1460 800" fill="none" stroke="rgba(178,107,255,.28)" strokeWidth="1" />
-        <path d="M-20 240 C 380 170, 900 330, 1460 200" fill="none" stroke="url(#lgL1)" strokeWidth="1" opacity=".55" />
-      </svg>
       {!reduced &&
         STELE.map((t) => (
           <span
