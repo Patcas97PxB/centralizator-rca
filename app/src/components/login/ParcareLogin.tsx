@@ -8,6 +8,7 @@ import { usePrefersReducedMotion } from '@/hooks/usePrefersReducedMotion'
 // predata mai demult, parcheaza, iar clientul ei coboara multumit (predat -> preluat).
 // Interactiuni: click pe o masina = deblocare (avarii de 2 ori, faruri, „bip-bip"); masina de langa
 // cursor isi aprinde usor farurile; fiecare tasta din parola = o masina clipeste o data (incuiere).
+// La fiecare bucla povestea foloseste alta masina din parcare; mai sunt locuri si prin mijloc (si sub formular).
 // Cu animatiile oprite: parcarea statica (fara poveste); click-ul tot deblocheaza (lumini, fara miscare).
 
 type Vec = { x: number; y: number }
@@ -117,19 +118,37 @@ export function ParcareLogin({ taste }: { taste: number }) {
     let dpr = 1
     let U = 44 // lungimea unei masini
     let masini: Masina[] = []
-    let yRandSus = 0 // centrul locurilor de sus
-    let yRandJos = 0
-    let yCuloar = 0 // culoarul de sus, pe unde ies masinile
-    let birou: Vec = { x: 0, y: 0 }
-    let loc: Masina | null = null // masina de inlocuire din poveste
-    let xLoc = 0
+    let latLoc = 34
+    let lungLoc = 57
+    // randuri de parcare: sus (botul in sus), randuri duble (jos / sus), jos (botul in jos)
+    let randuri: { y: number; h: number }[] = []
+    let culoare: number[] = [] // y-ul culoarelor dintre randuri
+    let rSediu = 1 // primul rand din randul dublu in care sta sediul
+    let yL2 = 0 // culoarul de jos — aici se petrece povestea
+    let sediu = { x: 0, y: 0, w: 0, h: 0, usaX: 0 }
+    let loc: Masina | null = null // masina de inlocuire aleasa in bucla curenta
+    let slot = { x: 0, y: 0, h: 0 } // locul ei
     let client: Om
     let angajat: Om
     let clientIntors: Om
     let cheie: { x: number; y: number; vizibil: boolean } = { x: 0, y: 0, vizibil: false }
     let t0Poveste = performance.now()
+    let pornita = false
     const mouse = { x: -999, y: -999 }
     let raf = 0
+
+    const ascunsDeFormular = (x: number, y: number) => Math.abs(x - W / 2) < 230 && Math.abs(y - H / 2) < 260
+    const masinaNoua = (x: number, y: number, h: number): Masina => ({
+      x,
+      y,
+      h,
+      culoare: CULORI[Math.floor(Math.random() * CULORI.length)],
+      vizibila: true,
+      avariiPana: 0,
+      avariiStart: 0,
+      farPana: 0,
+      farMouse: 0,
+    })
 
     function construieste() {
       dpr = Math.min(2, window.devicePixelRatio || 1)
@@ -141,60 +160,74 @@ export function ParcareLogin({ taste }: { taste: number }) {
       }
       ctx!.setTransform(dpr, 0, 0, dpr, 0, 0)
       fctx.setTransform(dpr, 0, 0, dpr, 0, 0)
-      U = Math.max(44, Math.min(74, W / 19))
-      const latLoc = U * 0.78
-      const lungLoc = U * 1.3
-      yRandSus = Math.max(U * 0.9, H * 0.05) + lungLoc / 2
-      yRandJos = H - Math.max(U * 0.9, H * 0.05) - lungLoc / 2
-      yCuloar = yRandSus + lungLoc / 2 + U * 0.75
-      birou = { x: Math.max(U * 1.6, W * 0.07), y: H * 0.64 }
-      const n = Math.floor((W - U) / latLoc)
+      U = Math.max(30, Math.min(74, W / 19, H / 11.6))
+      latLoc = U * 0.78
+      lungLoc = U * 1.3
+      const banda = U * 2.4
+      // cate randuri duble incap (ca parcarea sa umple ecranul): rand, culoar, [rand dublu, culoar]*k, rand
+      const k = Math.max(1, Math.floor((H - U * 0.6 - 2 * lungLoc - banda) / (2 * lungLoc + banda)))
+      let y = Math.max(U * 0.3, (H - (2 * lungLoc + banda + k * (2 * lungLoc + banda))) / 2)
+      randuri = [{ y: y + lungLoc / 2, h: -Math.PI / 2 }]
+      culoare = []
+      y += lungLoc
+      for (let j = 0; j < k; j++) {
+        culoare.push(y + banda / 2)
+        y += banda
+        randuri.push({ y: y + lungLoc / 2, h: Math.PI / 2 })
+        y += lungLoc
+        randuri.push({ y: y + lungLoc / 2, h: -Math.PI / 2 })
+        y += lungLoc
+      }
+      culoare.push(y + banda / 2)
+      y += banda
+      randuri.push({ y: y + lungLoc / 2, h: Math.PI / 2 })
+      // sediul sta in randul dublu cel mai apropiat de mijloc; povestea, pe culoarul de sub el
+      let jS = 0
+      for (let j = 1; j < k; j++) if (Math.abs(randuri[2 + 2 * j].y - H / 2) < Math.abs(randuri[2 + 2 * jS].y - H / 2)) jS = j
+      rSediu = 1 + 2 * jS
+      yL2 = culoare[jS + 1]
+      const n = Math.floor((W - U * 0.4) / latLoc)
       const x0 = (W - n * latLoc) / 2 + latLoc / 2
+      // sediul Autonom: la capatul din stanga al randului dublu din mijloc
+      const sw = Math.max(U * 3.4, Math.min(U * 4.6, W * 0.2))
+      sediu = { x: x0 - latLoc / 2 + U * 0.15, y: randuri[rSediu].y - lungLoc / 2 + 4, w: sw, h: lungLoc * 2 - 8, usaX: 0 }
+      sediu.usaX = sediu.x + sediu.w * 0.62
       masini = []
-      // locul masinii de inlocuire: in stanga, departe de formular
-      xLoc = x0 + latLoc * Math.max(1, Math.round((W * 0.16 - x0) / latLoc))
       for (let i = 0; i < n; i++) {
         const x = x0 + i * latLoc
-        for (const [y, h] of [
-          [yRandSus, -Math.PI / 2],
-          [yRandJos, Math.PI / 2],
-        ] as const) {
-          const liber = Math.random() < 0.22 && Math.abs(x - xLoc) > 1
-          if (liber) continue
-          masini.push({
-            x,
-            y,
-            h,
-            culoare: CULORI[Math.floor(Math.random() * CULORI.length)],
-            vizibila: true,
-            avariiPana: 0,
-            avariiStart: 0,
-            farPana: 0,
-            farMouse: 0,
-          })
-        }
+        randuri.forEach((r, ri) => {
+          if ((ri === rSediu || ri === rSediu + 1) && x < sediu.x + sediu.w + latLoc * 0.6) return
+          if (Math.random() < 0.15) return
+          masini.push(masinaNoua(x, r.y, r.h))
+        })
       }
-      loc = masini.find((m) => Math.abs(m.x - xLoc) < 1 && m.y === yRandSus) ?? null
-      if (!loc) {
-        loc = { x: xLoc, y: yRandSus, h: -Math.PI / 2, culoare: '#f8fafc', vizibila: true, avariiPana: 0, avariiStart: 0, farPana: 0, farMouse: 0 }
-        masini.push(loc)
-      }
-      loc.culoare = '#f8fafc'
-      deseneazaFundal(n, x0, latLoc, lungLoc)
+      deseneazaFundal(n, x0)
       const om = (tricou: string, angajat: boolean): Om => ({ x: -50, y: 0, h: 0, tricou, angajat, vizibil: false, dispozitie: 0, merge: false, alpha: 1 })
       client = om('#334155', false)
       angajat = om('#f8fafc', true)
       clientIntors = om('#1e3a5f', false)
+      alegeMasina()
+    }
+
+    // La fiecare bucla alta masina, de pe randurile de langa culoarul de jos, vizibila (nu sub formular),
+    // de preferinta in stanga (mai aproape de sediu).
+    function alegeMasina() {
+      const bune = masini.filter(
+        (m) => m.vizibila && (m.y === randuri[rSediu + 1].y || m.y === randuri[rSediu + 2].y) && m.x > sediu.x + sediu.w + U && !ascunsDeFormular(m.x, m.y),
+      )
+      const stanga = bune.filter((m) => m.x < W / 2)
+      const din = stanga.length && (Math.random() < 0.75 || stanga.length === bune.length) ? stanga : bune
+      loc = din.length ? din[Math.floor(Math.random() * din.length)] : null
+      if (loc) slot = { x: loc.x, y: loc.y, h: loc.h }
       t0Poveste = performance.now()
     }
 
-    // ---- strat static: asfalt, locuri de parcare, biroul Autonom ----
-    function deseneazaFundal(n: number, x0: number, latLoc: number, lungLoc: number) {
+    // ---- strat static: asfalt, locuri de parcare, sediul Autonom ----
+    function deseneazaFundal(n: number, x0: number) {
       const c = fctx
       c.clearRect(0, 0, W, H)
       c.fillStyle = 'rgba(12,18,34,0.55)'
       c.fillRect(0, 0, W, H)
-      // dale discrete de asfalt
       c.strokeStyle = 'rgba(148,163,184,0.035)'
       c.lineWidth = 1
       for (let x = 0; x < W; x += U * 2.2) {
@@ -208,44 +241,126 @@ export function ParcareLogin({ taste }: { taste: number }) {
       c.lineWidth = 2
       c.shadowColor = 'rgba(61,139,255,.55)'
       c.shadowBlur = 6
-      for (const yc of [yRandSus, yRandJos]) {
+      randuri.forEach((r, ri) => {
+        const xStart = ri === rSediu || ri === rSediu + 1 ? sediu.x + sediu.w + latLoc * 0.1 : x0 - latLoc / 2
         for (let i = 0; i <= n; i++) {
           const x = x0 - latLoc / 2 + i * latLoc
+          if (x < xStart - 1) continue
           c.beginPath()
-          c.moveTo(x, yc - lungLoc / 2)
-          c.lineTo(x, yc + lungLoc / 2)
+          c.moveTo(x, r.y - lungLoc / 2)
+          c.lineTo(x, r.y + lungLoc / 2)
           c.stroke()
         }
-        // linia din spate a randului
-        const ys = yc === yRandSus ? yc - lungLoc / 2 : yc + lungLoc / 2
+        // linia din spate a randului (la randul dublu: linia din mijloc)
+        const ys = r.h < 0 ? r.y - lungLoc / 2 : r.y + lungLoc / 2
         c.beginPath()
-        c.moveTo(x0 - latLoc / 2, ys)
+        c.moveTo(Math.max(xStart, x0 - latLoc / 2), ys)
         c.lineTo(x0 - latLoc / 2 + n * latLoc, ys)
         c.stroke()
-      }
+      })
       c.shadowBlur = 0
-      // biroul Autonom (vazut de sus): acoperis cu dunga in culorile logo-ului
-      const bw = U * 1.7
-      const bh = U * 1.1
-      c.fillStyle = '#121a2e'
-      c.strokeStyle = 'rgba(148,163,184,.25)'
+      deseneazaSediu(c)
+    }
+
+    // Sediul Autonom vazut de sus: acoperis cu parapet, luminator, aparate de aer conditionat, numele
+    // pe acoperis cu dunga in culorile logo-ului, intrare cu copertina, ferestre luminate, ghivece.
+    function deseneazaSediu(c: CanvasRenderingContext2D) {
+      const { x, y, w, h, usaX } = sediu
+      // umbra
+      c.fillStyle = 'rgba(0,0,0,.45)'
+      c.beginPath()
+      c.roundRect(x + 7, y + 9, w, h, 10)
+      c.fill()
+      // cladire + parapet
+      c.fillStyle = '#1b2438'
+      c.beginPath()
+      c.roundRect(x, y, w, h, 10)
+      c.fill()
+      c.strokeStyle = '#3a4a6e'
+      c.lineWidth = 3
+      c.beginPath()
+      c.roundRect(x + 2.5, y + 2.5, w - 5, h - 5, 8)
+      c.stroke()
+      c.fillStyle = '#141c2e'
+      c.fillRect(x + 7, y + 7, w - 14, h - 14)
+      // luminator (sticla)
+      const lx = x + 12
+      const ly = y + 12
+      const lw = w * 0.3
+      const lh = h - 24
+      const g = c.createLinearGradient(lx, ly, lx + lw, ly + lh)
+      g.addColorStop(0, 'rgba(96,165,250,.45)')
+      g.addColorStop(1, 'rgba(124,58,237,.3)')
+      c.fillStyle = g
+      c.fillRect(lx, ly, lw, lh)
+      c.strokeStyle = 'rgba(191,219,254,.35)'
+      c.lineWidth = 1
+      for (let i = 1; i < 3; i++) {
+        c.beginPath()
+        c.moveTo(lx + (lw * i) / 3, ly)
+        c.lineTo(lx + (lw * i) / 3, ly + lh)
+        c.stroke()
+      }
+      for (let i = 1; i < 4; i++) {
+        c.beginPath()
+        c.moveTo(lx, ly + (lh * i) / 4)
+        c.lineTo(lx + lw, ly + (lh * i) / 4)
+        c.stroke()
+      }
+      // aparate de aer conditionat
+      for (const [ax, ay] of [
+        [x + w - U * 0.85, y + 12],
+        [x + w - U * 0.85, y + 12 + U * 0.5],
+      ]) {
+        c.fillStyle = '#475569'
+        c.fillRect(ax, ay, U * 0.62, U * 0.38)
+        c.fillStyle = '#1f2937'
+        c.beginPath()
+        c.arc(ax + U * 0.2, ay + U * 0.19, U * 0.13, 0, Math.PI * 2)
+        c.arc(ax + U * 0.44, ay + U * 0.19, U * 0.13, 0, Math.PI * 2)
+        c.fill()
+      }
+      // numele pe acoperis + dunga logo
+      const tx = x + 12 + lw + (w - 24 - lw - U * 0.85) / 2
+      c.fillStyle = '#f8fafc'
+      c.font = `800 ${Math.round(U * 0.3)}px 'Plus Jakarta Sans Variable', system-ui, sans-serif`
+      c.textAlign = 'center'
+      c.textBaseline = 'middle'
+      c.fillText('AUTONOM', tx, y + h * 0.52)
+      const sl = U * 1.3
+      const dg = c.createLinearGradient(tx - sl / 2, 0, tx + sl / 2, 0)
+      dg.addColorStop(0, '#00A848')
+      dg.addColorStop(0.5, '#0060F0')
+      dg.addColorStop(1, '#6000C0')
+      c.fillStyle = dg
+      c.fillRect(tx - sl / 2, y + h * 0.52 + U * 0.25, sl, 3)
+      // ferestre luminate pe latura de jos
+      c.fillStyle = 'rgba(253,230,138,.55)'
+      for (let wx = x + 14; wx < x + w - 14; wx += U * 0.42) {
+        if (Math.abs(wx - usaX) < U * 0.6) continue
+        c.fillRect(wx, y + h - 4, U * 0.24, 3)
+      }
+      // intrare cu copertina (spre culoarul de jos)
+      c.fillStyle = 'rgba(96,165,250,.35)'
+      c.strokeStyle = 'rgba(147,197,253,.7)'
       c.lineWidth = 1.5
       c.beginPath()
-      c.roundRect(birou.x - bw / 2, birou.y - bh / 2, bw, bh, 8)
+      c.roundRect(usaX - U * 0.5, y + h - 2, U, U * 0.32, 4)
       c.fill()
       c.stroke()
-      const g = c.createLinearGradient(birou.x - bw / 2, 0, birou.x + bw / 2, 0)
-      g.addColorStop(0, '#00A848')
-      g.addColorStop(0.5, '#0060F0')
-      g.addColorStop(1, '#6000C0')
-      c.fillStyle = g
-      c.fillRect(birou.x - bw / 2 + 6, birou.y - bh / 2 + 6, bw - 12, 4)
-      c.fillStyle = 'rgba(148,163,184,.18)'
-      c.fillRect(birou.x - bw / 2 + 10, birou.y - 4, bw - 20, 2)
-      c.fillRect(birou.x - bw / 2 + 10, birou.y + 6, bw - 20, 2)
-      // usa (spre culoar)
-      c.fillStyle = 'rgba(96,165,250,.55)'
-      c.fillRect(birou.x + bw / 2 - 2, birou.y - 7, 3, 14)
+      c.fillStyle = '#0b1222'
+      c.fillRect(usaX - U * 0.16, y + h - 3, U * 0.32, 4)
+      // ghivece
+      for (const px of [usaX - U * 0.72, usaX + U * 0.72]) {
+        c.fillStyle = '#14532d'
+        c.beginPath()
+        c.arc(px, y + h + U * 0.16, U * 0.15, 0, Math.PI * 2)
+        c.fill()
+        c.fillStyle = '#22c55e'
+        c.beginPath()
+        c.arc(px - 1, y + h + U * 0.14, U * 0.1, 0, Math.PI * 2)
+        c.fill()
+      }
     }
 
     // ---- desen masina, vazuta de sus ----
@@ -431,64 +546,71 @@ export function ParcareLogin({ taste }: { taste: number }) {
       o.h = Math.atan2(b.y - a.y, b.x - a.x)
       o.merge = k > 0 && k < 1
     }
+    // drumurile masinii pentru locul ales (randul de deasupra sau de dedesubtul culoarului de jos)
+    function drumuri() {
+      const r = U * 1.0
+      const sus = slot.y < yL2 // randul de deasupra culoarului (botul in sus)
+      const semn = sus ? -1 : 1
+      const iesireSpate = drum([
+        { x: slot.x, y: slot.y },
+        { x: slot.x, y: yL2 + semn * r },
+        ...arc({ x: slot.x - r, y: yL2 + semn * r }, r, 0, sus ? Math.PI / 2 : -Math.PI / 2),
+      ])
+      const iesireFata = drum([
+        { x: slot.x - r, y: yL2 },
+        { x: W + U * 2, y: yL2 },
+      ])
+      const intoarcere = drum([
+        { x: W + U * 2, y: yL2 },
+        { x: slot.x + r, y: yL2 },
+        ...arc({ x: slot.x + r, y: yL2 + semn * r }, r, sus ? Math.PI / 2 : -Math.PI / 2, sus ? Math.PI : -Math.PI),
+        { x: slot.x, y: slot.y },
+      ])
+      return { iesireSpate, iesireFata, intoarcere, semn }
+    }
+
     function poveste(acum: number) {
       if (!loc) return
       const t = (acum - t0Poveste) / 1000
       const v = (PAS * U) / 46
-      const yOm = H * 0.5
-      const intrare: Vec = { x: -30, y: yOm }
-      const intalnire: Vec = { x: Math.max(U * 3.2, W * 0.2), y: yOm }
-      const usaBirou: Vec = { x: birou.x + U * 1.1, y: birou.y }
-      const usaMasina: Vec = { x: xLoc + U * 0.55, y: yRandSus + U * 0.15 }
-      const dIntrare = Math.hypot(intalnire.x - intrare.x, intalnire.y - intrare.y) / v
-      const dAngajat = Math.hypot(intalnire.x + U * 0.5 - usaBirou.x, intalnire.y - usaBirou.y) / v
-      const dLaMasina = Math.hypot(usaMasina.x - intalnire.x, usaMasina.y - intalnire.y) / v
+      const { iesireSpate, iesireFata, intoarcere, semn } = drumuri()
+      const yMers = yL2 + U * 0.35
+      const intrare: Vec = { x: -30, y: yMers }
+      const usaSediu: Vec = { x: sediu.usaX, y: sediu.y + sediu.h + U * 0.35 }
+      const intalnire: Vec = { x: Math.min(sediu.usaX + U * 1.8, W * 0.42), y: yMers }
+      const lang: Vec = { x: intalnire.x + U * 0.55, y: yMers }
+      const usaMasina: Vec = { x: slot.x + U * 0.45, y: yL2 + semn * U * 0.55 }
+      const langMasina: Vec = { x: usaMasina.x + U * 0.5, y: usaMasina.y - semn * U * 0.15 }
+      const dist = (a: Vec, b: Vec) => Math.hypot(b.x - a.x, b.y - a.y) / v
+      const dIntrare = dist(intrare, intalnire)
+      const dAngajat = dist(usaSediu, lang)
+      const dLaMasina = dist(intalnire, usaMasina)
+      const dInapoi = dist(langMasina, usaSediu)
 
-      // 1) clientul suparat vine pe jos
-      const T1 = dIntrare
-      // 2) angajatul iese din birou si ajunge in acelasi timp
-      const T2s = Math.max(0, T1 - dAngajat)
-      // 3) predarea cheii
-      const T3 = T1 + 0.3
+      const T1 = dIntrare // clientul suparat ajunge
+      const T2s = Math.max(0, T1 - dAngajat) // angajatul iese din sediu
+      const T3 = T1 + 0.3 // cheia
       const T4 = T3 + 1.3
-      // 4) merg la masina
-      const T5 = T4 + dLaMasina
-      // 5) deblocare, urca in masina; angajatul se intoarce
-      const T6 = T5 + 1.1
-      // 6) masina iese (in spate, apoi inainte spre dreapta)
-      const iesireSpate = drum([
-        { x: xLoc, y: yRandSus },
-        { x: xLoc, y: yCuloar - U * 1.1 },
-        ...arc({ x: xLoc - U * 1.1, y: yCuloar - U * 1.1 }, U * 1.1, 0, Math.PI / 2),
-      ])
-      const iesireFata = drum([
-        { x: xLoc - U * 1.1, y: yCuloar },
-        { x: W + U * 2, y: yCuloar },
-      ])
+      const T5 = T4 + dLaMasina // la masina
+      const T6 = T5 + 1.1 // deblocare, urca
       const T7 = T6 + 0.4
-      const T8 = T7 + 2.2
-      const T9 = T8 + Math.max(2.5, iesireFata.total / (U * 9))
-      // 7) se intoarce o masina predata mai demult si parcheaza la loc
-      const intoarcere = drum([
-        { x: W + U * 2, y: yCuloar },
-        { x: xLoc + U * 1.1, y: yCuloar },
-        ...arc({ x: xLoc + U * 1.1, y: yCuloar - U * 1.1 }, U * 1.1, Math.PI / 2, Math.PI),
-        { x: xLoc, y: yRandSus },
-      ])
+      const T8 = T7 + 2.2 // iese cu spatele
+      const T9 = T8 + Math.max(2.5, iesireFata.total / (U * 9)) // pleaca pe culoar
       const T10 = T9 + 1.2
-      const T11 = T10 + Math.max(4, intoarcere.total / (U * 8))
-      // 8) clientul coboara multumit si pleaca pe jos
+      const T11 = T10 + Math.max(4, intoarcere.total / (U * 8)) // se intoarce masina predata
       const T12 = T11 + 1.0
-      const coborare: Vec = { x: xLoc + U * 0.55, y: yRandSus + U * 0.1 }
-      const dPleaca = Math.hypot(coborare.x - intrare.x, coborare.y - yOm) / v
+      const coborare: Vec = { x: slot.x + U * 0.45, y: yL2 + semn * U * 0.55 }
+      const dPleaca = dist(coborare, intrare)
       const T13 = T12 + dPleaca
-      const FINAL = T13 + 1.5
+      const FINAL = T13 + 1.2
 
       if (t > FINAL) {
-        // bucla noua: masina de inlocuire e din nou la locul ei
-        t0Poveste = acum
-        loc.culoare = '#f8fafc'
         loc.lovita = false
+        loc.x = slot.x
+        loc.y = slot.y
+        loc.h = slot.h
+        loc.vizibila = true
+        alegeMasina() // urmatoarea bucla: alta masina
         return
       }
 
@@ -504,20 +626,14 @@ export function ParcareLogin({ taste }: { taste: number }) {
       client.dispozitie = t < T4 - 0.4 ? 1 : 2
 
       // angajat
-      angajat.vizibil = t > T2s && t < T6 + dAngajat + dLaMasina + 0.5
-      angajat.dispozitie = 0
-      const lang: Vec = { x: intalnire.x + U * 0.5, y: intalnire.y }
-      const langMasina: Vec = { x: usaMasina.x + U * 0.45, y: usaMasina.y + U * 0.3 }
-      if (t < T1) mergi(angajat, usaBirou, lang, (t - T2s) / (T1 - T2s))
+      angajat.vizibil = t > T2s && t < T6 + dInapoi + 0.3
+      if (t < T1) mergi(angajat, usaSediu, lang, (t - T2s) / (T1 - T2s))
       else if (t < T4) {
         angajat.merge = false
         angajat.h = Math.PI
       } else if (t < T5) mergi(angajat, lang, langMasina, (t - T4) / (T5 - T4))
       else if (t < T6) angajat.merge = false
-      else {
-        const dIntoarcere = Math.hypot(usaBirou.x - langMasina.x, usaBirou.y - langMasina.y) / v
-        mergi(angajat, langMasina, usaBirou, (t - T6) / dIntoarcere)
-      }
+      else mergi(angajat, langMasina, usaSediu, (t - T6) / dInapoi)
 
       // cheia trece de la angajat la client
       cheie.vizibil = t > T3 && t < T4
@@ -534,16 +650,15 @@ export function ParcareLogin({ taste }: { taste: number }) {
         loc.farPana = acum + 2600
       }
       if (t < T7) {
-        loc.x = xLoc
-        loc.y = yRandSus
-        loc.h = -Math.PI / 2
+        loc.x = slot.x
+        loc.y = slot.y
+        loc.h = slot.h
         loc.vizibila = true
       } else if (t < T8) {
-        // in spate: botul ramane opus directiei de mers
         const { p, dir } = peDrum(iesireSpate, iesireSpate.total * easeInOut((t - T7) / (T8 - T7)))
         loc.x = p.x
         loc.y = p.y
-        loc.h = dir + Math.PI
+        loc.h = dir + Math.PI // in spate: botul opus directiei de mers
       } else if (t < T9) {
         const u = (t - T8) / (T9 - T8)
         const { p, dir } = peDrum(iesireFata, iesireFata.total * u * u)
@@ -553,10 +668,12 @@ export function ParcareLogin({ taste }: { taste: number }) {
       } else if (t < T10) {
         loc.vizibila = false
       } else if (t < T11) {
-        // masina predata se intoarce (alta culoare, cu o urma de tamponare)
         if (!loc.vizibila) {
+          // se intoarce o masina predata mai demult: alta culoare, cu o urma de tamponare
           loc.vizibila = true
-          loc.culoare = '#3b82f6'
+          let c = loc.culoare
+          while (c === loc.culoare) c = CULORI[Math.floor(Math.random() * CULORI.length)]
+          loc.culoare = c
           loc.lovita = true
         }
         const u = (t - T10) / (T11 - T10)
@@ -565,13 +682,12 @@ export function ParcareLogin({ taste }: { taste: number }) {
         loc.y = p.y
         loc.h = dir
       } else {
-        loc.x = xLoc
-        loc.y = yRandSus
-        loc.h = -Math.PI / 2
+        loc.x = slot.x
+        loc.y = slot.y
+        loc.h = slot.h
         if (t < T11 + 0.05 && loc.avariiPana < acum) {
-          // incuiere: un clipit
           loc.avariiStart = acum
-          loc.avariiPana = acum + 2 * 160
+          loc.avariiPana = acum + 2 * 160 // incuiere: un clipit
         }
       }
 
@@ -584,7 +700,7 @@ export function ParcareLogin({ taste }: { taste: number }) {
           clientIntors.x = coborare.x
           clientIntors.y = coborare.y
           clientIntors.merge = false
-        } else mergi(clientIntors, coborare, { x: intrare.x, y: yOm + U * 0.4 }, (t - T12) / (T13 - T12))
+        } else mergi(clientIntors, coborare, intrare, (t - T12) / (T13 - T12))
       }
     }
 
@@ -609,25 +725,27 @@ export function ParcareLogin({ taste }: { taste: number }) {
 
     let fazaSageti = 0
     function deseneazaCuloar(dt: number) {
-      // sageti verzi punctate pe culoarul de sus (ca linia punctata din meniu), curg spre iesire
+      // sageti verzi punctate pe culoare (ca linia punctata din meniu), curg spre iesire
       fazaSageti += dt * 26
       ctx!.save()
-      ctx!.strokeStyle = 'rgba(0,245,160,.32)'
-      ctx!.lineWidth = 1.4
-      ctx!.setLineDash([4, 8])
-      ctx!.lineDashOffset = -fazaSageti
-      ctx!.beginPath()
-      ctx!.moveTo(0, yCuloar)
-      ctx!.lineTo(W, yCuloar)
-      ctx!.stroke()
-      ctx!.setLineDash([])
-      ctx!.strokeStyle = 'rgba(0,245,160,.45)'
-      for (let x = (fazaSageti * 2) % (U * 4); x < W; x += U * 4) {
+      for (const y of culoare) {
+        ctx!.strokeStyle = 'rgba(0,245,160,.3)'
+        ctx!.lineWidth = 1.4
+        ctx!.setLineDash([4, 8])
+        ctx!.lineDashOffset = -fazaSageti
         ctx!.beginPath()
-        ctx!.moveTo(x - 5, yCuloar - 5)
-        ctx!.lineTo(x, yCuloar)
-        ctx!.lineTo(x - 5, yCuloar + 5)
+        ctx!.moveTo(0, y)
+        ctx!.lineTo(W, y)
         ctx!.stroke()
+        ctx!.setLineDash([])
+        ctx!.strokeStyle = 'rgba(0,245,160,.45)'
+        for (let x = (fazaSageti * 2) % (U * 4); x < W; x += U * 4) {
+          ctx!.beginPath()
+          ctx!.moveTo(x - 5, y - 5)
+          ctx!.lineTo(x, y)
+          ctx!.lineTo(x - 5, y + 5)
+          ctx!.stroke()
+        }
       }
       ctx!.restore()
     }
@@ -636,6 +754,10 @@ export function ParcareLogin({ taste }: { taste: number }) {
     function cadru(acum: number) {
       const dt = Math.min(0.05, (acum - ultim) / 1000)
       ultim = acum
+      if (!pornita) {
+        pornita = true
+        t0Poveste = acum
+      }
       poveste(acum)
       // farurile masinii de langa cursor (lin)
       let cea = -1
