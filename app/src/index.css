@@ -216,16 +216,7 @@
   animation: backupGlow 2.4s ease-in-out infinite;
 }
 
-/* Usa de garaj la intrarea in aplicatie (AuthGate): lamele metalice inchise care se ridica. */
-@keyframes usaSus {
-  0%, 28% { transform: translateY(0); }
-  100% { transform: translateY(-104%); }
-}
-.usa-garaj {
-  background:
-    repeating-linear-gradient(180deg, rgba(255, 255, 255, .055) 0 2px, transparent 2px 46px),
-    repeating-linear-gradient(180deg, transparent 0 40px, rgba(0, 0, 0, .45) 40px 46px),
-    linear-gradient(180deg, #121a2e 0%, #0b1222 60%, #070d1a 100%);
-  box-shadow: 0 30px 60px -10px rgba(0, 0, 0, .8);
-  animation: usaSus 1.15s cubic-bezier(.65, 0, .35, 1) both;
+/* Login: contur luminos pe campul activ, ca la cardurile „Zile din deviz" / „Modificare PDF". */
+.camp-glow:focus-visible {
+  animation: devizGlow 2.2s ease-in-out infinite;
 }
