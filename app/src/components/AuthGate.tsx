@@ -10,9 +10,9 @@ import { DOMENIU_PERMIS } from '@/lib/autentificare'
 import { FundalLogin } from '@/components/login/FundalLogin'
 import { ParcareLogin } from '@/components/login/ParcareLogin'
 
-// Pagina de login: o parcare vazuta de sus cu masinile de inlocuire (ParcareLogin) — povestea predarii
-// unei masini, click pe masini = deblocare cu „bip-bip", fiecare tasta din parola face o masina sa
-// clipeasca. Formularul din sticla mata, in centru. Fara poze/video (decizia utilizatorului).
+// Pagina de login: parcarea sediului Autonom vazuta de sus (ParcareLogin), dupa locul real — scenarii de
+// predare a masinilor de inlocuire, click pe masini = deblocare cu „bip-bip", fiecare tasta din parola face
+// o masina sa clipeasca. Formularul din sticla mata, in dreapta (pe telefon in centru). Fara poze/video.
 
 const CHEIE_EMAIL = 'rca-ultim-email'
 function emailSalvat(): string {
@@ -84,7 +84,7 @@ export function AuthGate({ children }: { children: ReactNode }) {
       <FundalLogin reduced={fara} />
       <ParcareLogin taste={taste} />
 
-      <main className="pointer-events-none relative z-10 flex flex-1 items-center justify-center px-4 py-10">
+      <main className="pointer-events-none relative z-10 flex flex-1 items-center justify-center px-4 py-10 md:justify-end md:pr-[max(3rem,6vw)]">
         <form
           onSubmit={handleSubmit}
           noValidate
