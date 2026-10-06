@@ -38,6 +38,19 @@ export function AuthGate({ children }: { children: ReactNode }) {
   const [vortex, setVortex] = useState<{ x: number; y: number } | null>(null)
   const butonRef = useRef<HTMLButtonElement>(null)
 
+  // La delogare pagina de login revine la starea initiala (altfel ramanea „inghitita" de gaura neagra:
+  // formular stins, buton blocat). Ajustare in timpul randarii, inainte sa apara reteaua.
+  const [eraLogat, setEraLogat] = useState(isAuthenticated)
+  if (isAuthenticated !== eraLogat) {
+    setEraLogat(isAuthenticated)
+    if (!isAuthenticated) {
+      setVortex(null)
+      setIntrare(false)
+      setStare('liber')
+      setPassword('')
+    }
+  }
+
   if (isLoading) {
     return <div className="flex min-h-svh items-center justify-center bg-background" />
   }
@@ -73,6 +86,7 @@ export function AuthGate({ children }: { children: ReactNode }) {
           /* fara localStorage: emailul nu se mai precompleteaza */
         }
       }
+      setPassword('')
       const r = butonRef.current?.getBoundingClientRect()
       if (!fara && r) setVortex({ x: r.left + r.width / 2, y: r.top + r.height / 2 })
       else setIntrare(false)
@@ -92,8 +106,9 @@ export function AuthGate({ children }: { children: ReactNode }) {
           onSubmit={handleSubmit}
           noValidate
           className={
-            'relative w-full max-w-[400px] overflow-hidden rounded-[22px] border border-white/12 bg-[#0a1226]/60 p-7 shadow-[0_30px_80px_-30px_#000] backdrop-blur-xl transition-[opacity,transform] duration-300 ease-[cubic-bezier(0.23,1,0.32,1)] sm:p-8' +
-            (vortex ? ' scale-[.97] opacity-0 delay-[850ms]' : '')
+            'relative w-full max-w-[400px] overflow-hidden rounded-[22px] border border-white/12 bg-[#0a1226]/60 p-7 shadow-[0_30px_80px_-30px_#000] transition-[opacity,transform] duration-300 ease-[cubic-bezier(0.23,1,0.32,1)] sm:p-8' +
+            // fara blur cat ruleaza gaura neagra: blur-ul recalculat la fiecare cadru o facea sacadata
+            (vortex ? ' scale-[.97] opacity-0 delay-[1000ms]' : ' backdrop-blur-xl')
           }
         >
           <span aria-hidden="true" className="absolute inset-x-0 top-0 h-[3px] bg-gradient-to-r from-[#00A848] via-[#0060F0] to-[#6000C0]" />

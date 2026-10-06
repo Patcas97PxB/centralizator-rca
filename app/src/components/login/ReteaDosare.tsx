@@ -11,8 +11,10 @@ import { usePrefersReducedMotion } from '@/hooks/usePrefersReducedMotion'
 //    iar legaturile din jur se aprind usor;
 //  - 'email': pulsuri de lumina curg pe legaturi spre formular (centrul ecranului);
 //  - 'parola': dosarele se intorc si devin scuturi (ca in logo), reteaua incetineste si capata tenta mov.
-//  - vortex (la intrare reusita): toate dosarele si legaturile sunt absorbite intr-o spirala tot mai
-//    rapida in butonul „Intra" (ideea de centralizare), ca un fast-forward; apoi onVortexGata.
+//  - gaura neagra (la intrare reusita): dosarele si legaturile cad drept spre butonul „Intra", ca in
+//    caderea libera — incet la inceput, tot mai repede; cele apropiate sunt inghitite primele (timpul de
+//    cadere creste cu distanta^1,5), se alungesc pe directia caderii si se sting; urme de miscare + un
+//    inel de lumina in jurul butonului; apoi onVortexGata. Fara rotatie (arata „plastic").
 // Cu animatiile oprite (reduced motion) se deseneaza un singur cadru static (si nu exista vortex).
 
 export type StareRetea = 'liber' | 'email' | 'parola'
@@ -34,9 +36,9 @@ interface Nod {
   z: number
   faza: number
   f: number // 0 = dosar, 1 = scut
-  vr: number // vortex: distanta si unghiul de pornire fata de buton, rotatia proprie
+  vr: number // gaura neagra: distanta si unghiul de pornire fata de buton, timpul de cadere (ms)
   va: number
-  vrot: number
+  vtf: number
   maxLeg: number // cate legaturi poate avea (2-4), diferit de la dosar la dosar
   raza: number // cat de departe isi cauta vecini (160-280 px)
 }
@@ -79,7 +81,7 @@ const C_MOV = [178, 107, 255]
 const C_VERDE = [0, 245, 160]
 const C_PUNCTAT = [96, 165, 250]
 
-const DURATA_VORTEX = 1100 // ms
+const DURATA_VORTEX = 1300 // ms (pana cade si ultimul dosar)
 const FLASH_VORTEX = 160 // ms dupa ce totul a intrat in buton
 
 export function ReteaDosare({
@@ -134,14 +136,16 @@ export function ReteaDosare({
     let timpLinii = 0 // timpul liniilor punctate (accelereaza in vortex = fast-forward)
 
     const pozNormala = (n: Nod) => [n.x + n.ox, n.y + n.oy] as const
-    // progresul vortexului, accelerat (absorbtie): 0 -> 1
-    const progresVortex = () => (vStart ? Math.min(1, (acumCurent - vStart) / DURATA_VORTEX) ** 2.1 : 0)
+    // progresul general (0 -> 1) — pentru lumina si stingerea legaturilor
+    const progresVortex = () => (vStart ? Math.min(1, (acumCurent - vStart) / DURATA_VORTEX) : 0)
+    // progresul caderii unui dosar (0 -> 1)
+    const cadere = (n: Nod) => (vStart ? Math.min(1, (acumCurent - vStart) / n.vtf) : 0)
     const poz = (n: Nod) => {
       if (!vStart || !vortexRef.current) return pozNormala(n)
-      const e = progresVortex()
-      const r = n.vr * (1 - e)
-      const ung = n.va + e * n.vrot
-      return [vortexRef.current.x + Math.cos(ung) * r, vortexRef.current.y + Math.sin(ung) * r] as const
+      const u = cadere(n)
+      // cadere libera radiala: porneste din repaus si accelereaza (forma lui r(t) in caderea libera)
+      const r = n.vr * Math.pow(Math.max(0, 1 - u * u), 2 / 3)
+      return [vortexRef.current.x + Math.cos(n.va) * r, vortexRef.current.y + Math.sin(n.va) * r] as const
     }
     const dist = (a: Nod, b: Nod) => {
       const [x1, y1] = poz(a)
@@ -205,7 +209,7 @@ export function ReteaDosare({
           f: stareRef.current === 'parola' ? 1 : 0,
           vr: 0,
           va: 0,
-          vrot: 0,
+          vtf: 1,
           maxLeg: Math.random() < 0.25 ? 5 + Math.floor(Math.random() * 2) : 2 + Math.floor(Math.random() * 3),
           raza: 170 + Math.random() * 130,
         }
@@ -218,16 +222,24 @@ export function ReteaDosare({
     function actualizeaza(dt: number, acum: number) {
       const st = stareRef.current
       const vt = vortexRef.current
+      if (!vt && vStart) {
+        // gaura neagra anulata (ex. delogare): reteaua revine la locul ei
+        vStart = 0
+        vGata = false
+      }
       if (vt && !vStart) {
         // pornire: fiecare dosar isi retine pozitia fata de buton si primeste o rotatie proprie
         vStart = acum
         pulsuri.length = 0
+        let rMax = 1
         for (const n of noduri) {
           const [x, y] = pozNormala(n)
           n.vr = Math.hypot(x - vt.x, y - vt.y)
           n.va = Math.atan2(y - vt.y, x - vt.x)
-          n.vrot = (2.2 + Math.random() * 1.4) * Math.PI
+          rMax = Math.max(rMax, n.vr)
         }
+        // timpul de cadere ~ distanta^1,5 (ca la gravitatie): cele apropiate cad primele
+        for (const n of noduri) n.vtf = DURATA_VORTEX * (0.35 + 0.65 * Math.pow(n.vr / rMax, 1.5))
       }
       if (vStart) {
         const e = progresVortex()
@@ -349,13 +361,38 @@ export function ReteaDosare({
 
     function deseneaza(acum: number) {
       acumCurent = acum
-      ctx!.clearRect(0, 0, W, H)
       const ev = progresVortex()
+      if (vStart) {
+        // urme de miscare: cadrul anterior se estompeaza (ramane transparent sub el), nu se sterge
+        ctx!.globalCompositeOperation = 'destination-out'
+        ctx!.fillStyle = 'rgba(0,0,0,0.42)'
+        ctx!.fillRect(0, 0, W, H)
+        ctx!.globalCompositeOperation = 'source-over'
+      } else {
+        ctx!.clearRect(0, 0, W, H)
+      }
       // in ultimul sfert al vortexului totul se stinge in lumina butonului
       const stingereVortex = 1 - Math.max(0, (ev - 0.75) / 0.25)
       ctx!.lineCap = 'round'
-      // legaturi, in stilul liniilor din meniul lateral
-      for (const l of legaturi) {
+      // legaturi: in gaura neagra, grupate pe stil intr-o singura trasare per culoare (cadre constante)
+      if (vStart) {
+        const culori: Record<StilLegatura, readonly number[]> = { albastru: C_ALBASTRU, mov: C_MOV, verde: C_VERDE, punctat: C_PUNCTAT }
+        for (const stil of STILURI) {
+          ctx!.beginPath()
+          for (const l of legaturi) {
+            if (l.stil !== stil || l.alpha < 0.05) continue
+            const [x1, y1, x2, y2, ax, ay, bx, by] = control(l)
+            ctx!.moveTo(x1, y1)
+            ctx!.bezierCurveTo(ax, ay, bx, by, x2, y2)
+          }
+          ctx!.setLineDash(stil === 'verde' ? [4, 8] : stil === 'punctat' ? [2, 10] : [])
+          ctx!.strokeStyle = rgba(culori[stil], 0.45 * stingereVortex)
+          ctx!.lineWidth = 1.2
+          ctx!.stroke()
+        }
+        ctx!.setLineDash([])
+      }
+      for (const l of vStart ? [] : legaturi) {
         if (l.alpha < 0.01) continue
         const [x1, y1, x2, y2, ax, ay, bx, by] = control(l)
         let a = l.alpha * Math.min(noduri[l.a].z, noduri[l.b].z) * stingereVortex
@@ -411,13 +448,21 @@ export function ReteaDosare({
       for (const n of noduri) {
         const [x, y] = poz(n)
         const scaleX = Math.max(0.04, Math.abs(Math.cos(n.f * Math.PI)))
-        const s = n.s * (0.3 + 0.7 * (1 - ev))
+        const u = cadere(n)
+        if (u >= 1) continue
+        const s = n.s * (1 - 0.7 * u)
         ctx!.save()
         ctx!.translate(x, y)
+        if (u > 0) {
+          // „spaghettificare": alungit spre gaura, subtiat lateral
+          ctx!.rotate(n.va)
+          ctx!.scale(1 + 1.6 * u * u, 1 - 0.5 * u)
+          ctx!.rotate(-n.va)
+        }
         ctx!.scale(s * scaleX, s)
         ctx!.lineWidth = 1.5 / s
         ctx!.lineJoin = 'round'
-        const a = (0.35 + n.z * 0.5) * stingereVortex
+        const a = (0.35 + n.z * 0.5) * (1 - u * u * u)
         if (n.f > 0.5) {
           ctx!.save()
           ctx!.clip(SCUT)
@@ -452,16 +497,28 @@ export function ReteaDosare({
       const vt = vortexRef.current
       if (vStart && vt) {
         const flash = Math.max(0, Math.min(1, (acumCurent - vStart - DURATA_VORTEX) / FLASH_VORTEX))
-        const raza = 30 + 160 * ev + 220 * flash
-        const g = ctx!.createRadialGradient(vt.x, vt.y, 0, vt.x, vt.y, raza)
-        g.addColorStop(0, `rgba(219,234,254,${0.75 * ev})`)
-        g.addColorStop(0.3, `rgba(61,139,255,${0.45 * ev})`)
-        g.addColorStop(0.7, `rgba(124,58,237,${0.25 * ev})`)
+        const r = 26 + 34 * ev
+        // inel luminos in jurul unui miez intunecat (ca discul unei gauri negre), creste pe masura ce cad
+        const g = ctx!.createRadialGradient(vt.x, vt.y, r * 0.35, vt.x, vt.y, r * 2.6)
+        g.addColorStop(0, `rgba(5,8,18,${0.85 * ev * (1 - flash)})`)
+        g.addColorStop(0.32, `rgba(147,197,253,${0.7 * ev})`)
+        g.addColorStop(0.5, `rgba(61,139,255,${0.5 * ev})`)
+        g.addColorStop(0.75, `rgba(124,58,237,${0.28 * ev})`)
         g.addColorStop(1, 'rgba(124,58,237,0)')
         ctx!.fillStyle = g
         ctx!.beginPath()
-        ctx!.arc(vt.x, vt.y, raza, 0, Math.PI * 2)
+        ctx!.arc(vt.x, vt.y, r * 2.6, 0, Math.PI * 2)
         ctx!.fill()
+        if (flash > 0) {
+          const rf = 40 + 260 * flash
+          const gf = ctx!.createRadialGradient(vt.x, vt.y, 0, vt.x, vt.y, rf)
+          gf.addColorStop(0, `rgba(219,234,254,${0.9 * (1 - flash * 0.6)})`)
+          gf.addColorStop(1, 'rgba(219,234,254,0)')
+          ctx!.fillStyle = gf
+          ctx!.beginPath()
+          ctx!.arc(vt.x, vt.y, rf, 0, Math.PI * 2)
+          ctx!.fill()
+        }
       }
     }
 
