@@ -2,15 +2,16 @@ import { useEffect, useRef } from 'react'
 import { usePrefersReducedMotion } from '@/hooks/usePrefersReducedMotion'
 
 // Fundalul paginii de login: parcarea sediului Autonom vazuta de sus (ca din drona), dupa locul real
-// (schita utilizatorului): sediul in stanga sus, cu trotuar in fata si Bulevardul Decebal jos (circulatie
-// de la dreapta spre stanga); parcarea in dreapta sediului, cu zidul cladirii vecine in capat, masini pe
-// langa zid, pe dreapta, pe coltul rotunjit din dreapta jos, in mijloc si langa platforma de beton unde se
-// fumeaza (pe lateral, langa sediu). Din dreapta jos coboara o strada cu sens unic in bulevard.
+// (schita + poza de sus a utilizatorului): sediul in stanga, cu trotuar in fata si Bulevardul Decebal jos
+// (circulatie de la dreapta spre stanga); parcarea de pamant (fara marcaje) in dreapta sediului, cu copaci
+// in capat; masinile stau ca in poza: in capat, langa sediu, in mijloc, pe dreapta, una piezis in colt si
+// langa trotuar. Platforma de beton unde se fumeaza e langa sediu. In dreapta, un drum cu doua sensuri
+// coboara intr-un pasaj pe sub bulevard.
 // Scenarii alese la intamplare (fara repetare imediata): clientul vine din stanga / din dreapta / cu taxiul,
 // intra in birou si iese cu un coleg care ii preda masina; clientul se opreste la cei de la tigara si ei ii
 // dau masina; doi colegi pleaca cu o masina sa o predea si se intorc cu alta; o zi obisnuita. Masina
 // clientului iese pe bulevard din prima sau se chinuie cand e aglomerat; apoi se intoarce o masina predata
-// mai demult (cu o urma de tamponare) si clientul ei pleaca multumit. La tigara stau 1–2 sau 3–4 colegi.
+// mai demult (cu o urma de tamponare) si clientul ei pleaca multumit. Clientii vin tristi (bula albastra). La tigara stau 1–2 sau 3–4 colegi.
 // Interactiuni: click pe o masina = deblocare (avarii de 2 ori, faruri, „bip-bip"); masina de langa
 // cursor isi aprinde usor farurile; fiecare tasta din parola = o masina clipeste o data (incuiere).
 // Cu animatiile oprite: parcarea statica; click-ul tot deblocheaza (lumini, fara miscare).
@@ -21,6 +22,7 @@ interface Loc {
   x: number
   y: number
   h: number // directia botului masinii parcate (radiani; 0 = spre dreapta, PI/2 = in jos)
+  poveste?: boolean // de aici poate pleca masina de inlocuire din scenariu
 }
 
 interface Masina {
@@ -35,6 +37,7 @@ interface Masina {
   farMouse: number // 0..1, farurile aprinse de apropierea cursorului
   lovita?: boolean
   taxi?: boolean
+  pasaj?: boolean // pe drumul din dreapta (coboara / urca din pasajul de sub bulevard)
   loc?: Loc | null // locul in care e parcata (null = in miscare)
   ocupata?: boolean // folosita intr-un scenariu
 }
@@ -165,25 +168,21 @@ export function ParcareLogin({ taste }: { taste: number }) {
     let H = 0
     let dpr = 1
     let U = 44 // lungimea unei masini
-    let latLoc = 34
-    let lungLoc = 57
-    let banda = 100 // latimea unui culoar din parcare
     // geometria locului (vezi construieste)
     let yTrot = 0 // marginea de sus a trotuarului
     let trotH = 0
     let yBul0 = 0 // marginea de sus a bulevardului
     let bulH = 0
     let benzi: [number, number] = [0, 0] // y-ul celor doua benzi (0 = langa trotuar)
-    let stradaW = 0 // strada cu sens unic, in dreapta
-    let xStr = 0
-    let xLot1 = 0 // marginea din dreapta a parcarii
-    let xA = 0 // culoarul din stanga (si iesirea spre bulevard)
-    let xRA = 0 // culoarul din dreapta
-    let yL2 = 0 // culoarul de jos
-    let wallH = 0 // zidul cladirii vecine, in capatul parcarii
-    let culoare: number[] = [] // y-ul culoarelor orizontale
+    let drum0 = 0 // drumul din dreapta (coboara in pasajul de sub bulevard): marginea din stanga
+    let drumW = 0
+    let lot = { x: 0, y: 0, w: 0, h: 0 } // parcarea de pamant
+    let copaciH = 0 // fasia cu copaci din capatul parcarii
+    let xA = 0 // iesirea din parcare spre bulevard (stanga jos, intre platforma de fumat si randul de jos)
+    let yL2 = 0 // culoarul de jos (intre masinile din mijloc si cele de langa trotuar)
     let sediu = { x: 0, y: 0, w: 0, h: 0, usaX: 0 }
     let plat = { x: 0, y: 0, w: 0, h: 0 } // platforma de beton (locul de fumat)
+    let pietre: { x: number; y: number; r: number; c: string }[] = []
     let locuri: Loc[] = []
     let masini: Masina[] = []
     let trafic: Trafic[] = []
@@ -205,7 +204,7 @@ export function ParcareLogin({ taste }: { taste: number }) {
 
     const vOm = () => U * 1.5 // viteza de mers a oamenilor (px/s)
     const ySw = () => yTrot + trotH * 0.5 // mijlocul trotuarului
-    const xW = () => xA - banda * 0.3 // pe unde merg oamenii pe aleea de iesire
+    const xW = () => xA - U * 0.15 // pe unde merg oamenii spre/din parcare (pe la iesire)
     // formularul de login (dreapta pe desktop, centru pe telefon) nu trebuie sa ascunda povestea
     const ascunsDeFormular = (x: number, y: number) => {
       const r = document.querySelector('form')?.getBoundingClientRect()
@@ -247,71 +246,48 @@ export function ParcareLogin({ taste }: { taste: number }) {
       }
       ctx!.setTransform(dpr, 0, 0, dpr, 0, 0)
       fctx.setTransform(dpr, 0, 0, dpr, 0, 0)
-      U = Math.max(28, Math.min(64, W / 21, H / 12.5))
-      latLoc = U * 0.78
-      lungLoc = U * 1.3
-      banda = U * 2.3
-      bulH = U * 2.5
-      trotH = U * 0.62
+      bulH = Math.max(H * 0.15, 70)
+      trotH = Math.max(H * 0.065, 26)
       yBul0 = H - bulH
       yTrot = yBul0 - trotH
       benzi = [yBul0 + bulH * 0.29, yBul0 + bulH * 0.71]
-      stradaW = U * 1.7
-      xStr = W - stradaW / 2
-      xLot1 = W - stradaW - U * 0.25
-      // sediul: stanga sus, cu fata spre trotuar
-      const sw = Math.max(U * 3.2, Math.min(U * 4.8, W * 0.16))
-      const oh = Math.min(yTrot - U * 0.4, U * 6)
-      sediu = { x: U * 0.1, y: yTrot - oh, w: sw - U * 0.1, h: oh, usaX: U * 0.1 + (sw - U * 0.1) * 0.55 }
-      // langa sediu: coloana de masini + platforma de beton (locul de fumat), apoi culoarul din stanga
-      const colW = U * 1.3
-      const platH = Math.min(U * 2.3, oh * 0.45)
-      plat = { x: sw + U * 0.22, y: yTrot - U * 0.12 - platH, w: U * 1.05, h: platH }
-      xA = sw + U * 0.12 + colW + banda / 2
-      const Rw = lungLoc + banda / 2
-      xRA = xLot1 - Rw
-      yL2 = yTrot - Rw
-      const xr0 = xA + banda / 2
-      const xr1 = xRA - banda / 2
-      const k = Math.max(0, Math.floor((yL2 - banda / 2 - lungLoc - U * 0.35) / (2 * lungLoc + banda)))
-      wallH = yL2 - banda / 2 - k * (2 * lungLoc + banda) - lungLoc
-      culoare = []
-      for (let j = 0; j <= k; j++) culoare.push(wallH + lungLoc + banda / 2 + j * (2 * lungLoc + banda))
+      drumW = Math.max(W * 0.12, 70)
+      drum0 = W - drumW
+      const sw = Math.max(W * 0.2, 110)
+      copaciH = H * 0.1
+      lot = { x: sw + 14, y: copaciH + 6, w: 0, h: 0 }
+      lot.w = drum0 - W * 0.02 - lot.x
+      lot.h = yTrot - 4 - lot.y
+      // scara: o masina ~ 1/7 din latimea parcarii (ca in poza de sus a locului)
+      U = Math.max(26, Math.min(lot.w * 0.14, lot.h * 0.17))
+      const oy = Math.max(copaciH * 0.4, yTrot - U * 6.5)
+      sediu = { x: 0, y: oy, w: sw, h: yTrot - oy, usaX: sw * 0.8 }
+      plat = { x: lot.x + lot.w * 0.005, y: lot.y + lot.h * 0.75, w: lot.w * 0.12, h: lot.h * 0.23 }
+      xA = lot.x + lot.w * 0.205
+      yL2 = lot.y + lot.h * 0.66
 
-      // locurile de parcare
+      // cum se parcheaza de obicei, cand parcarea e aproape plina (dupa poza utilizatorului)
       locuri = []
-      const n = Math.max(0, Math.floor((xr1 - xr0) / latLoc))
-      const x0 = xr0 + (xr1 - xr0 - n * latLoc) / 2 + latLoc / 2
-      const rand = (y: number, h: number, nr = n) => {
-        for (let i = 0; i < nr; i++) locuri.push({ x: x0 + i * latLoc, y, h })
-      }
-      rand(wallH + lungLoc / 2, -Math.PI / 2) // langa zid
-      for (let j = 0; j < k; j++) {
-        const y1 = culoare[j] + banda / 2 + lungLoc / 2
-        rand(y1, Math.PI / 2)
-        rand(y1 + lungLoc, -Math.PI / 2)
-      }
-      rand(yTrot - lungLoc / 2, Math.PI / 2, Math.max(0, Math.floor((xRA - latLoc * 0.55 - x0) / latLoc) + 1)) // langa trotuar
-      // pe dreapta
-      for (let y = wallH + latLoc / 2 + U * 0.08; y < yL2 - latLoc * 0.55; y += latLoc) locuri.push({ x: xLot1 - lungLoc / 2, y, h: 0 })
-      // coltul rotunjit din dreapta jos
-      const ra = lungLoc / 2 + banda / 2
-      const na = Math.max(1, Math.floor(((Math.PI / 2) * ra) / latLoc))
-      for (let i = 0; i < na; i++) {
-        const a = ((i + 0.5) * (Math.PI / 2)) / na
-        locuri.push({ x: xRA + Math.cos(a) * ra, y: yL2 + Math.sin(a) * ra, h: a })
-      }
-      // langa platforma de fumat (coloana dintre sediu si culoarul din stanga)
-      const xc = sw + U * 0.12 + colW / 2
-      for (let y = plat.y - latLoc / 2 - U * 0.1; y > wallH + latLoc / 2; y -= latLoc) locuri.push({ x: xc, y, h: 0 })
+      const loc = (fx: number, fy: number, h: number, poveste = false) => locuri.push({ x: lot.x + fx * lot.w, y: lot.y + fy * lot.h, h, poveste })
+      for (const fx of [0.24, 0.34, 0.56, 0.66, 0.94]) loc(fx, 0.1, -Math.PI / 2) // in capat, spre copaci
+      for (const fy of [0.35, 0.47, 0.59]) loc(0.08, fy, Math.PI) // langa sediu, deasupra platformei
+      for (const fx of [0.41, 0.5, 0.6]) loc(fx, 0.42, -Math.PI / 2, true) // in mijloc
+      for (const fy of [0.32, 0.44, 0.56]) loc(0.86, fy, Math.PI) // pe dreapta
+      loc(0.83, 0.76, 0.65) // pieziș, in coltul din dreapta jos
+      for (const fx of [0.33, 0.45, 0.56, 0.68]) loc(fx, 0.88, Math.PI / 2, true) // langa trotuar
 
       masini = []
       for (const l of locuri) {
-        if (Math.random() < 0.15) continue
+        if (Math.random() < 0.18) continue
         const m = masinaNoua(l.x, l.y, l.h)
         m.loc = l
         masini.push(m)
       }
+      pietre = []
+      const np = Math.round((lot.w * lot.h) / 1300)
+      const culPietre = ['rgba(148,136,120,.5)', 'rgba(120,110,96,.6)', 'rgba(190,180,160,.35)']
+      for (let i = 0; i < np; i++)
+        pietre.push({ x: lot.x + Math.random() * lot.w, y: lot.y + Math.random() * lot.h, r: intre(0.6, 1.9), c: unul(culPietre) })
       trafic = []
       actori = []
       fundalActori = []
@@ -347,28 +323,91 @@ export function ParcareLogin({ taste }: { taste: number }) {
       return { x: plat.x + plat.w * f[0], y: plat.y + plat.h * f[1] }
     }
 
-    // ---- strat static: bulevard, trotuar, strada cu sens unic, parcarea, sediul, platforma ----
+    // ---- strat static: copaci, parcarea de pamant, drumul cu pasaj, bulevardul, trotuarul, sediul ----
     function deseneazaFundal() {
       const c = fctx
       c.clearRect(0, 0, W, H)
       c.fillStyle = 'rgba(12,18,34,0.55)'
       c.fillRect(0, 0, W, H)
-      // cladirile vecine: zidul din capatul parcarii si blocul de deasupra sediului
-      cladireVecina(c, sediu.x + sediu.w + U * 0.05, -U * 0.3, xLot1 - sediu.x - sediu.w + U * 0.05, wallH + U * 0.3)
-      if (sediu.y > U * 0.6) cladireVecina(c, -U * 0.3, -U * 0.3, sediu.x + sediu.w + U * 0.3, sediu.y - U * 0.15 + U * 0.3)
-      // strada cu sens unic (coboara in bulevard)
-      c.fillStyle = 'rgba(30,38,58,.8)'
-      c.fillRect(W - stradaW, 0, stradaW, yBul0)
-      c.strokeStyle = 'rgba(226,232,240,.4)'
-      c.lineWidth = 1.5
+      // blocul de deasupra sediului
+      if (sediu.y > U * 0.6) cladireVecina(c, -U * 0.3, -U * 0.3, sediu.w + U * 0.3, sediu.y - U * 0.15 + U * 0.3)
+      // parcarea: pamant batatorit cu putine pietre
+      c.fillStyle = '#2b251f'
       c.beginPath()
-      c.moveTo(W - stradaW, 0)
-      c.lineTo(W - stradaW, yTrot)
+      c.roundRect(lot.x, lot.y, lot.w, yTrot - lot.y, 6)
+      c.fill()
+      for (let i = 0; i < 16; i++) {
+        const x = lot.x + Math.random() * lot.w
+        const y = lot.y + Math.random() * lot.h
+        const r = U * intre(0.8, 2)
+        const g = c.createRadialGradient(x, y, 0, x, y, r)
+        g.addColorStop(0, Math.random() < 0.5 ? 'rgba(92,80,64,.28)' : 'rgba(20,16,12,.3)')
+        g.addColorStop(1, 'rgba(0,0,0,0)')
+        c.fillStyle = g
+        c.fillRect(x - r, y - r, 2 * r, 2 * r)
+      }
+      for (const p of pietre) {
+        c.fillStyle = p.c
+        c.beginPath()
+        c.arc(p.x, p.y, p.r, 0, Math.PI * 2)
+        c.fill()
+      }
+      // urme de roti pe unde se circula (culoarul de jos si iesirea)
+      c.strokeStyle = 'rgba(12,9,6,.35)'
+      c.lineWidth = Math.max(2, U * 0.07)
+      for (const d of [-U * 0.16, U * 0.16]) {
+        c.beginPath()
+        c.moveTo(lot.x + lot.w * 0.74, yL2 + d)
+        c.lineTo(xA + U * 0.6, yL2 + d)
+        c.quadraticCurveTo(xA + d, yL2 + d, xA + d, yL2 + U * 0.8)
+        c.lineTo(xA + d, yTrot)
+        c.stroke()
+      }
+      // iarba: fasie jos, spre trotuar, si intre parcare si drum
+      c.fillStyle = 'rgba(34,74,44,.75)'
+      c.fillRect(lot.x + lot.w * 0.27, yTrot - U * 0.12, lot.w * 0.62, U * 0.12)
+      c.fillStyle = '#1d3a26'
+      c.fillRect(lot.x + lot.w, lot.y, drum0 - lot.x - lot.w, yTrot - lot.y)
+      // trotuarul alb de-a lungul peretelui sediului
+      c.fillStyle = 'rgba(203,213,225,.28)'
+      c.fillRect(sediu.w, sediu.y, lot.x - sediu.w, yTrot - sediu.y)
+      // copacii din capat (coroane vazute de sus) + gardul jos
+      c.fillStyle = '#4b5563'
+      c.fillRect(lot.x, lot.y - 5, drum0 - lot.x, 4)
+      for (let x = lot.x - U * 0.2; x < drum0 + U * 0.2; x += U * intre(0.7, 1.1)) {
+        const y = copaciH * intre(0.2, 0.55)
+        const r = U * intre(0.55, 0.9)
+        const g = c.createRadialGradient(x - r * 0.3, y - r * 0.3, r * 0.1, x, y, r)
+        g.addColorStop(0, '#2f5a3a')
+        g.addColorStop(1, '#13291b')
+        c.fillStyle = g
+        c.beginPath()
+        c.arc(x, y, r, 0, Math.PI * 2)
+        c.fill()
+      }
+      // drumul din dreapta: doua sensuri, coboara in pasajul de pe sub bulevard
+      c.fillStyle = 'rgba(30,38,58,.92)'
+      c.fillRect(drum0, 0, drumW, yBul0)
+      c.strokeStyle = 'rgba(226,232,240,.45)'
+      c.lineWidth = 2
+      c.beginPath()
+      c.moveTo(drum0 + drumW / 2, 0)
+      c.lineTo(drum0 + drumW / 2, yBul0)
       c.stroke()
-      for (let y = U * 1.5; y < yTrot - U; y += U * 3.2) sageata(c, xStr, y, Math.PI / 2, 'rgba(226,232,240,.35)')
-      // bulevardul (doua benzi, spre stanga)
-      c.fillStyle = 'rgba(26,33,52,.92)'
+      rampa(c)
+      c.strokeStyle = '#64748b'
+      c.lineWidth = 3
+      c.beginPath()
+      c.moveTo(drum0, yTrot - U * 2.5)
+      c.lineTo(drum0, yBul0)
+      c.moveTo(W - 1.5, yTrot - U * 2.5)
+      c.lineTo(W - 1.5, yBul0)
+      c.stroke()
+      // bulevardul (doua benzi, spre stanga) — trece peste pasaj
+      c.fillStyle = 'rgba(26,33,52,.97)'
       c.fillRect(0, yBul0, W, bulH)
+      c.fillStyle = '#475569'
+      c.fillRect(drum0 - 3, yBul0 - 3, drumW + 6, 5)
       c.strokeStyle = 'rgba(226,232,240,.35)'
       c.lineWidth = 2
       c.setLineDash([U * 0.7, U * 0.55])
@@ -377,20 +416,12 @@ export function ParcareLogin({ taste }: { taste: number }) {
       c.lineTo(W, yBul0 + bulH / 2)
       c.stroke()
       c.setLineDash([])
-      for (let x = U * 3; x < W; x += U * 7) {
-        sageata(c, x, benzi[0], Math.PI, 'rgba(226,232,240,.22)')
-        sageata(c, x + U * 3.5, benzi[1], Math.PI, 'rgba(226,232,240,.22)')
-      }
-      // trecere de pietoni in fata sediului
-      c.fillStyle = 'rgba(226,232,240,.2)'
-      const zx = Math.max(U * 0.3, sediu.x + U * 0.3)
-      for (let y = yBul0 + U * 0.15; y < H - U * 0.2; y += U * 0.42) c.fillRect(zx, y, U * 1.2, U * 0.2)
-      // trotuarul (pana la strada cu sens unic), cu dale
+      // trotuarul (pana la pasaj), cu dale
       c.fillStyle = 'rgba(71,85,105,.5)'
-      c.fillRect(0, yTrot, W - stradaW, trotH)
+      c.fillRect(0, yTrot, drum0, trotH)
       c.strokeStyle = 'rgba(148,163,184,.12)'
       c.lineWidth = 1
-      for (let x = 0; x < W - stradaW; x += U * 0.62) {
+      for (let x = 0; x < drum0; x += U * 0.62) {
         c.beginPath()
         c.moveTo(x, yTrot)
         c.lineTo(x, yBul0)
@@ -401,62 +432,24 @@ export function ParcareLogin({ taste }: { taste: number }) {
       c.lineWidth = 2
       c.beginPath()
       c.moveTo(0, yBul0)
-      c.lineTo(xA - banda / 2, yBul0)
-      c.moveTo(xA + banda / 2, yBul0)
-      c.lineTo(W - stradaW, yBul0)
+      c.lineTo(xA - U * 0.6, yBul0)
+      c.moveTo(xA + U * 0.6, yBul0)
+      c.lineTo(drum0, yBul0)
       c.stroke()
-      c.fillStyle = 'rgba(30,38,58,.7)'
-      c.fillRect(xA - banda / 2, yTrot, banda, trotH)
-      // marginile parcarii: dreapta, coltul rotunjit, jos
-      c.strokeStyle = 'rgba(148,163,184,.4)'
-      c.lineWidth = 2.5
-      c.beginPath()
-      c.moveTo(xLot1, wallH)
-      c.lineTo(xLot1, yL2)
-      c.arc(xRA, yL2, xLot1 - xRA, 0, Math.PI / 2)
-      c.lineTo(xA + banda / 2, yTrot)
-      c.stroke()
-      // locurile de parcare (albastru ca liniile din meniu)
-      c.strokeStyle = 'rgba(96,165,250,.38)'
-      c.lineWidth = 2
-      c.shadowColor = 'rgba(61,139,255,.55)'
-      c.shadowBlur = 6
-      const L = lungLoc
-      const w = latLoc
-      for (const l of locuri) {
-        c.save()
-        c.translate(l.x, l.y)
-        c.rotate(l.h)
-        c.beginPath()
-        c.moveTo(-L / 2, -w / 2)
-        c.lineTo(L / 2, -w / 2)
-        c.lineTo(L / 2, w / 2)
-        c.lineTo(-L / 2, w / 2)
-        c.stroke()
-        c.restore()
-      }
-      c.shadowBlur = 0
-      // sageti pe culoare (sensul de iesire: spre stanga, apoi in jos spre bulevard)
-      for (const y of culoare) for (let x = xA + U * 2.5; x < xRA - U; x += U * 5) sageata(c, x, y, Math.PI, 'rgba(0,245,160,.22)')
-      sageata(c, xA, (yL2 + yTrot) / 2, Math.PI / 2, 'rgba(0,245,160,.3)')
+      c.fillStyle = 'rgba(43,37,31,.6)'
+      c.fillRect(xA - U * 0.6, yTrot, U * 1.2, trotH)
       deseneazaPlatforma(c)
       deseneazaSediu(c)
     }
 
-    function sageata(c: CanvasRenderingContext2D, x: number, y: number, dir: number, cul: string) {
-      c.save()
-      c.translate(x, y)
-      c.rotate(dir)
-      c.strokeStyle = cul
-      c.lineWidth = 2
-      c.beginPath()
-      c.moveTo(-U * 0.45, 0)
-      c.lineTo(U * 0.3, 0)
-      c.moveTo(U * 0.08, -U * 0.18)
-      c.lineTo(U * 0.3, 0)
-      c.lineTo(U * 0.08, U * 0.18)
-      c.stroke()
-      c.restore()
+    // rampa pasajului: drumul se intuneca spre intrarea pe sub bulevard (si peste masinile care intra)
+    function rampa(c: CanvasRenderingContext2D) {
+      const y0 = yTrot - U * 2.5
+      const g = c.createLinearGradient(0, y0, 0, yBul0)
+      g.addColorStop(0, 'rgba(2,4,10,0)')
+      g.addColorStop(1, 'rgba(2,4,10,.9)')
+      c.fillStyle = g
+      c.fillRect(drum0, y0, drumW, yBul0 - y0)
     }
 
     // acoperis de bloc vecin (doar sugerat): parapet, cateva aparate de aer conditionat
@@ -471,12 +464,6 @@ export function ParcareLogin({ taste }: { taste: number }) {
       for (let ax = x + U * 0.8; ax < x + w - U; ax += U * 3.1) {
         if (h > U * 0.9) c.fillRect(ax, y + h - U * 0.75, U * 0.5, U * 0.32)
       }
-      c.strokeStyle = 'rgba(148,163,184,.5)'
-      c.lineWidth = 2
-      c.beginPath()
-      c.moveTo(x, y + h)
-      c.lineTo(x + w, y + h)
-      c.stroke()
     }
 
     // platforma de beton unde se fumeaza: dale, scrumiera, o banca
@@ -748,8 +735,8 @@ export function ParcareLogin({ taste }: { taste: number }) {
         const r = 9 * s
         ctx!.save()
         ctx!.globalAlpha = o.alpha
-        ctx!.fillStyle = o.dispozitie === 1 ? '#ef4444' : '#22c55e'
-        ctx!.shadowColor = o.dispozitie === 1 ? 'rgba(239,68,68,.7)' : 'rgba(34,197,94,.7)'
+        ctx!.fillStyle = o.dispozitie === 1 ? '#60a5fa' : '#22c55e'
+        ctx!.shadowColor = o.dispozitie === 1 ? 'rgba(96,165,250,.7)' : 'rgba(34,197,94,.7)'
         ctx!.shadowBlur = 8
         ctx!.beginPath()
         ctx!.arc(bx, by, r, 0, Math.PI * 2)
@@ -765,10 +752,11 @@ export function ParcareLogin({ taste }: { taste: number }) {
         ctx!.fill()
         ctx!.beginPath()
         if (o.dispozitie === 1) {
-          ctx!.moveTo(bx - 5 * s, by - 5 * s)
-          ctx!.lineTo(bx - 1.5 * s, by - 3.5 * s)
-          ctx!.moveTo(bx + 5 * s, by - 5 * s)
-          ctx!.lineTo(bx + 1.5 * s, by - 3.5 * s)
+          // sprancene ridicate la mijloc (trist), gura in jos
+          ctx!.moveTo(bx - 5 * s, by - 3.5 * s)
+          ctx!.lineTo(bx - 1.5 * s, by - 5 * s)
+          ctx!.moveTo(bx + 5 * s, by - 3.5 * s)
+          ctx!.lineTo(bx + 1.5 * s, by - 5 * s)
           ctx!.moveTo(bx - 3.5 * s, by + 4.5 * s)
           ctx!.quadraticCurveTo(bx, by + 1.5 * s, bx + 3.5 * s, by + 4.5 * s)
         } else {
@@ -776,6 +764,13 @@ export function ParcareLogin({ taste }: { taste: number }) {
           ctx!.quadraticCurveTo(bx, by + 6 * s, bx + 4 * s, by + 1.5 * s)
         }
         ctx!.stroke()
+        if (o.dispozitie === 1) {
+          // o lacrima
+          ctx!.fillStyle = '#e0f2fe'
+          ctx!.beginPath()
+          ctx!.ellipse(bx - 3 * s, by + 1.5 * s, 0.9 * s, 1.5 * s, 0, 0, Math.PI * 2)
+          ctx!.fill()
+        }
         ctx!.restore()
       }
     }
@@ -922,7 +917,7 @@ export function ParcareLogin({ taste }: { taste: number }) {
     })
 
     // ---- trafic ----
-    const vehicule = () => [...trafic.map((t) => t.m), ...masini.filter((m) => m.vizibila && !m.loc)]
+    const vehicule = () => [...trafic.map((t) => t.m), ...masini.filter((m) => m.vizibila && !m.loc && !m.pasaj)]
     // banda e libera in jurul lui x0 (masinile vin din dreapta: „inapoi" = cat de departe in dreapta)
     function liber(banda: 0 | 1, x0: number, inainte: number, inapoi: number, fara?: Masina) {
       const y = benzi[banda]
@@ -963,7 +958,7 @@ export function ParcareLogin({ taste }: { taste: number }) {
     }
 
     // ---- drumuri ----
-    const R = () => U * 0.95 // raza de viraj in parcare
+    const R = () => U * 0.8 // raza de viraj in parcare
     const R2 = () => U * 0.8 // raza de viraj spre/din bulevard
     const yMarg = () => yBul0 - U * 0.55 // botul la marginea bulevardului
     const semnLoc = (l: Loc) => (l.y < yL2 ? -1 : 1)
@@ -1021,17 +1016,7 @@ export function ParcareLogin({ taste }: { taste: number }) {
 
     // ---- scenariile ----
     function alegeMasina(): Masina | null {
-      const ySus = yL2 - banda / 2 - lungLoc / 2
-      const yJos = yTrot - lungLoc / 2
-      const toate = masini.filter(
-        (m) =>
-          m.loc &&
-          m.vizibila &&
-          !m.ocupata &&
-          (Math.abs(m.loc.y - ySus) < 1 || Math.abs(m.loc.y - yJos) < 1) &&
-          m.loc.x > xA + U * 2.3 &&
-          m.loc.x < xRA - U * 0.6,
-      )
+      const toate = masini.filter((m) => m.loc?.poveste && m.vizibila && !m.ocupata && m.loc.x > xA + 2 * R() + U * 0.2)
       // de preferinta masini care nu stau sub formular (pe ecrane inguste nu se poate mereu)
       const vizibile = toate.filter((m) => !ascunsDeFormular(m.loc!.x, m.loc!.y))
       const bune = vizibile.length ? vizibile : toate
@@ -1372,26 +1357,29 @@ export function ParcareLogin({ taste }: { taste: number }) {
       actori.push(...(spreTigara ? prinTigara(m, K, inainte) : prinBirou(m, K, inainte)), plecare(m, chinuie), retur(l, m.culoare, coboaraClient(l), intre(1.5, 4)))
     }
 
-    // masini care coboara pe strada cu sens unic si intra in bulevard
+    // masini pe drumul din dreapta: coboara in pasajul de sub bulevard sau ies din el
     function stradaNoua() {
+      const jos = Math.random() < 0.6
+      const x = drum0 + drumW * (jos ? 0.27 : 0.73)
+      const y0 = jos ? -U : yBul0 + U
+      const y1 = jos ? yBul0 + U : -U
       const a: Actor = { t: 0, coada: [] }
       a.coada = [
         fa(() => {
-          const m = masinaNoua(xStr, -U, Math.PI / 2)
+          const m = masinaNoua(x, y0, jos ? Math.PI / 2 : -Math.PI / 2)
+          m.pasaj = true
           masini.push(m)
           a.m = m
         }),
         conduce(
           [
-            { x: xStr, y: -U },
-            { x: xStr, y: yMarg() },
+            { x, y: y0 },
+            { x, y: y1 },
           ],
-          U * 2.6,
-          'fran',
+          U * 3.5,
+          'lin',
         ),
-        cand(() => liber(0, xStr, U * 1.3, U * 6, a.m)),
-        conduce((p) => inBulevard(p), U * 1.8, 'acc'),
-        fa(() => laTrafic(a.m!)),
+        fa(() => (masini = masini.filter((q) => q !== a.m))),
       ]
       fundalActori.push(a)
     }
@@ -1413,8 +1401,8 @@ export function ParcareLogin({ taste }: { taste: number }) {
       fundalActori = fundalActori.filter((a) => a.coada.length)
       tStrada -= dt
       if (tStrada <= 0) {
-        if (!fundalActori.length) stradaNoua()
-        tStrada = intre(7, 14)
+        if (fundalActori.length < 3) stradaNoua()
+        tStrada = intre(2.5, 7)
       }
       actualizeazaTrafic(dt, acum)
       actualizeazaFum(dt, acum)
@@ -1436,7 +1424,15 @@ export function ParcareLogin({ taste }: { taste: number }) {
       ctx!.clearRect(0, 0, W, H)
       ctx!.drawImage(fundal, 0, 0, W, H)
       for (const m of masini) if (m.loc) deseneazaMasina(m, acum)
-      for (const m of masini) if (!m.loc) deseneazaMasina(m, acum)
+      // masinile din pasaj: taiate la marginea bulevardului si intunecate pe rampa
+      ctx!.save()
+      ctx!.beginPath()
+      ctx!.rect(0, 0, W, yBul0 - 2)
+      ctx!.clip()
+      for (const m of masini) if (m.pasaj) deseneazaMasina(m, acum)
+      ctx!.restore()
+      rampa(ctx!)
+      for (const m of masini) if (!m.loc && !m.pasaj) deseneazaMasina(m, acum)
       for (const c of trafic) deseneazaMasina(c.m, acum)
       for (const o of oameni) deseneazaOm(o, acum)
       deseneazaFum()

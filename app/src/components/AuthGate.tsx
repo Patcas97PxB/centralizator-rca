@@ -12,7 +12,7 @@ import { ParcareLogin } from '@/components/login/ParcareLogin'
 
 // Pagina de login: parcarea sediului Autonom vazuta de sus (ParcareLogin), dupa locul real — scenarii de
 // predare a masinilor de inlocuire, click pe masini = deblocare cu „bip-bip", fiecare tasta din parola face
-// o masina sa clipeasca. Formularul din sticla mata, in dreapta (pe telefon in centru). Fara poze/video.
+// o masina sa clipeasca. Formularul din sticla mata, compact, sus in dreapta (pe telefon in centru). Fara poze/video.
 
 const CHEIE_EMAIL = 'rca-ultim-email'
 function emailSalvat(): string {
@@ -77,24 +77,24 @@ export function AuthGate({ children }: { children: ReactNode }) {
   }
 
   const campCls =
-    'camp-glow h-11 rounded-xl border-white/15 bg-[#060c1c]/80 text-[15px] text-white placeholder:text-[#64748b] focus-visible:border-[#60a5fa] focus-visible:ring-0'
+    'camp-glow h-10 rounded-xl border-white/15 bg-[#060c1c]/80 text-[15px] text-white placeholder:text-[#64748b] focus-visible:border-[#60a5fa] focus-visible:ring-0'
 
   return (
     <div className="relative flex min-h-svh flex-col overflow-hidden bg-[#070b14]">
       <FundalLogin reduced={fara} />
       <ParcareLogin taste={taste} />
 
-      <main className="pointer-events-none relative z-10 flex flex-1 items-center justify-center px-4 py-10 md:justify-end md:pr-[max(3rem,6vw)]">
+      <main className="pointer-events-none relative z-10 flex flex-1 items-center justify-center px-4 py-10 md:items-start md:justify-end md:px-5 md:py-5">
         <form
           onSubmit={handleSubmit}
           noValidate
-          className="pointer-events-auto relative w-full max-w-[400px] overflow-hidden rounded-[22px] border border-white/12 bg-[#0a1226]/70 p-7 shadow-[0_30px_80px_-30px_#000] backdrop-blur-xl sm:p-8"
+          className="pointer-events-auto relative w-full max-w-[340px] overflow-hidden rounded-[20px] border border-white/12 bg-[#0a1226]/75 p-6 shadow-[0_30px_80px_-30px_#000] backdrop-blur-xl md:max-w-[300px] md:p-5"
         >
           <span aria-hidden="true" className="absolute inset-x-0 top-0 h-[3px] bg-gradient-to-r from-[#00A848] via-[#0060F0] to-[#6000C0]" />
-          <div className="mb-7 flex flex-col items-center gap-3 text-center">
-            <img src={assetUrl('/icons/logo.png')} alt="Centralizator RCA" className="h-14 w-auto drop-shadow-[0_6px_18px_rgba(0,96,240,.35)]" />
+          <div className="mb-5 flex flex-col items-center gap-2 text-center">
+            <img src={assetUrl('/icons/logo.png')} alt="Centralizator RCA" className="h-11 w-auto drop-shadow-[0_6px_18px_rgba(0,96,240,.35)]" />
             <div>
-              <h1 className="text-xl font-extrabold tracking-[-.01em] text-white">Bine ai revenit</h1>
+              <h1 className="text-lg font-extrabold tracking-[-.01em] text-white">Bine ai revenit</h1>
               <p className="mt-1 text-[13px] text-[#9fb3d9]">
                 {ESTE_DEMO ? 'Intră cu parola variantei de test.' : 'Intră cu contul tău Autonom.'}
               </p>
@@ -146,7 +146,7 @@ export function AuthGate({ children }: { children: ReactNode }) {
           <button
             type="submit"
             disabled={submitting}
-            className="btn-brand-gradient mt-2 flex h-11 w-full items-center justify-center gap-2 rounded-xl text-[15px] font-extrabold tracking-[.01em] disabled:cursor-wait disabled:opacity-80"
+            className="btn-brand-gradient mt-1 flex h-10 w-full items-center justify-center gap-2 rounded-xl text-[15px] font-extrabold tracking-[.01em] disabled:cursor-wait disabled:opacity-80"
           >
             {submitting && <Loader2 className="size-4 animate-spin" aria-hidden="true" />}
             {submitting ? 'Se verifică…' : 'Intră'}
