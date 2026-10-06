@@ -4,7 +4,8 @@ import { usePrefersReducedMotion } from '@/hooks/usePrefersReducedMotion'
 // Fundalul paginii de login: o retea de iconite-dosar (documentul din logo) care plutesc incet, unite
 // prin putine linii curgatoare in stilul decorului din meniul lateral (AppSidebar.tsx):
 // albastru in degrade, mov in degrade, verde punctat care curge, albastru punctat in sens invers.
-//  - legaturile sunt STABILE: fiecare dosar are 1-2 legaturi cu vecinii cei mai apropiati, care apar si
+//  - legaturile sunt STABILE: fiecare dosar are 2-4 legaturi cu vecini apropiati (lungimi, curburi si
+//    forme diferite — arc sau S), care apar si
 //    dispar lin (nu se recalculeaza toate perechile la fiecare cadru -> fara linii incalcite/palpaitoare);
 //  - mouse: dosarele din jur se dau foarte putin la o parte, cu amortizare (fara miscare de ansamblu),
 //    iar legaturile din jur se aprind usor;
@@ -17,8 +18,6 @@ export type StareRetea = 'liber' | 'email' | 'parola'
 type StilLegatura = 'albastru' | 'mov' | 'verde' | 'punctat'
 const STILURI: StilLegatura[] = ['albastru', 'mov', 'verde', 'punctat']
 
-const LEGATURA_MAX = 230 // peste distanta asta legatura se stinge
-const LEGATURA_NOUA = 190 // vecin acceptat pentru o legatura noua
 const RAZA_MOUSE = 140
 const IMPINGERE = 9 // px, maxim
 
@@ -33,13 +32,17 @@ interface Nod {
   z: number
   faza: number
   f: number // 0 = dosar, 1 = scut
+  maxLeg: number // cate legaturi poate avea (2-4), diferit de la dosar la dosar
+  raza: number // cat de departe isi cauta vecini (160-280 px)
 }
 
 interface Legatura {
   a: number
   b: number
   stil: StilLegatura
-  curb: number // curbura fixa (fractiune din lungime, cu semn)
+  c1: number // curbura la 1/3 din lungime (fractiune din lungime, cu semn)
+  c2: number // curbura la 2/3 — acelasi semn = arc, semn opus = forma de S
+  dMax: number // peste distanta asta legatura se stinge
   alpha: number
 }
 
@@ -112,29 +115,32 @@ export function ReteaDosare({ stare }: { stare: StareRetea }) {
     const grad = (i: number) => legaturi.reduce((s, l) => s + (l.a === i || l.b === i ? 1 : 0), 0)
     const legate = (i: number, j: number) => legaturi.some((l) => (l.a === i && l.b === j) || (l.a === j && l.b === i))
 
-    // Leaga nodurile cu putine legaturi de cel mai apropiat vecin liber (max 2 legaturi pe nod).
+    // Leaga fiecare dosar cu inca un vecin, ales la intamplare dintre cei mai apropiati 3 (nu mereu
+    // cel mai apropiat) -> lungimi diferite; curbura si forma (arc / S) diferite la fiecare legatura.
     function completeazaLegaturi(alphaInitial: number) {
       for (let i = 0; i < noduri.length; i++) {
-        if (grad(i) >= 1) continue
-        let best = -1
-        let bestD = LEGATURA_NOUA
+        const ni = noduri[i]
+        if (grad(i) >= ni.maxLeg) continue
+        const cand: [number, number][] = []
         for (let j = 0; j < noduri.length; j++) {
-          if (j === i || grad(j) >= 2 || legate(i, j)) continue
-          const d = dist(noduri[i], noduri[j])
-          if (d < bestD) {
-            bestD = d
-            best = j
-          }
+          if (j === i || grad(j) >= noduri[j].maxLeg || legate(i, j)) continue
+          const d = dist(ni, noduri[j])
+          if (d < ni.raza) cand.push([d, j])
         }
-        if (best >= 0) {
-          legaturi.push({
-            a: i,
-            b: best,
-            stil: STILURI[(i + best) % STILURI.length],
-            curb: (0.12 + Math.random() * 0.1) * (Math.random() < 0.5 ? -1 : 1),
-            alpha: alphaInitial,
-          })
-        }
+        if (!cand.length) continue
+        cand.sort((x, y) => x[0] - y[0])
+        const [d, j] = cand[Math.floor(Math.random() ** 1.6 * Math.min(3, cand.length))]
+        const m = (0.04 + Math.random() * 0.34) * (Math.random() < 0.5 ? -1 : 1)
+        const sForma = Math.random() < 0.35
+        legaturi.push({
+          a: i,
+          b: j,
+          stil: STILURI[Math.floor(Math.random() * STILURI.length)],
+          c1: m,
+          c2: sForma ? -m * (0.6 + Math.random() * 0.6) : m * (0.6 + Math.random() * 0.8),
+          dMax: d * 1.3 + 50,
+          alpha: alphaInitial,
+        })
       }
     }
 
@@ -161,11 +167,12 @@ export function ReteaDosare({ stare }: { stare: StareRetea }) {
           z,
           faza: Math.random() * Math.PI * 2,
           f: stareRef.current === 'parola' ? 1 : 0,
+          maxLeg: 2 + Math.floor(Math.random() * 3),
+          raza: 160 + Math.random() * 120,
         }
       })
       legaturi = []
-      completeazaLegaturi(1)
-      completeazaLegaturi(1) // a doua trecere: unele noduri primesc a doua legatura
+      for (let k = 0; k < 4; k++) completeazaLegaturi(1) // mai multe treceri -> 2-4 legaturi pe dosar
       pulsuri.length = 0
     }
 
@@ -215,10 +222,10 @@ export function ReteaDosare({ stare }: { stare: StareRetea }) {
       // legaturile se sting lin cand nodurile se departeaza; din cand in cand apar altele noi
       for (const l of legaturi) {
         const d = dist(noduri[l.a], noduri[l.b])
-        const tinta = d < LEGATURA_MAX - 40 ? 1 : Math.max(0, 1 - (d - (LEGATURA_MAX - 40)) / 40)
+        const tinta = d < l.dMax - 40 ? 1 : Math.max(0, 1 - (d - (l.dMax - 40)) / 40)
         l.alpha += (tinta - l.alpha) * Math.min(1, dt * 1.5)
       }
-      legaturi = legaturi.filter((l) => l.alpha > 0.01 || dist(noduri[l.a], noduri[l.b]) < LEGATURA_MAX)
+      legaturi = legaturi.filter((l) => l.alpha > 0.01 || dist(noduri[l.a], noduri[l.b]) < l.dMax)
       if (acum - ultimeLegaturi > 1500) {
         ultimeLegaturi = acum
         completeazaLegaturi(0)
@@ -264,12 +271,19 @@ export function ReteaDosare({ stare }: { stare: StareRetea }) {
       return null
     }
 
+    // Curba cubica: doua puncte de control la 1/3 si 2/3, deplasate perpendicular (arc sau S).
     function control(l: Legatura) {
       const [x1, y1] = poz(noduri[l.a])
       const [x2, y2] = poz(noduri[l.b])
-      const d = Math.hypot(x2 - x1, y2 - y1) || 1
-      const k = l.curb * d
-      return [x1, y1, x2, y2, (x1 + x2) / 2 - ((y2 - y1) / d) * k, (y1 + y2) / 2 + ((x2 - x1) / d) * k] as const
+      const dx = x2 - x1
+      const dy = y2 - y1
+      const nx = -dy
+      const ny = dx
+      return [
+        x1, y1, x2, y2,
+        x1 + dx / 3 + nx * l.c1, y1 + dy / 3 + ny * l.c1,
+        x1 + (2 * dx) / 3 + nx * l.c2, y1 + (2 * dy) / 3 + ny * l.c2,
+      ] as const
     }
 
     function deseneaza(acum: number) {
@@ -278,7 +292,7 @@ export function ReteaDosare({ stare }: { stare: StareRetea }) {
       // legaturi, in stilul liniilor din meniul lateral
       for (const l of legaturi) {
         if (l.alpha < 0.01) continue
-        const [x1, y1, x2, y2, cx, cy] = control(l)
+        const [x1, y1, x2, y2, ax, ay, bx, by] = control(l)
         let a = l.alpha * Math.min(noduri[l.a].z, noduri[l.b].z)
         if (mouse.activ) {
           const dm = Math.hypot((x1 + x2) / 2 - mouse.x, (y1 + y2) / 2 - mouse.y)
@@ -308,16 +322,17 @@ export function ReteaDosare({ stare }: { stare: StareRetea }) {
         }
         ctx!.beginPath()
         ctx!.moveTo(x1, y1)
-        ctx!.quadraticCurveTo(cx, cy, x2, y2)
+        ctx!.bezierCurveTo(ax, ay, bx, by, x2, y2)
         ctx!.stroke()
       }
       ctx!.setLineDash([])
       // pulsuri
       for (const p of pulsuri) {
-        const [x1, y1, x2, y2, cx, cy] = control(p.l)
+        const [x1, y1, x2, y2, ax, ay, bx, by] = control(p.l)
         const t = p.dir === 1 ? p.t : 1 - p.t
-        const x = (1 - t) * (1 - t) * x1 + 2 * (1 - t) * t * cx + t * t * x2
-        const y = (1 - t) * (1 - t) * y1 + 2 * (1 - t) * t * cy + t * t * y2
+        const u = 1 - t
+        const x = u * u * u * x1 + 3 * u * u * t * ax + 3 * u * t * t * bx + t * t * t * x2
+        const y = u * u * u * y1 + 3 * u * u * t * ay + 3 * u * t * t * by + t * t * t * y2
         const g = ctx!.createRadialGradient(x, y, 0, x, y, 8)
         g.addColorStop(0, 'rgba(219,234,254,.95)')
         g.addColorStop(0.35, 'rgba(96,165,250,.55)')
