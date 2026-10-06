@@ -58,6 +58,8 @@ interface Om {
   ocupat?: boolean // condus de un scenariu (nu sta la tigara)
   spot?: number // locul de pe platforma de fumat
   fata?: boolean // colegele care ies uneori la tigara
+  panaLa?: number // cand intra inapoi de la tigara
+  rezervat?: boolean // asteptat de un scenariu (nu intra inca)
   par?: string
 }
 
@@ -222,6 +224,7 @@ export function ParcareLogin({ taste }: { taste: number }) {
     let aglomeratPana = 0
     let tSpawn = 1
     let tStrada = 4
+    let tFumat = 6 // cand mai iese cineva la tigara
     let pauzaScena = 1.2
     let ultimScenariu = ''
     const mouse = { x: -999, y: -999 }
@@ -330,6 +333,7 @@ export function ParcareLogin({ taste }: { taste: number }) {
         o.tigara = true
         o.pufStart = performance.now() + Math.random() * 3000
         o.spot = i
+        o.panaLa = performance.now() + intre(4000, 20000)
         fumatori.push(o)
       }
       oameni = [...fumatori]
@@ -1100,7 +1104,7 @@ export function ParcareLogin({ taste }: { taste: number }) {
       fumatori.push(o)
       oameni.push(o)
       const p = locFumat(o.spot)
-      actori.push({
+      fundalActori.push({
         om: o,
         t: 0,
         coada: [
@@ -1111,13 +1115,15 @@ export function ParcareLogin({ taste }: { taste: number }) {
           fa(() => {
             o.tigara = true
             o.ocupat = false
+            // cat stau: baietii ~15–28 s, fetele cel mai putin (~7–12 s)
+            o.panaLa = acumCurent + (o.fata ? intre(7000, 12000) : intre(15000, 28000))
           }),
         ],
       })
     }
     function pleacaDeLaTigara(o: Om, intarziere: number) {
       fumatori = fumatori.filter((x) => x !== o)
-      actori.push({
+      fundalActori.push({
         om: o,
         t: 0,
         coada: [
@@ -1132,26 +1138,34 @@ export function ParcareLogin({ taste }: { taste: number }) {
         ],
       })
     }
-    // baieti = cati colegi; fete = ies si cele doua colege (una bruneta, una satena spre roscat)
-    function ajusteazaFumatori(baieti: number, fete: boolean) {
-      const f = fumatori.filter((o) => o.fata)
-      if (!fete) f.forEach((o, i) => pleacaDeLaTigara(o, intre(0.5, 2) + i * 0.4))
-      else if (!f.length) {
-        const t = intre(0, 2)
-        ;['#2a1a12', '#8f3f1f'].forEach((par, i) => {
-          const o = omNou('#f8fafc', true)
-          o.fata = true
-          o.par = par
-          vineLaTigara(o, t + i * 0.45)
-        })
+    // din cand in cand mai iese cineva la tigara (1–2 colegi; rar si cele doua colege, doar cand sunt baieti afara);
+    // cine si-a terminat tigara intra inapoi (fetele pleaca impreuna)
+    function actualizeazaFumatori(dt: number, acum: number) {
+      tFumat -= dt
+      if (tFumat <= 0) {
+        tFumat = intre(9, 20)
+        const b = fumatori.filter((o) => !o.fata).length
+        const f = fumatori.some((o) => o.fata)
+        const max = f ? 2 : 4
+        if (!f && b >= 1 && b <= 2 && Math.random() < 0.2)
+          ['#2a1a12', '#8f3f1f'].forEach((par, i) => {
+            const o = omNou('#f8fafc', true)
+            o.fata = true
+            o.par = par
+            vineLaTigara(o, i * 0.45)
+          })
+        else if (b < max && Math.random() < 0.75) {
+          const n = Math.min(Math.random() < 0.65 ? 1 : 2, max - b)
+          for (let i = 0; i < n; i++) vineLaTigara(omNou('#f8fafc', true), i * 0.6)
+        }
       }
-      const max = fete ? 2 : 4
-      let b = fumatori.filter((o) => !o.fata)
-      while (b.length > Math.min(baieti, max)) {
-        pleacaDeLaTigara(b[b.length - 1], intre(0.5, 3))
-        b = b.slice(0, -1)
+      for (const o of [...fumatori]) {
+        if (o.ocupat || o.rezervat || !o.panaLa || acum < o.panaLa || !fumatori.includes(o)) continue
+        if (o.fata) {
+          const fete = fumatori.filter((x) => x.fata)
+          if (fete.every((x) => !x.ocupat)) fete.forEach((x, i) => pleacaDeLaTigara(x, i * 0.4))
+        } else pleacaDeLaTigara(o, 0)
       }
-      for (let i = b.length; i < Math.min(baieti, max); i++) vineLaTigara(omNou('#f8fafc', true), intre(0, 2.5))
     }
 
     // masina iese din loc (cu spatele sau, daca e parcata cu spatele, cu botul inainte), merge la bulevard
@@ -1214,7 +1228,7 @@ export function ParcareLogin({ taste }: { taste: number }) {
           m.x = l.x
           m.y = l.y
           m.h = l.h
-          for (const x of coboara(m)) actori.push(x)
+          for (const x of coboara(m)) fundalActori.push(x)
         }),
         pana('coborat'),
         stai(1.6),
@@ -1347,6 +1361,8 @@ export function ParcareLogin({ taste }: { taste: number }) {
           ? [
               fa(() => {
                 E.tigara = true
+                E.rezervat = false
+                E.panaLa = acumCurent + intre(5000, 12000)
                 E.ocupat = false
               }),
             ]
@@ -1371,7 +1387,7 @@ export function ParcareLogin({ taste }: { taste: number }) {
       const l = m.loc!
       const E = omNou('#f8fafc', true)
       oameni.push(E)
-      const t = intre(2.5, 4)
+      const t = intre(1.5, 2.5)
       const { pasiE, pasiK } = laMasinaPasi(m, E, K, false, [usaAfara(), usaIn()], false)
       return [
         {
@@ -1386,7 +1402,12 @@ export function ParcareLogin({ taste }: { taste: number }) {
     // clientul se opreste la colegii de la tigara; unul dintre ei ii da cheia si il duce la masina
     function prinTigara(m: Masina, K: Om, inainte: Pas[]): Actor[] {
       const l = m.loc!
-      const E = fumatori.find((o) => !o.fata)!
+      let E = fumatori.find((o) => !o.fata && !o.rezervat)
+      if (!E) {
+        E = omNou('#f8fafc', true)
+        vineLaTigara(E, 0) // iese cineva la tigara chiar atunci
+      }
+      E.rezervat = true
       const sub = subPlatforma()
       const { pasiE, pasiK } = laMasinaPasi(m, E, K, true, [sub, pePlatforma(), locFumat(E.spot ?? 0)], true)
       return [
@@ -1420,19 +1441,29 @@ export function ParcareLogin({ taste }: { taste: number }) {
       semnale = new Set()
       actori = []
       cheie = null
-      oameni = oameni.filter((o) => fumatori.includes(o))
-      const toate = ['stanga', 'dreapta', 'taxi', 'livrare', 'tigara', 'zi']
-      let sc = unul(toate.filter((s) => s !== ultimScenariu))
+      oameni = oameni.filter((o) => fumatori.includes(o) || fundalActori.some((a) => a.om === o))
+      // clientii vin des: scenariile cu clienti au ponderea cea mai mare
+      const ponderi: [string, number][] = [
+        ['stanga', 3],
+        ['dreapta', 3],
+        ['taxi', 2],
+        ['tigara', 2],
+        ['livrare', 1],
+        ['zi', 0.5],
+      ]
+      const posibile = ponderi.filter(([n]) => n !== ultimScenariu)
+      let alege = Math.random() * posibile.reduce((x, [, w]) => x + w, 0)
+      let sc = posibile[0][0]
+      for (const [n, w] of posibile) {
+        alege -= w
+        if (alege <= 0) {
+          sc = n
+          break
+        }
+      }
       const m = sc === 'zi' ? null : alegeMasina()
       if (!m) sc = 'zi'
       ultimScenariu = sc
-      // la tigara: uneori nimeni (au intrat toti), de obicei 1–2 colegi, uneori 3–4; din cand in cand ies si
-      // cele doua colege si stau cu baietii
-      const r = Math.random()
-      let nb = r < 0.25 ? 0 : r < 0.72 ? 1 + Math.floor(Math.random() * 2) : 3 + Math.floor(Math.random() * 2)
-      const fete = fumatori.some((o) => o.fata) ? Math.random() < 0.55 : Math.random() < 0.3
-      if (fete || sc === 'tigara') nb = Math.max(1, nb)
-      ajusteazaFumatori(nb, fete)
       if (!m) {
         // zi obisnuita; daca a ramas un loc gol (o masina a ramas la client), se intoarce una in locul ei
         const gol = locuri.filter((l) => l.poveste && !masini.some((q) => q.loc === l) && l.x > xA + 2 * R() + U * 0.2)
@@ -1481,7 +1512,7 @@ export function ParcareLogin({ taste }: { taste: number }) {
       let dupa: string | undefined
       if (sc === 'taxi') {
         // vine cu taxiul, care intra pana in parcare; apoi clientul merge in birou sau la cei de la tigara
-        spreTigara = fumatori.some((o) => !o.fata) && Math.random() < 0.5
+        spreTigara = fumatori.some((o) => !o.fata && !o.rezervat) && Math.random() < 0.5
         dupa = 'taxiPlecat'
         actori.push(taxi())
         inainte = [
@@ -1498,7 +1529,7 @@ export function ParcareLogin({ taste }: { taste: number }) {
       actori.push(
         ...(spreTigara ? prinTigara(m, K, inainte) : prinBirou(m, K, inainte)),
         plecare(m, Math.random() < 0.4, { dupa }),
-        retur(l, m.culoare, coboaraClient(l), intre(1.5, 4)),
+        retur(l, m.culoare, coboaraClient(l), intre(1, 2.5)),
       )
     }
 
@@ -1538,7 +1569,7 @@ export function ParcareLogin({ taste }: { taste: number }) {
         pauzaScena -= dt
         if (pauzaScena <= 0) {
           scenariuNou()
-          pauzaScena = intre(1, 2.5)
+          pauzaScena = intre(0.3, 1)
         }
       }
       for (const a of actori) ruleaza(a, dt)
@@ -1546,11 +1577,12 @@ export function ParcareLogin({ taste }: { taste: number }) {
       fundalActori = fundalActori.filter((a) => a.coada.length)
       tStrada -= dt
       if (tStrada <= 0) {
-        if (fundalActori.length < 3) stradaNoua()
+        if (fundalActori.filter((a) => a.m?.pasaj).length < 3) stradaNoua()
         tStrada = intre(2.5, 7)
       }
       actualizeazaTrafic(dt, acum)
       actualizeazaFum(dt, acum)
+      actualizeazaFumatori(dt, acum)
       const cx = plat.x + plat.w / 2
       const cy = plat.y + plat.h / 2
       for (const o of fumatori) if (!o.ocupat && o.vizibil) o.h = Math.atan2(cy - o.y, cx - o.x)
