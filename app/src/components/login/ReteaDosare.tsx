@@ -11,7 +11,9 @@ import { usePrefersReducedMotion } from '@/hooks/usePrefersReducedMotion'
 //    iar legaturile din jur se aprind usor;
 //  - 'email': pulsuri de lumina curg pe legaturi spre formular (centrul ecranului);
 //  - 'parola': dosarele se intorc si devin scuturi (ca in logo), reteaua incetineste si capata tenta mov.
-// Cu animatiile oprite (reduced motion) se deseneaza un singur cadru static.
+//  - vortex (la intrare reusita): toate dosarele si legaturile sunt absorbite intr-o spirala tot mai
+//    rapida in butonul „Intra" (ideea de centralizare), ca un fast-forward; apoi onVortexGata.
+// Cu animatiile oprite (reduced motion) se deseneaza un singur cadru static (si nu exista vortex).
 
 export type StareRetea = 'liber' | 'email' | 'parola'
 
@@ -32,6 +34,9 @@ interface Nod {
   z: number
   faza: number
   f: number // 0 = dosar, 1 = scut
+  vr: number // vortex: distanta si unghiul de pornire fata de buton, rotatia proprie
+  va: number
+  vrot: number
   maxLeg: number // cate legaturi poate avea (2-4), diferit de la dosar la dosar
   raza: number // cat de departe isi cauta vecini (160-280 px)
 }
@@ -74,16 +79,34 @@ const C_MOV = [178, 107, 255]
 const C_VERDE = [0, 245, 160]
 const C_PUNCTAT = [96, 165, 250]
 
-export function ReteaDosare({ stare }: { stare: StareRetea }) {
+const DURATA_VORTEX = 1100 // ms
+const FLASH_VORTEX = 160 // ms dupa ce totul a intrat in buton
+
+export function ReteaDosare({
+  stare,
+  vortex = null,
+  onVortexGata,
+}: {
+  stare: StareRetea
+  /** Punctul (centrul butonului „Intra") in care e absorbita reteaua; null = fara vortex. */
+  vortex?: { x: number; y: number } | null
+  onVortexGata?: () => void
+}) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const fara = usePrefersReducedMotion()
   const stareRef = useRef(stare)
+  const vortexRef = useRef(vortex)
+  const onGataRef = useRef(onVortexGata)
   const desenStaticRef = useRef<(() => void) | null>(null)
 
   useEffect(() => {
     stareRef.current = stare
     desenStaticRef.current?.()
   }, [stare])
+  useEffect(() => {
+    vortexRef.current = vortex
+    onGataRef.current = onVortexGata
+  }, [vortex, onVortexGata])
 
   useEffect(() => {
     const canvas = canvasRef.current
@@ -105,8 +128,21 @@ export function ReteaDosare({ stare }: { stare: StareRetea }) {
     let raf = 0
     let schimbareStare = performance.now()
     let stareAnterioara = stareRef.current
+    let acumCurent = performance.now()
+    let vStart = 0 // momentul pornirii vortexului (0 = nu ruleaza)
+    let vGata = false
+    let timpLinii = 0 // timpul liniilor punctate (accelereaza in vortex = fast-forward)
 
-    const poz = (n: Nod) => [n.x + n.ox, n.y + n.oy] as const
+    const pozNormala = (n: Nod) => [n.x + n.ox, n.y + n.oy] as const
+    // progresul vortexului, accelerat (absorbtie): 0 -> 1
+    const progresVortex = () => (vStart ? Math.min(1, (acumCurent - vStart) / DURATA_VORTEX) ** 2.1 : 0)
+    const poz = (n: Nod) => {
+      if (!vStart || !vortexRef.current) return pozNormala(n)
+      const e = progresVortex()
+      const r = n.vr * (1 - e)
+      const ung = n.va + e * n.vrot
+      return [vortexRef.current.x + Math.cos(ung) * r, vortexRef.current.y + Math.sin(ung) * r] as const
+    }
     const dist = (a: Nod, b: Nod) => {
       const [x1, y1] = poz(a)
       const [x2, y2] = poz(b)
@@ -167,8 +203,11 @@ export function ReteaDosare({ stare }: { stare: StareRetea }) {
           z,
           faza: Math.random() * Math.PI * 2,
           f: stareRef.current === 'parola' ? 1 : 0,
-          maxLeg: 2 + Math.floor(Math.random() * 3),
-          raza: 160 + Math.random() * 120,
+          vr: 0,
+          va: 0,
+          vrot: 0,
+          maxLeg: Math.random() < 0.25 ? 5 + Math.floor(Math.random() * 2) : 2 + Math.floor(Math.random() * 3),
+          raza: 170 + Math.random() * 130,
         }
       })
       legaturi = []
@@ -178,6 +217,28 @@ export function ReteaDosare({ stare }: { stare: StareRetea }) {
 
     function actualizeaza(dt: number, acum: number) {
       const st = stareRef.current
+      const vt = vortexRef.current
+      if (vt && !vStart) {
+        // pornire: fiecare dosar isi retine pozitia fata de buton si primeste o rotatie proprie
+        vStart = acum
+        pulsuri.length = 0
+        for (const n of noduri) {
+          const [x, y] = pozNormala(n)
+          n.vr = Math.hypot(x - vt.x, y - vt.y)
+          n.va = Math.atan2(y - vt.y, x - vt.x)
+          n.vrot = (2.2 + Math.random() * 1.4) * Math.PI
+        }
+      }
+      if (vStart) {
+        const e = progresVortex()
+        timpLinii += dt * (1 + 9 * e)
+        if (!vGata && acum - vStart > DURATA_VORTEX + FLASH_VORTEX) {
+          vGata = true
+          onGataRef.current?.()
+        }
+        return
+      }
+      timpLinii += dt
       // tranzitii line intre stari (~0,6 s)
       viteza += ((st === 'parola' ? 0.35 : 1) - viteza) * Math.min(1, dt * 3)
       tenta += ((st === 'parola' ? 1 : 0) - tenta) * Math.min(1, dt * 3)
@@ -287,13 +348,17 @@ export function ReteaDosare({ stare }: { stare: StareRetea }) {
     }
 
     function deseneaza(acum: number) {
+      acumCurent = acum
       ctx!.clearRect(0, 0, W, H)
+      const ev = progresVortex()
+      // in ultimul sfert al vortexului totul se stinge in lumina butonului
+      const stingereVortex = 1 - Math.max(0, (ev - 0.75) / 0.25)
       ctx!.lineCap = 'round'
       // legaturi, in stilul liniilor din meniul lateral
       for (const l of legaturi) {
         if (l.alpha < 0.01) continue
         const [x1, y1, x2, y2, ax, ay, bx, by] = control(l)
-        let a = l.alpha * Math.min(noduri[l.a].z, noduri[l.b].z)
+        let a = l.alpha * Math.min(noduri[l.a].z, noduri[l.b].z) * stingereVortex
         if (mouse.activ) {
           const dm = Math.hypot((x1 + x2) / 2 - mouse.x, (y1 + y2) / 2 - mouse.y)
           if (dm < 200) a = Math.min(1, a * (1 + (1 - dm / 200) * 0.9))
@@ -313,12 +378,12 @@ export function ReteaDosare({ stare }: { stare: StareRetea }) {
           ctx!.strokeStyle = rgba(amesteca(C_VERDE, C_MOV, tenta * 0.5), 0.5 * a)
           ctx!.lineWidth = 1.2
           ctx!.setLineDash([4, 8])
-          ctx!.lineDashOffset = -((acum / 3000) * 48) % 48 // ca dashFlow 3s
+          ctx!.lineDashOffset = -((timpLinii / 3) * 48) % 48 // ca dashFlow 3s
         } else {
           ctx!.strokeStyle = rgba(amesteca(C_PUNCTAT, C_MOV, tenta * 0.6), 0.45 * a)
           ctx!.lineWidth = 1
           ctx!.setLineDash([2, 10])
-          ctx!.lineDashOffset = ((acum / 4500) * 48) % 48 // invers, 4,5s
+          ctx!.lineDashOffset = ((timpLinii / 4.5) * 48) % 48 // invers, 4,5s
         }
         ctx!.beginPath()
         ctx!.moveTo(x1, y1)
@@ -346,13 +411,13 @@ export function ReteaDosare({ stare }: { stare: StareRetea }) {
       for (const n of noduri) {
         const [x, y] = poz(n)
         const scaleX = Math.max(0.04, Math.abs(Math.cos(n.f * Math.PI)))
-        const s = n.s
+        const s = n.s * (0.3 + 0.7 * (1 - ev))
         ctx!.save()
         ctx!.translate(x, y)
         ctx!.scale(s * scaleX, s)
         ctx!.lineWidth = 1.5 / s
         ctx!.lineJoin = 'round'
-        const a = 0.35 + n.z * 0.5
+        const a = (0.35 + n.z * 0.5) * stingereVortex
         if (n.f > 0.5) {
           ctx!.save()
           ctx!.clip(SCUT)
@@ -384,11 +449,26 @@ export function ReteaDosare({ stare }: { stare: StareRetea }) {
         ctx!.fillStyle = `rgba(96,0,192,${0.1 * tenta})`
         ctx!.fillRect(0, 0, W, H)
       }
+      const vt = vortexRef.current
+      if (vStart && vt) {
+        const flash = Math.max(0, Math.min(1, (acumCurent - vStart - DURATA_VORTEX) / FLASH_VORTEX))
+        const raza = 30 + 160 * ev + 220 * flash
+        const g = ctx!.createRadialGradient(vt.x, vt.y, 0, vt.x, vt.y, raza)
+        g.addColorStop(0, `rgba(219,234,254,${0.75 * ev})`)
+        g.addColorStop(0.3, `rgba(61,139,255,${0.45 * ev})`)
+        g.addColorStop(0.7, `rgba(124,58,237,${0.25 * ev})`)
+        g.addColorStop(1, 'rgba(124,58,237,0)')
+        ctx!.fillStyle = g
+        ctx!.beginPath()
+        ctx!.arc(vt.x, vt.y, raza, 0, Math.PI * 2)
+        ctx!.fill()
+      }
     }
 
     function cadru(acum: number) {
       const dt = Math.min(0.05, (acum - ultim) / 1000)
       ultim = acum
+      acumCurent = acum
       if (stareRef.current !== stareAnterioara) {
         stareAnterioara = stareRef.current
         schimbareStare = acum

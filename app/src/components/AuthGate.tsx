@@ -1,4 +1,4 @@
-import { type FormEvent, type ReactNode, useState } from 'react'
+import { type FormEvent, type ReactNode, useRef, useState } from 'react'
 import { Loader2 } from 'lucide-react'
 import { useAuth } from '@/hooks/useAuth'
 import { usePrefersReducedMotion } from '@/hooks/usePrefersReducedMotion'
@@ -13,7 +13,8 @@ import { ReteaDosare, type StareRetea } from '@/components/login/ReteaDosare'
 // Pagina de login: fundalul din meniul lateral (valuri, puncte, stele) pe tot ecranul, peste el o
 // retea de dosare care reactioneaza la mouse si la formular (la Email pulsuri spre formular, la
 // Parola dosarele devin scuturi). Formularul din sticla mata, in centru. Fara poze/video (decizia
-// utilizatorului).
+// utilizatorului). La intrare reusita: vortex — reteaua e absorbita in butonul „Intra", formularul se
+// stinge, abia apoi apare aplicatia (fara vortex cand animatiile sunt oprite).
 
 const CHEIE_EMAIL = 'rca-ultim-email'
 function emailSalvat(): string {
@@ -32,12 +33,16 @@ export function AuthGate({ children }: { children: ReactNode }) {
   const [error, setError] = useState('')
   const [submitting, setSubmitting] = useState(false)
   const [stare, setStare] = useState<StareRetea>('liber')
+  // intrare = logarea e in curs / vortexul ruleaza: aplicatia apare abia dupa ce se termina vortexul
+  const [intrare, setIntrare] = useState(false)
+  const [vortex, setVortex] = useState<{ x: number; y: number } | null>(null)
+  const butonRef = useRef<HTMLButtonElement>(null)
 
   if (isLoading) {
     return <div className="flex min-h-svh items-center justify-center bg-background" />
   }
 
-  if (isAuthenticated) return <>{children}</>
+  if (isAuthenticated && !intrare) return <>{children}</>
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault()
@@ -51,19 +56,26 @@ export function AuthGate({ children }: { children: ReactNode }) {
     }
     setSubmitting(true)
     setError('')
+    if (!fara) setIntrare(true)
     const msg = await login(email, password)
     setSubmitting(false)
+    if (msg) setIntrare(false)
     if (msg === 'domeniu') {
       setError(`Accesul e permis doar cu adresa de email ${DOMENIU_PERMIS}.`)
     } else if (msg) {
       setError(ESTE_DEMO ? 'Parolă greșită.' : 'Email sau parolă greșită.')
       setPassword('')
-    } else if (!ESTE_DEMO) {
-      try {
-        localStorage.setItem(CHEIE_EMAIL, email.trim().toLowerCase())
-      } catch {
-        /* fara localStorage: emailul nu se mai precompleteaza */
+    } else {
+      if (!ESTE_DEMO) {
+        try {
+          localStorage.setItem(CHEIE_EMAIL, email.trim().toLowerCase())
+        } catch {
+          /* fara localStorage: emailul nu se mai precompleteaza */
+        }
       }
+      const r = butonRef.current?.getBoundingClientRect()
+      if (!fara && r) setVortex({ x: r.left + r.width / 2, y: r.top + r.height / 2 })
+      else setIntrare(false)
     }
   }
 
@@ -73,13 +85,16 @@ export function AuthGate({ children }: { children: ReactNode }) {
   return (
     <div className="relative flex min-h-svh flex-col overflow-hidden bg-[#070b14]">
       <FundalLogin reduced={fara} />
-      <ReteaDosare stare={stare} />
+      <ReteaDosare stare={stare} vortex={vortex} onVortexGata={() => setIntrare(false)} />
 
       <main className="relative z-10 flex flex-1 items-center justify-center px-4 py-10">
         <form
           onSubmit={handleSubmit}
           noValidate
-          className="relative w-full max-w-[400px] overflow-hidden rounded-[22px] border border-white/12 bg-[#0a1226]/60 p-7 shadow-[0_30px_80px_-30px_#000] backdrop-blur-xl sm:p-8"
+          className={
+            'relative w-full max-w-[400px] overflow-hidden rounded-[22px] border border-white/12 bg-[#0a1226]/60 p-7 shadow-[0_30px_80px_-30px_#000] backdrop-blur-xl transition-[opacity,transform] duration-300 ease-[cubic-bezier(0.23,1,0.32,1)] sm:p-8' +
+            (vortex ? ' scale-[.97] opacity-0 delay-[850ms]' : '')
+          }
         >
           <span aria-hidden="true" className="absolute inset-x-0 top-0 h-[3px] bg-gradient-to-r from-[#00A848] via-[#0060F0] to-[#6000C0]" />
           <div className="mb-7 flex flex-col items-center gap-3 text-center">
@@ -136,8 +151,9 @@ export function AuthGate({ children }: { children: ReactNode }) {
             {error}
           </p>
           <button
+            ref={butonRef}
             type="submit"
-            disabled={submitting}
+            disabled={submitting || !!vortex}
             className="btn-brand-gradient mt-2 flex h-11 w-full items-center justify-center gap-2 rounded-xl text-[15px] font-extrabold tracking-[.01em] disabled:cursor-wait disabled:opacity-80"
           >
             {submitting && <Loader2 className="size-4 animate-spin" aria-hidden="true" />}
