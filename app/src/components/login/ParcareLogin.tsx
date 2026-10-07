@@ -42,6 +42,7 @@ interface Masina {
   pasaj?: boolean // pe drumul din dreapta (coboara / urca din pasajul de sub bulevard)
   laIntrare?: boolean // asteapta pe bulevard sa intre in parcare (nu incurca masina care iese)
   cedeaza?: boolean // sta pe loc ca sa treaca un om (omul nu o mai asteapta)
+  semnal?: boolean // semnalizare dreapta (intra in parcare / iese in bulevard)
   loc?: Loc | null // locul in care e parcata (null = in miscare)
   ocupata?: boolean // folosita intr-un scenariu
 }
@@ -300,7 +301,7 @@ export function ParcareLogin({ taste }: { taste: number }) {
     })
 
     function construieste() {
-      dpr = Math.min(2, window.devicePixelRatio || 1)
+      dpr = Math.min(2.5, window.devicePixelRatio || 1)
       W = window.innerWidth
       H = window.innerHeight
       for (const c of [canvas!, fundal]) {
@@ -326,7 +327,7 @@ export function ParcareLogin({ taste }: { taste: number }) {
       const oy = Math.max(copaciH * 0.4, yTrot - U * 6.5)
       sediu = { x: 0, y: oy, w: sw, h: yTrot - oy, usaX: sw * 0.8 }
       plat = { x: lot.x + lot.w * 0.005, y: lot.y + lot.h * 0.75, w: lot.w * 0.12, h: lot.h * 0.23 }
-      xA = lot.x + lot.w * 0.205
+      xA = lot.x + lot.w * 0.225
       yL2 = lot.y + lot.h * 0.66
       yUp = lot.y + lot.h * 0.25
       xRA = lot.x + lot.w * 0.72
@@ -507,12 +508,12 @@ export function ParcareLogin({ taste }: { taste: number }) {
       c.lineWidth = 2
       c.beginPath()
       c.moveTo(0, yBul0)
-      c.lineTo(xA - U * 0.6, yBul0)
-      c.moveTo(xA + U * 0.6, yBul0)
+      c.lineTo(xA - U * 0.9, yBul0)
+      c.moveTo(xA + U * 0.9, yBul0)
       c.lineTo(W, yBul0)
       c.stroke()
       c.fillStyle = 'rgba(30,38,58,.7)'
-      c.fillRect(xA - U * 0.6, yTrot, U * 1.2, trotH)
+      c.fillRect(xA - U * 0.9, yTrot, U * 1.8, trotH)
       deseneazaPlatforma(c)
       deseneazaSediu(c)
     }
@@ -660,7 +661,7 @@ export function ParcareLogin({ taste }: { taste: number }) {
       c.fillRect(usaX - U * 0.16, y + h - 3, U * 0.32, 4)
     }
 
-    // ---- desen masina, vazuta de sus (roti, caroserie cu volum, geamuri, oglinzi, faruri, numere) ----
+    // ---- desen masina, vazuta de sus: caroserie cu bot rotunjit, bari, roti, geamuri cu reflexii, faruri, semnalizare ----
     function deseneazaMasina(m: Masina, acum: number) {
       if (!m.vizibila) return
       const L = U
@@ -693,130 +694,188 @@ export function ParcareLogin({ taste }: { taste: number }) {
       c.save()
       c.translate(m.x, m.y)
       c.rotate(m.h)
-      // umbra
-      c.fillStyle = 'rgba(0,0,0,.38)'
+      const raze: [number, number, number, number] = [w * 0.3, w * 0.44, w * 0.44, w * 0.3] // spate stanga, fata stanga, fata dreapta, spate dreapta
+      // umbra moale
+      c.fillStyle = 'rgba(0,0,0,.22)'
       c.beginPath()
-      c.roundRect(-L / 2 + 2, -w / 2 + 3, L, w, w * 0.32)
+      c.roundRect(-L / 2 + 1, -w / 2 + 1, L + 3, w + 4, raze)
       c.fill()
-      // roti (se vad putin pe langa caroserie)
-      c.fillStyle = '#0b0f19'
+      c.fillStyle = 'rgba(0,0,0,.3)'
+      c.beginPath()
+      c.roundRect(-L / 2 + 2, -w / 2 + 2.5, L, w, raze)
+      c.fill()
+      // roti
+      c.fillStyle = '#05070d'
       for (const rx of [L * 0.3, -L * 0.29])
         for (const sy of [-1, 1]) {
           c.beginPath()
-          c.roundRect(rx - L * 0.085, sy > 0 ? w * 0.4 : -w * 0.54, L * 0.17, w * 0.14, 2)
+          c.roundRect(rx - L * 0.09, sy > 0 ? w * 0.39 : -w * 0.55, L * 0.18, w * 0.16, 2.5)
           c.fill()
         }
-      // caroserie cu volum: mai inchisa pe margini, luminoasa pe mijloc
+      // caroserie cu volum
       const gc = c.createLinearGradient(0, -w / 2, 0, w / 2)
-      gc.addColorStop(0, nuanta(m.culoare, -0.38))
-      gc.addColorStop(0.2, m.culoare)
-      gc.addColorStop(0.5, nuanta(m.culoare, 0.14))
-      gc.addColorStop(0.8, m.culoare)
-      gc.addColorStop(1, nuanta(m.culoare, -0.38))
+      gc.addColorStop(0, nuanta(m.culoare, -0.42))
+      gc.addColorStop(0.16, nuanta(m.culoare, -0.05))
+      gc.addColorStop(0.42, nuanta(m.culoare, 0.18))
+      gc.addColorStop(0.58, nuanta(m.culoare, 0.18))
+      gc.addColorStop(0.84, nuanta(m.culoare, -0.05))
+      gc.addColorStop(1, nuanta(m.culoare, -0.42))
       c.fillStyle = gc
       c.beginPath()
-      c.roundRect(-L / 2, -w / 2, L, w, w * 0.32)
+      c.roundRect(-L / 2, -w / 2, L, w, raze)
       c.fill()
-      c.strokeStyle = 'rgba(0,0,0,.35)'
+      c.strokeStyle = 'rgba(0,0,0,.45)'
       c.lineWidth = 0.8
       c.stroke()
-      // capota si portbagajul (linii de imbinare)
-      c.strokeStyle = 'rgba(0,0,0,.25)'
+      // bari fata/spate
+      c.fillStyle = 'rgba(15,23,42,.55)'
+      c.beginPath()
+      c.roundRect(L * 0.47, -w * 0.36, L * 0.035, w * 0.72, 2)
+      c.roundRect(-L * 0.505, -w * 0.34, L * 0.035, w * 0.68, 2)
+      c.fill()
+      // capota (nervuri), portbagaj, usi, manere
+      c.strokeStyle = 'rgba(0,0,0,.22)'
       c.lineWidth = 0.7
       c.beginPath()
-      c.moveTo(L * 0.34, -w * 0.4)
-      c.quadraticCurveTo(L * 0.38, 0, L * 0.34, w * 0.4)
-      c.moveTo(-L * 0.41, -w * 0.38)
-      c.quadraticCurveTo(-L * 0.44, 0, -L * 0.41, w * 0.38)
-      // usile (taieturi scurte pe laterale)
-      for (const ux of [L * 0.04, -L * 0.16]) {
+      c.moveTo(L * 0.34, -w * 0.38)
+      c.quadraticCurveTo(L * 0.39, 0, L * 0.34, w * 0.38)
+      c.moveTo(L * 0.44, -w * 0.18)
+      c.lineTo(L * 0.34, -w * 0.12)
+      c.moveTo(L * 0.44, w * 0.18)
+      c.lineTo(L * 0.34, w * 0.12)
+      c.moveTo(-L * 0.41, -w * 0.36)
+      c.quadraticCurveTo(-L * 0.45, 0, -L * 0.41, w * 0.36)
+      for (const ux of [L * 0.04, -L * 0.17]) {
         c.moveTo(ux, -w * 0.5)
-        c.lineTo(ux, -w * 0.4)
+        c.lineTo(ux, -w * 0.39)
         c.moveTo(ux, w * 0.5)
-        c.lineTo(ux, w * 0.4)
+        c.lineTo(ux, w * 0.39)
       }
       c.stroke()
-      // geamuri: parbriz, luneta, laterale
-      c.fillStyle = 'rgba(15,23,42,.88)'
+      c.strokeStyle = 'rgba(255,255,255,.35)'
       c.beginPath()
-      c.moveTo(L * 0.17, -w * 0.39)
-      c.lineTo(L * 0.3, -w * 0.32)
-      c.lineTo(L * 0.3, w * 0.32)
-      c.lineTo(L * 0.17, w * 0.39)
+      for (const ux of [L * 0.0, -L * 0.21]) {
+        c.moveTo(ux, -w * 0.48)
+        c.lineTo(ux - L * 0.03, -w * 0.48)
+        c.moveTo(ux, w * 0.48)
+        c.lineTo(ux - L * 0.03, w * 0.48)
+      }
+      c.stroke()
+      // geamuri cu reflexii
+      const gg = c.createLinearGradient(L * 0.3, -w * 0.4, L * 0.15, w * 0.4)
+      gg.addColorStop(0, '#1e3a5f')
+      gg.addColorStop(0.5, '#0b1222')
+      gg.addColorStop(1, '#16253f')
+      c.fillStyle = gg
+      c.beginPath()
+      c.moveTo(L * 0.16, -w * 0.39)
+      c.quadraticCurveTo(L * 0.25, -w * 0.4, L * 0.31, -w * 0.31)
+      c.lineTo(L * 0.31, w * 0.31)
+      c.quadraticCurveTo(L * 0.25, w * 0.4, L * 0.16, w * 0.39)
       c.closePath()
       c.fill()
       c.beginPath()
-      c.moveTo(-L * 0.29, -w * 0.35)
-      c.lineTo(-L * 0.38, -w * 0.3)
-      c.lineTo(-L * 0.38, w * 0.3)
-      c.lineTo(-L * 0.29, w * 0.35)
+      c.moveTo(-L * 0.29, -w * 0.36)
+      c.quadraticCurveTo(-L * 0.36, -w * 0.34, -L * 0.385, -w * 0.27)
+      c.lineTo(-L * 0.385, w * 0.27)
+      c.quadraticCurveTo(-L * 0.36, w * 0.34, -L * 0.29, w * 0.36)
       c.closePath()
       c.fill()
-      c.fillStyle = 'rgba(15,23,42,.7)'
-      c.fillRect(-L * 0.28, -w * 0.43, L * 0.44, w * 0.07)
-      c.fillRect(-L * 0.28, w * 0.36, L * 0.44, w * 0.07)
+      c.fillStyle = 'rgba(15,23,42,.75)'
+      c.beginPath()
+      c.roundRect(-L * 0.27, -w * 0.43, L * 0.42, w * 0.075, 1.5)
+      c.roundRect(-L * 0.27, w * 0.355, L * 0.42, w * 0.075, 1.5)
+      c.fill()
       // plafon
-      c.fillStyle = nuanta(m.culoare, 0.06)
+      const gp = c.createLinearGradient(0, -w * 0.34, 0, w * 0.34)
+      gp.addColorStop(0, nuanta(m.culoare, -0.08))
+      gp.addColorStop(0.5, nuanta(m.culoare, 0.12))
+      gp.addColorStop(1, nuanta(m.culoare, -0.08))
+      c.fillStyle = gp
       c.beginPath()
       c.roundRect(-L * 0.28, -w * 0.34, L * 0.44, w * 0.68, 3)
       c.fill()
-      c.fillStyle = 'rgba(255,255,255,.1)'
-      c.fillRect(-L * 0.24, -w * 0.3, L * 0.36, w * 0.18)
-      // reflexie pe parbriz
-      c.strokeStyle = 'rgba(255,255,255,.28)'
+      c.fillStyle = 'rgba(255,255,255,.13)'
+      c.beginPath()
+      c.roundRect(-L * 0.24, -w * 0.29, L * 0.34, w * 0.13, 2)
+      c.fill()
+      // reflexii pe parbriz si luneta
+      c.strokeStyle = 'rgba(255,255,255,.3)'
       c.lineWidth = 1
       c.beginPath()
-      c.moveTo(L * 0.2, -w * 0.28)
-      c.lineTo(L * 0.27, -w * 0.06)
+      c.moveTo(L * 0.2, -w * 0.3)
+      c.lineTo(L * 0.28, -w * 0.08)
+      c.moveTo(-L * 0.33, w * 0.05)
+      c.lineTo(-L * 0.36, w * 0.2)
       c.stroke()
       if (m.taxi) {
-        // lampa TAXI pe plafon
+        // lampa TAXI pe plafon + dunga in carouri
         c.fillStyle = '#111827'
         c.fillRect(-L * 0.1, -w * 0.22, L * 0.14, w * 0.44)
         c.fillStyle = '#fde047'
         c.fillRect(-L * 0.08, -w * 0.18, L * 0.1, w * 0.36)
+        c.fillStyle = '#111827'
+        for (let i = 0; i < 6; i++) c.fillRect(-L * 0.26 + i * L * 0.07, (i % 2 ? 1 : -1) * w * 0.46 - w * 0.02, L * 0.035, w * 0.04)
       }
       // oglinzi
-      c.fillStyle = nuanta(m.culoare, -0.2)
+      c.fillStyle = nuanta(m.culoare, -0.25)
       c.beginPath()
-      c.roundRect(L * 0.11, -w * 0.64, L * 0.07, w * 0.15, 1.5)
-      c.roundRect(L * 0.11, w * 0.49, L * 0.07, w * 0.15, 1.5)
+      c.roundRect(L * 0.1, -w * 0.66, L * 0.08, w * 0.17, 2)
+      c.roundRect(L * 0.1, w * 0.49, L * 0.08, w * 0.17, 2)
       c.fill()
-      // faruri, numere, stopuri
-      c.fillStyle = far > 0.02 ? '#fff8dc' : 'rgba(255,248,220,.6)'
+      c.fillStyle = 'rgba(148,163,184,.6)'
+      c.fillRect(L * 0.115, -w * 0.64, L * 0.02, w * 0.12)
+      c.fillRect(L * 0.115, w * 0.52, L * 0.02, w * 0.12)
+      // faruri cu lumina de zi, numere, stopuri
+      c.fillStyle = far > 0.02 ? '#fffbe6' : 'rgba(226,232,240,.75)'
       c.beginPath()
-      c.roundRect(L * 0.45, -w * 0.41, L * 0.05, w * 0.17, 1.5)
-      c.roundRect(L * 0.45, w * 0.24, L * 0.05, w * 0.17, 1.5)
+      c.roundRect(L * 0.43, -w * 0.42, L * 0.07, w * 0.17, [1, 4, 4, 1])
+      c.roundRect(L * 0.43, w * 0.25, L * 0.07, w * 0.17, [1, 4, 4, 1])
       c.fill()
+      c.strokeStyle = 'rgba(191,219,254,.8)'
+      c.lineWidth = 0.9
+      c.beginPath()
+      c.moveTo(L * 0.44, -w * 0.25)
+      c.lineTo(L * 0.47, -w * 0.18)
+      c.moveTo(L * 0.44, w * 0.25)
+      c.lineTo(L * 0.47, w * 0.18)
+      c.stroke()
       c.fillStyle = '#e5e7eb'
-      c.fillRect(L * 0.485, -w * 0.12, L * 0.02, w * 0.24)
-      c.fillRect(-L * 0.505, -w * 0.12, L * 0.02, w * 0.24)
-      c.fillStyle = m.loc ? 'rgba(239,68,68,.75)' : 'rgba(248,80,80,.95)'
+      c.fillRect(L * 0.49, -w * 0.11, L * 0.018, w * 0.22)
+      c.fillRect(-L * 0.508, -w * 0.11, L * 0.018, w * 0.22)
+      c.fillStyle = m.loc ? 'rgba(220,38,38,.8)' : 'rgba(248,80,80,1)'
       c.beginPath()
-      c.roundRect(-L * 0.5, -w * 0.41, L * 0.04, w * 0.15, 1.5)
-      c.roundRect(-L * 0.5, w * 0.26, L * 0.04, w * 0.15, 1.5)
+      c.roundRect(-L * 0.5, -w * 0.42, L * 0.05, w * 0.16, [3, 1, 1, 3])
+      c.roundRect(-L * 0.5, w * 0.26, L * 0.05, w * 0.16, [3, 1, 1, 3])
       c.fill()
-      if (acum < m.avariiPana && Math.floor((acum - m.avariiStart) / 160) % 2 === 0) {
+      const lumina = (px: number, py: number, r: number) => {
+        const g = c.createRadialGradient(px, py, 0, px, py, r)
+        g.addColorStop(0, 'rgba(255,190,80,.95)')
+        g.addColorStop(0.35, 'rgba(251,146,60,.55)')
+        g.addColorStop(1, 'rgba(251,146,60,0)')
+        c.fillStyle = g
+        c.beginPath()
+        c.arc(px, py, r, 0, Math.PI * 2)
+        c.fill()
+      }
+      // avarii (toate colturile)
+      if (acum < m.avariiPana && Math.floor((acum - m.avariiStart) / 160) % 2 === 0)
         for (const [px, py] of [
           [L * 0.47, -w * 0.47],
           [L * 0.47, w * 0.47],
           [-L * 0.47, -w * 0.47],
           [-L * 0.47, w * 0.47],
-        ]) {
-          const g = c.createRadialGradient(px, py, 0, px, py, U * 0.28)
-          g.addColorStop(0, 'rgba(255,190,80,.95)')
-          g.addColorStop(0.35, 'rgba(251,146,60,.55)')
-          g.addColorStop(1, 'rgba(251,146,60,0)')
-          c.fillStyle = g
-          c.beginPath()
-          c.arc(px, py, U * 0.28, 0, Math.PI * 2)
-          c.fill()
-        }
+        ])
+          lumina(px, py, U * 0.28)
+      // semnalizare dreapta (partea dreapta a masinii = +y in sistemul ei)
+      if (m.semnal && Math.floor(acum / 380) % 2 === 0) {
+        lumina(L * 0.47, w * 0.47, U * 0.22)
+        lumina(-L * 0.47, w * 0.47, U * 0.22)
       }
       c.restore()
     }
 
-    // ---- desen om, vazut de sus: picioare cu pantofi, brate care se balanseaza, tricou, cap cu par ----
+    // ---- desen om, vazut de sus: umeri, brate cu maneci, picioare cu pantofi, cap cu par ----
     function deseneazaOm(o: Om, acum: number) {
       if (!o.vizibil || o.alpha <= 0.01) return
       const s = (U / 46) * 1.35
@@ -826,61 +885,83 @@ export function ParcareLogin({ taste }: { taste: number }) {
       c.translate(o.x, o.y)
       c.rotate(o.h)
       const leg = o.merge ? Math.sin(acum / 150) : 0
+      const piele = '#e8c4a0'
       // umbra
-      c.fillStyle = 'rgba(0,0,0,.3)'
+      c.fillStyle = 'rgba(0,0,0,.28)'
       c.beginPath()
-      c.ellipse(1 * s, 1.5 * s, 6 * s, 9 * s, 0, 0, Math.PI * 2)
+      c.ellipse(1.2 * s, 1.6 * s, 6.4 * s, 9.6 * s, 0, 0, Math.PI * 2)
       c.fill()
       // picioare (pantaloni) si pantofi
       for (const sy of [-1, 1]) {
-        const px = 3.2 * s * leg * -sy
+        const px = 3.4 * s * leg * -sy
         c.fillStyle = o.angajat ? '#1f2a44' : '#27272a'
         c.beginPath()
-        c.ellipse(px * 0.6, sy * 3.1 * s, 3 * s, 2.1 * s, 0, 0, Math.PI * 2)
+        c.ellipse(px * 0.55, sy * 3 * s, 3.1 * s, 2.2 * s, 0, 0, Math.PI * 2)
         c.fill()
         c.fillStyle = '#0b0f19'
         c.beginPath()
-        c.ellipse(px + 2.4 * s, sy * 3.1 * s, 1.7 * s, 1.4 * s, 0, 0, Math.PI * 2)
+        c.ellipse(px + 2.6 * s, sy * 3 * s, 1.9 * s, 1.5 * s, 0, 0, Math.PI * 2)
+        c.fill()
+        c.fillStyle = 'rgba(255,255,255,.18)'
+        c.beginPath()
+        c.ellipse(px + 3.2 * s, sy * 3 * s - 0.4 * s, 0.7 * s, 0.4 * s, 0, 0, Math.PI * 2)
         c.fill()
       }
       // bratele (balans opus picioarelor); fumatorul isi duce mana la gura
       const puf = !!o.tigara && !o.merge && o.pufStart !== undefined && acum > o.pufStart && acum < o.pufStart + 1400
       for (const sy of [-1, 1]) {
-        const ax = 2.6 * s * leg * sy
+        const ax = 2.8 * s * leg * sy
         const ridicat = sy > 0 && o.tigara && !o.merge
-        c.fillStyle = o.tricou
+        const mx = ridicat ? (puf ? 5.6 * s : 3.8 * s) : ax + 1.6 * s
+        const my = ridicat ? (puf ? 2.8 * s : 7.2 * s) : sy * 7.8 * s
+        // antebrat (piele) de la maneca la mana
+        c.strokeStyle = piele
+        c.lineWidth = 2.2 * s
+        c.lineCap = 'round'
         c.beginPath()
-        c.ellipse(ax * 0.5, sy * 7 * s, 2.3 * s, 1.9 * s, 0, 0, Math.PI * 2)
+        c.moveTo(ax * 0.4, sy * 7.2 * s)
+        c.lineTo(mx, my)
+        c.stroke()
+        c.fillStyle = nuanta(o.tricou, -0.06)
+        c.beginPath()
+        c.ellipse(ax * 0.4, sy * 7.1 * s, 2.4 * s, 2 * s, 0, 0, Math.PI * 2)
         c.fill()
-        c.fillStyle = '#e8c4a0'
+        c.fillStyle = piele
         c.beginPath()
-        if (ridicat) c.arc(puf ? 5.6 * s : 3.8 * s, puf ? 2.6 * s : 7.4 * s, 1.5 * s, 0, Math.PI * 2)
-        else c.arc(ax + 1.2 * s, sy * 7.6 * s, 1.4 * s, 0, Math.PI * 2)
+        c.arc(mx, my, 1.35 * s, 0, Math.PI * 2)
         c.fill()
       }
-      // trunchi: tricoul (umeri)
+      // trunchi: umeri cu volum
       const gt = c.createLinearGradient(0, -8 * s, 0, 8 * s)
-      gt.addColorStop(0, nuanta(o.tricou, -0.18))
-      gt.addColorStop(0.5, o.tricou)
-      gt.addColorStop(1, nuanta(o.tricou, -0.18))
+      gt.addColorStop(0, nuanta(o.tricou, -0.22))
+      gt.addColorStop(0.5, nuanta(o.tricou, 0.06))
+      gt.addColorStop(1, nuanta(o.tricou, -0.22))
       c.fillStyle = gt
       c.beginPath()
-      c.roundRect(-3.4 * s, -7.6 * s, 6.8 * s, 15.2 * s, 3.4 * s)
+      c.roundRect(-3.6 * s, -7.8 * s, 7.2 * s, 15.6 * s, [3 * s, 3.8 * s, 3.8 * s, 3 * s])
       c.fill()
+      c.strokeStyle = 'rgba(0,0,0,.25)'
+      c.lineWidth = 0.6
+      c.stroke()
       if (o.angajat) {
         // dungile cu culorile logo-ului pe umeri (verde, albastru, mov)
-        const cul = ['#00A848', '#0060F0', '#6000C0']
-        cul.forEach((cl, i) => {
+        ;['#00A848', '#0060F0', '#6000C0'].forEach((cl, i) => {
           c.fillStyle = cl
-          c.fillRect(-2.6 * s + i * 1.6 * s, -6.6 * s, 1.2 * s, 13.2 * s)
+          c.fillRect(-2.7 * s + i * 1.6 * s, -6.8 * s, 1.15 * s, 13.6 * s)
         })
       }
+      // guler
+      c.fillStyle = nuanta(o.tricou, -0.3)
+      c.beginPath()
+      c.ellipse(1.6 * s, 0, 1.3 * s, 3 * s, 0, 0, Math.PI * 2)
+      c.fill()
       if (o.tigara && !o.merge) {
         // tigara in mana dreapta, cu jarul aprins
         const tx = puf ? 6.6 * s : 4.8 * s
-        const ty = puf ? 2.6 * s : 7.4 * s
+        const ty = puf ? 2.8 * s : 7.2 * s
         c.strokeStyle = '#f1f5f9'
-        c.lineWidth = 1.2 * s
+        c.lineWidth = 1.1 * s
+        c.lineCap = 'butt'
         c.beginPath()
         c.moveTo(tx, ty)
         c.lineTo(tx + 3 * s, ty)
@@ -889,36 +970,41 @@ export function ParcareLogin({ taste }: { taste: number }) {
         c.shadowColor = 'rgba(251,146,60,.9)'
         c.shadowBlur = puf ? 8 : 4
         c.beginPath()
-        c.arc(tx + 3.4 * s, ty, 1.1 * s, 0, Math.PI * 2)
+        c.arc(tx + 3.4 * s, ty, 1 * s, 0, Math.PI * 2)
         c.fill()
         c.shadowBlur = 0
       }
-      // cap, urechi, par
-      c.fillStyle = '#e8c4a0'
+      // cap: urechi, fata (spre fata), par cu luciu
+      c.fillStyle = piele
       c.beginPath()
-      c.arc(0.6 * s, 0, 4 * s, 0, Math.PI * 2)
+      c.ellipse(0.4 * s, -3.9 * s, 0.9 * s, 1.2 * s, 0, 0, Math.PI * 2)
+      c.ellipse(0.4 * s, 3.9 * s, 0.9 * s, 1.2 * s, 0, 0, Math.PI * 2)
       c.fill()
       c.beginPath()
-      c.ellipse(0.2 * s, -4 * s, 0.9 * s, 1.2 * s, 0, 0, Math.PI * 2)
-      c.ellipse(0.2 * s, 4 * s, 0.9 * s, 1.2 * s, 0, 0, Math.PI * 2)
+      c.arc(0.7 * s, 0, 3.9 * s, 0, Math.PI * 2)
       c.fill()
+      const par = o.par ?? (o.angajat ? '#3f2a1d' : '#1f2937')
+      const gh = c.createRadialGradient(-1.2 * s, -1.2 * s, 0.3 * s, -0.5 * s, 0, 5 * s)
+      gh.addColorStop(0, nuanta(par, 0.3))
+      gh.addColorStop(1, par)
+      c.fillStyle = gh
       if (o.fata) {
         // par lung, prins in coada la spate
-        c.fillStyle = o.par ?? '#2a1a12'
         c.beginPath()
-        c.ellipse(-0.9 * s, 0, 4.4 * s, 4.8 * s, 0, Math.PI * 0.38, Math.PI * 1.62)
+        c.ellipse(-0.6 * s, 0, 4.3 * s, 4.7 * s, 0, Math.PI * 0.36, Math.PI * 1.64)
         c.fill()
         c.beginPath()
-        c.ellipse(-5.8 * s, 0, 3.2 * s, 2 * s, 0, 0, Math.PI * 2)
+        c.ellipse(-5.9 * s, 0, 3.3 * s, 2.1 * s, 0, 0, Math.PI * 2)
         c.fill()
-        c.fillStyle = 'rgba(255,255,255,.18)'
+        c.strokeStyle = nuanta(par, -0.3)
+        c.lineWidth = 0.6
         c.beginPath()
-        c.ellipse(-1.5 * s, -1.5 * s, 2 * s, 0.9 * s, 0.3, 0, Math.PI * 2)
-        c.fill()
+        c.moveTo(-3.6 * s, 0)
+        c.lineTo(-8.6 * s, 0)
+        c.stroke()
       } else {
-        c.fillStyle = o.par ?? (o.angajat ? '#3f2a1d' : '#1f2937')
         c.beginPath()
-        c.ellipse(-0.5 * s, 0, 3.6 * s, 3.9 * s, 0, 0, Math.PI * 2)
+        c.ellipse(-0.4 * s, 0, 3.6 * s, 3.9 * s, 0, 0, Math.PI * 2)
         c.fill()
       }
       c.restore()
@@ -1071,10 +1157,12 @@ export function ParcareLogin({ taste }: { taste: number }) {
       const colt = (lx: number, ly: number): Vec => ({ x: m.x + lx * c - ly * sn, y: m.y + lx * sn + ly * c })
       const cs = [colt(hl, hw), colt(hl, -hw), colt(-hl, hw), colt(-hl, -hw)].sort((a, b) => a.y - b.y).slice(0, 2)
       cs.sort((a, b) => Math.hypot(a.x - cur.x, a.y - cur.y) - Math.hypot(b.x - cur.x, b.y - cur.y))
+      // se reia drumul din punctul care il duce cel mai repede la destinatie (fara intoarceri)
+      const dr = drum(rest)
       let best = rest.length - 1
       let bd = Infinity
       for (let i = 1; i < rest.length; i++) {
-        const dd = Math.hypot(rest[i].x - cs[1].x, rest[i].y - cs[1].y)
+        const dd = Math.hypot(rest[i].x - cs[1].x, rest[i].y - cs[1].y) + (dr.total - dr.cum[i])
         if (dd < bd) {
           bd = dd
           best = i
@@ -1090,7 +1178,7 @@ export function ParcareLogin({ taste }: { taste: number }) {
         switch (p.k) {
           case 'mergi': {
             const o = a.om!
-            p.d ??= drum([{ x: o.x, y: o.y }, ...p.pts])
+            p.d ??= drum(colturi([{ x: o.x, y: o.y }, ...p.pts], U * 0.45))
             const s = a.t * vOm()
             const { p: q, dir } = peDrum(p.d, s)
             const bl = a.t > dt && s < p.d.total ? omBlocat(q) : null
@@ -1244,7 +1332,7 @@ export function ParcareLogin({ taste }: { taste: number }) {
         let gap = inFata(c, benzi[c.banda])
         // depasire: pe banda de langa trotuar, cine ajunge din urma o masina lenta sau oprita (taxi, cineva
         // care intra in parcare) trece pe banda 2 daca e libera
-        if (c.banda === 0 && gap < U * 4 && liber(1, c.m.x, U * 2.5, U * 3.5, c.m)) {
+        if (c.banda === 0 && gap < U * 4 && c.v > U * 0.8 && liber(1, c.m.x, U * 2.5, U * 3.5, c.m)) {
           c.banda = 1
           gap = inFata(c, benzi[1])
         }
@@ -1252,10 +1340,11 @@ export function ParcareLogin({ taste }: { taste: number }) {
         c.v = tinta < c.v ? Math.max(tinta, c.v - U * 12 * dt) : Math.min(tinta, c.v + U * 3 * dt)
         const dx = c.v * dt
         const ty = benzi[c.banda]
-        const dy = Math.sign(ty - c.m.y) * Math.min(Math.abs(ty - c.m.y), U * 1.4 * dt)
+        // schimbarea benzii e lina: deplasarea laterala e legata de viteza (fara sa para ca se intoarce)
+        const dy = Math.sign(ty - c.m.y) * Math.min(Math.abs(ty - c.m.y), Math.max(0, c.v) * 0.3 * dt)
         c.m.x -= dx
         c.m.y += dy
-        c.m.h = dx > 0.01 ? Math.atan2(dy, -dx) : Math.PI
+        c.m.h = Math.PI + (dx > 0.01 ? Math.atan2(-dy, dx) : 0)
       }
       trafic = trafic.filter((c) => c.m.x > -U * 2)
     }
@@ -1332,7 +1421,7 @@ export function ParcareLogin({ taste }: { taste: number }) {
       const D = alegeD(l, true)
       if (!D) return null
       const man = manevra(l, culoar(l.cul), D, !!l.invers)
-      return { man, spate: !l.invers, ruta: colturi([man[man.length - 1], ...noduri(l.cul, D)], U * 0.75) }
+      return { man, spate: !l.invers, ruta: colturi([man[man.length - 1], ...noduri(l.cul, D)], U * 1.05) }
     }
     // de pe bulevard (dinspre dreapta) pe aleea de iesire, in sus
     function intrareDinBulevard(): Vec[] {
@@ -1341,15 +1430,16 @@ export function ParcareLogin({ taste }: { taste: number }) {
       return [{ x: W + U * 1.5, y }, { x: xA + r2, y }, ...arc({ x: xA + r2, y: y - r2 }, r2, Math.PI / 2, Math.PI)]
     }
     // pe bulevard pana aproape de intrarea in parcare (acolo asteapta, daca alta masina manevreaza)
-    const laIntrare = (): Vec => ({ x: xA + R2() + U * 1.5, y: benzi[0] })
-    const pePanaLaIntrare = (): Vec[] => [{ x: W + U * 1.5, y: benzi[0] }, laIntrare()]
+    const laIntrare = (): Vec => ({ x: xA + R2() + U * 0.25, y: benzi[0] })
+    const inainteDeIntrare = (): Vec => ({ x: xA + R2() + U * 3, y: benzi[0] })
+    const pePanaLaIntrare = (): Vec[] => [{ x: W + U * 1.5, y: benzi[0] }, inainteDeIntrare()]
     function drumIntrare(l: Loc) {
       if (!l.cul) return null
       const D = alegeD(l, false)
       if (!D) return null
       const man = manevra(l, culoar(l.cul), D, !l.invers).reverse()
       const nd = noduri(l.cul, D).slice(0, -1).reverse()
-      const ruta = [...intrareDinBulevard(), ...colturi([{ x: xA, y: benzi[0] - R2() }, ...nd, man[0]], U * 0.75)]
+      const ruta = [...intrareDinBulevard(), ...colturi([{ x: xA, y: benzi[0] - R2() }, ...nd, man[0]], U * 1.05)]
       return { ruta, man, spate: !!l.invers }
     }
     function inBulevard(p: Vec): Vec[] {
@@ -1359,7 +1449,8 @@ export function ParcareLogin({ taste }: { taste: number }) {
     }
 
     // ---- pe unde merg oamenii in parcare (pe langa culoare, nu prin masini) ----
-    const xWw = () => xA + U * 0.5 // pe marginea aleii de iesire
+    const xP = () => plat.x + plat.w + U * 0.2 // culoarul oamenilor: pe langa marginea din dreapta a platformei
+    const xJ = () => xA + U * 0.75 // de partea cealalta a aleii de iesire
     const xWr = () => xRA - U * 0.5
     const yWj = () => yL2 + U * 0.55
     const yWs = () => yUp + U * 0.25
@@ -1371,11 +1462,12 @@ export function ParcareLogin({ taste }: { taste: number }) {
     }
     function laMasina(l: Loc, dx: number, px: number): Vec[] {
       const T = langaMasina(l, px)
-      const x0 = xWw() + dx
-      if (l.cul === 'H2') return [{ x: x0, y: ySw() }, { x: x0, y: yWs() }, { x: T.x, y: yWs() }, T]
-      if (l.cul === 'V2')
-        return [{ x: x0, y: ySw() }, { x: x0, y: yWj() }, { x: xWr(), y: yWj() }, { x: xWr(), y: T.y }, T]
-      return [{ x: x0, y: ySw() }, { x: x0, y: T.y }, T]
+      const x0 = xP() - Math.abs(dx) * 0.5
+      const urc = [{ x: x0, y: ySw() }, { x: x0, y: yWj() + dx * 0.5 }]
+      if (l.cul === 'H2') return [...urc, { x: xJ(), y: yWj() }, { x: xJ(), y: yWs() }, { x: T.x, y: yWs() }, T]
+      if (l.cul === 'V2') return [...urc, { x: xJ(), y: yWj() }, { x: xWr(), y: yWj() }, { x: xWr(), y: T.y }, T]
+      if (l.cul === 'V1') return [...urc, { x: T.x, y: Math.min(yWj(), T.y + U * 0.6) }, T]
+      return [...urc, T]
     }
     const dinMasina = (l: Loc, dx: number): Vec[] => laMasina(l, dx, 0).reverse().slice(1)
     const usaIn = (): Vec => ({ x: sediu.usaX, y: yTrot - U * 0.15 })
@@ -1502,13 +1594,14 @@ export function ParcareLogin({ taste }: { taste: number }) {
         ...iaLacat(a),
         fa(() => (m.loc = null)),
         stai(0.4),
-        ...(dr.spate ? [conduce(dr.man, U * 0.75, 'ease', true), conduce(ruta1, U * 1.9)] : [conduce([...dr.man, ...ruta1], U * 1.8)]),
+        // pana la marginea bulevardului; daca acolo asteapta deja una, se opreste in spatele ei pe alee
+        ...(dr.spate ? [conduce(dr.man, U * 0.75, 'ease', true), conduce([...ruta1, ...ruta2.slice(1)], U * 1.9)] : [conduce([...dr.man, ...ruta1, ...ruta2.slice(1)], U * 1.8)]),
         ...iaPoarta(a),
-        lasaLacat(a), // alta masina poate manevra deja prin parcare
+        lasaLacat(a), // alta masina poate porni (si sa astepte in spatele ei)
         fa(() => {
+          m.semnal = true
           if (chinuie) aglomeratPana = acumCurent + intre(5000, 8000)
         }),
-        conduce(ruta2, U * 1.6),
         ...(chinuie
           ? [
               stai(1),
@@ -1520,7 +1613,10 @@ export function ParcareLogin({ taste }: { taste: number }) {
         cand(() => liber(0, xA, U * 3, U * 8, m, true)),
         conduce((p) => inBulevard(p), U * 1.5, 'acc'),
         lasaPoarta(a),
-        fa(() => laTrafic(m)),
+        fa(() => {
+          m.semnal = false
+          laTrafic(m)
+        }),
         sem(o.plecat ?? 'plecat'),
       ]
       return a
@@ -1544,7 +1640,7 @@ export function ParcareLogin({ taste }: { taste: number }) {
               l.rezervat = true
               dr = drumIntrare(l)
               // pe aleea de iesire pana putin dupa capatul ei; restul prin parcare
-              const pts = [laIntrare(), ...dr!.ruta.slice(1)]
+              const pts = [laIntrare(), ...dr!.ruta.slice(1)] // (se porneste de unde e masina)
               const pana = drum([laIntrare(), ...intrareDinBulevard().slice(1)]).total + (benzi[0] - R2() - yL2) + U
               ;[in1, in2] = taie(pts, pana)
             }
@@ -1559,11 +1655,21 @@ export function ParcareLogin({ taste }: { taste: number }) {
           masini.push(m)
           a.m = m
         }),
-        conduce(pePanaLaIntrare(), U * 2.3),
+        conduce(pePanaLaIntrare(), U * 2.6, 'lin'),
+        fa(() => (a.m!.semnal = true)),
+        // daca e liber, intra direct; altfel franeaza pana la intrare si asteapta acolo
+        fa(() => {
+          if ((!lacat || lacat === a) && (!poarta || poarta === a)) {
+            lacat = a
+            poarta = a
+          }
+        }),
+        conduce((p) => (lacat === a && poarta === a ? [p] : [p, laIntrare()]), U * 1.3, 'fran'),
         ...iaLacat(a),
         ...iaPoarta(a),
         fa(() => (a.m!.laIntrare = false)),
-        conduce(() => in1, U * 1.8),
+        conduce((p) => [p, ...in1], U * 1.6),
+        fa(() => (a.m!.semnal = false)),
         lasaPoarta(a),
         conduce(() => in2, U * 1.8),
         stai(0.2),
@@ -1599,12 +1705,12 @@ export function ParcareLogin({ taste }: { taste: number }) {
       const A = { x: xA, y: yL2 }
       const E = { x: xA, y: yMarg() }
       const xa = xRA + r
-      const intra = [laIntrare(), ...intrareDinBulevard().slice(1), ...colturi([{ x: xA, y: benzi[0] - R2() }, A, { x: xS, y: yL2 }], U * 0.75)]
+      const intra = [laIntrare(), ...intrareDinBulevard().slice(1), ...colturi([{ x: xA, y: benzi[0] - R2() }, A, { x: xS, y: yL2 }], U * 1.05)]
       const [in1, in2] = taie(intra, drum([laIntrare(), ...intrareDinBulevard().slice(1)]).total + (benzi[0] - R2() - yL2) + U)
       const tura = Math.random() < 0.5
       const iese = tura
-        ? colturi([{ x: xS, y: yL2 }, { x: xRA, y: yL2 }, { x: xRA, y: yUp }, { x: xA, y: yUp }, A, E], U * 0.75)
-        : [...arc({ x: xa - 2 * r, y: yL2 - r }, r, 0, Math.PI / 2), ...colturi([{ x: xa - 2 * r, y: yL2 }, A, E], U * 0.75)]
+        ? colturi([{ x: xS, y: yL2 }, { x: xRA, y: yL2 }, { x: xRA, y: yUp }, { x: xA, y: yUp }, A, E], U * 1.05)
+        : [...arc({ x: xa - 2 * r, y: yL2 - r }, r, 0, Math.PI / 2), ...colturi([{ x: xa - 2 * r, y: yL2 }, A, E], U * 1.05)]
       const [ies1, ies2] = panaLaAlee(iese)
       a.coada = [
         ...(dupa ? [pana(dupa)] : []),
@@ -1617,11 +1723,21 @@ export function ParcareLogin({ taste }: { taste: number }) {
           masini.push(tx)
           a.m = tx
         }),
-        conduce(pePanaLaIntrare(), U * 2.3),
+        conduce(pePanaLaIntrare(), U * 2.6, 'lin'),
+        fa(() => (a.m!.semnal = true)),
+        // daca e liber, intra direct; altfel franeaza pana la intrare si asteapta acolo
+        fa(() => {
+          if ((!lacat || lacat === a) && (!poarta || poarta === a)) {
+            lacat = a
+            poarta = a
+          }
+        }),
+        conduce((p) => (lacat === a && poarta === a ? [p] : [p, laIntrare()]), U * 1.3, 'fran'),
         ...iaLacat(a),
         ...iaPoarta(a),
         fa(() => (a.m!.laIntrare = false)),
-        conduce(in1, U * 1.8),
+        conduce((p) => [p, ...in1], U * 1.6),
+        fa(() => (a.m!.semnal = false)),
         lasaPoarta(a),
         conduce(in2, U * 1.8),
         sem('taxiOprit'),
@@ -1639,24 +1755,27 @@ export function ParcareLogin({ taste }: { taste: number }) {
               ),
               conduce(arc({ x: xa, y: yL2 - r }, r, Math.PI / 2, Math.PI), U * 0.55, 'ease', true),
             ]),
-        conduce(ies1, U * 1.8),
+        conduce([...ies1, ...ies2.slice(1)], U * 1.8),
         ...iaPoarta(a),
         lasaLacat(a),
-        conduce(ies2, U * 1.6),
+        fa(() => (a.m!.semnal = true)),
         cand(() => liber(0, xA, U * 3, U * 8, a.m, true)),
         conduce((p) => inBulevard(p), U * 1.5, 'acc'),
         lasaPoarta(a),
-        fa(() => laTrafic(a.m!)),
+        fa(() => {
+          a.m!.semnal = false
+          laTrafic(a.m!)
+        }),
       ]
       return a
     }
     // pasagerul taxiului coboara langa el, pe partea dinspre trotuar
     const dinTaxi = (o: Om): Pas[] => [
       pana('taxiOprit'),
-      pune(o, { x: xA + U * 1.5, y: yL2 + U * 0.5 }),
+      pune(o, { x: xA + U * 1.5, y: yWj() }),
       apare(1),
       sem('dinTaxi'),
-      mergi({ x: xWw(), y: yWj() }, { x: xWw(), y: ySw() }),
+      mergi({ x: xP(), y: yWj() }, { x: xP(), y: ySw() }),
     ]
 
     // ---- oamenii ----
@@ -1740,11 +1859,11 @@ export function ParcareLogin({ taste }: { taste: number }) {
             t: 0,
             coada: [
               fa(() => (E.tigara = false)),
-              mergi(pePlatforma(), subPlatforma(), ...laMasina(l, 0, -U * 0.5)),
+              mergi({ x: xP(), y: E.y }, ...laMasina(l, 0, -U * 0.5).slice(1)),
               sem('Esosit'),
               pana('predat'),
               stai(0.4),
-              mergi(...dinMasina(l, 0), subPlatforma(), pePlatforma(), locFumat(E.spot ?? 0)),
+              mergi(...dinMasina(l, 0).slice(0, -1), { x: xP(), y: locFumat(E.spot ?? 0).y }, locFumat(E.spot ?? 0)),
               fa(() => {
                 E.tigara = true
                 E.ocupat = false
@@ -1788,7 +1907,7 @@ export function ParcareLogin({ taste }: { taste: number }) {
         sem('cheie'),
         pana('urcat'),
         stai(0.3),
-        mergi(...dinMasina(l, 0), ...intoarcereE),
+        mergi(...(laTigara ? dinMasina(l, 0).slice(0, -1) : dinMasina(l, 0)), ...intoarcereE),
         ...(laTigara
           ? [
               fa(() => {
@@ -1836,9 +1955,9 @@ export function ParcareLogin({ taste }: { taste: number }) {
     function prinTigara(m: Masina, K: Om, E: Om): Actor[] {
       const l = m.loc!
       E.rezervat = true
-      const jos: Vec = { x: xA + U * 1.5, y: yL2 + U * 0.5 } // unde coboara din taxi
+      const jos: Vec = { x: xA + U * 1.5, y: yWj() } // unde coboara din taxi
       const Me: Vec = { x: jos.x - U * 0.5, y: jos.y } // langa client, pe marginea culoarului (nu pe alee)
-      const { pasiE, pasiK } = laMasinaPasi(m, E, K, true, [subPlatforma(), pePlatforma(), locFumat(E.spot ?? 0)], true)
+      const { pasiE, pasiK } = laMasinaPasi(m, E, K, true, [{ x: xP(), y: locFumat(E.spot ?? 0).y }, locFumat(E.spot ?? 0)], true)
       return [
         {
           om: K,
@@ -1856,7 +1975,7 @@ export function ParcareLogin({ taste }: { taste: number }) {
               E.ocupat = true
               E.tigara = false
             }),
-            mergi(pePlatforma(), subPlatforma(), { x: xWw(), y: ySw() }, { x: xWw(), y: yWj() }, Me),
+            mergi({ x: xP(), y: E.y }, { x: xP(), y: yWj() }, Me),
             stai(0.5, 0),
             fa(() => chei.push({ de: E, la: K, t0: performance.now() })),
             stai(1.15),
