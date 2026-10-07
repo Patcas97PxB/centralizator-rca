@@ -1049,16 +1049,38 @@ export function ParcareLogin({ taste }: { taste: number }) {
       return null
     }
     // omul nu intra in masini: asteapta masina care trece / iese de pe trotuar (nu si pe cea care il asteapta pe el)
-    function omBlocat(q: Vec): boolean {
+    function omBlocat(q: Vec): Masina | null {
       for (const m of masini) {
         if (!m.vizibila || m.loc || m.pasaj || m.cedeaza || m.y > yBul0 + U * 0.3) continue
         const c = Math.cos(-m.h)
         const sn = Math.sin(-m.h)
         const lx = (q.x - m.x) * c - (q.y - m.y) * sn
         const ly = (q.x - m.x) * sn + (q.y - m.y) * c
-        if (Math.abs(lx) < U * 0.68 && Math.abs(ly) < U * 0.42) return true
+        if (Math.abs(lx) < U * 0.68 && Math.abs(ly) < U * 0.42) return m
       }
-      return false
+      return null
+    }
+    // ocolirea unei masini oprite in drum: prin spatele ei, pe partea dinspre parcare (niciodata prin bulevard),
+    // apoi omul isi continua drumul de dupa masina
+    function ocolire(m: Masina, cur: Vec, d: Drum, s: number): Vec[] {
+      const rest = taie(d.pts, s)[1]
+      const c = Math.cos(m.h)
+      const sn = Math.sin(m.h)
+      const hl = U * 0.8
+      const hw = U * 0.55
+      const colt = (lx: number, ly: number): Vec => ({ x: m.x + lx * c - ly * sn, y: m.y + lx * sn + ly * c })
+      const cs = [colt(hl, hw), colt(hl, -hw), colt(-hl, hw), colt(-hl, -hw)].sort((a, b) => a.y - b.y).slice(0, 2)
+      cs.sort((a, b) => Math.hypot(a.x - cur.x, a.y - cur.y) - Math.hypot(b.x - cur.x, b.y - cur.y))
+      let best = rest.length - 1
+      let bd = Infinity
+      for (let i = 1; i < rest.length; i++) {
+        const dd = Math.hypot(rest[i].x - cs[1].x, rest[i].y - cs[1].y)
+        if (dd < bd) {
+          bd = dd
+          best = i
+        }
+      }
+      return [cur, cs[0], cs[1], ...rest.slice(best)]
     }
     function ruleaza(a: Actor, dt: number) {
       for (let n = 0; n < 10 && a.coada.length; n++) {
@@ -1071,11 +1093,20 @@ export function ParcareLogin({ taste }: { taste: number }) {
             p.d ??= drum([{ x: o.x, y: o.y }, ...p.pts])
             const s = a.t * vOm()
             const { p: q, dir } = peDrum(p.d, s)
-            if (a.t > dt && s < p.d.total && omBlocat(q)) {
+            const bl = a.t > dt && s < p.d.total ? omBlocat(q) : null
+            if (bl) {
               a.t -= dt
               o.merge = false
+              a.asteapta = (a.asteapta ?? 0) + dt
+              if (a.asteapta > 0.6) {
+                // masina sta pe loc (ex. asteapta sa intre in trafic): omul o ocoleste prin parcare
+                p.d = drum(ocolire(bl, { x: o.x, y: o.y }, p.d, a.t * vOm()))
+                a.t = 0
+                a.asteapta = 0
+              }
               return
             }
+            a.asteapta = 0
             o.x = q.x
             o.y = q.y
             if (p.d.total > 0.5) o.h = dir
@@ -1328,9 +1359,9 @@ export function ParcareLogin({ taste }: { taste: number }) {
     }
 
     // ---- pe unde merg oamenii in parcare (pe langa culoare, nu prin masini) ----
-    const xWw = () => xA + U * 0.45 // langa aleea de iesire
-    const xWr = () => xRA - U * 0.45
-    const yWj = () => yL2 + U * 0.5
+    const xWw = () => xA + U * 0.5 // pe marginea aleii de iesire
+    const xWr = () => xRA - U * 0.5
+    const yWj = () => yL2 + U * 0.55
     const yWs = () => yUp + U * 0.25
     function langaMasina(l: Loc, px: number): Vec {
       const c = culoar(l.cul!)
