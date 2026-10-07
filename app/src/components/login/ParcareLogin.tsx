@@ -1444,10 +1444,13 @@ export function ParcareLogin({ taste }: { taste: number }) {
       const ruta = [...intrareDinBulevard(), ...colturi([{ x: xA, y: benzi[0] - R2() }, ...nd, man[0]], U * 1.05)]
       return { ruta, man, spate: !!l.invers }
     }
+    // virajul spre bulevard porneste de unde e masina (niciodata inapoi spre parcare, oricat de mare e ecranul)
     function inBulevard(p: Vec): Vec[] {
-      const r = R2()
       const y = benzi[0]
-      return [p, { x: p.x, y: y - r }, ...arc({ x: p.x - r, y: y - r }, r, 0, Math.PI / 2), { x: p.x - r - U * 0.4, y }]
+      if (y - p.y < U * 0.2) return [p, { x: p.x - U * 0.8, y }] // e deja aproape pe banda
+      const r = Math.min(R2(), y - p.y)
+      const start = p.y < y - r - 0.5 ? [p, { x: p.x, y: y - r }] : [{ x: p.x, y: y - r }]
+      return [...start, ...arc({ x: p.x - r, y: y - r }, r, 0, Math.PI / 2), { x: p.x - r - U * 0.4, y }]
     }
 
     // ---- pe unde merg oamenii in parcare (pe langa culoare, nu prin masini) ----
