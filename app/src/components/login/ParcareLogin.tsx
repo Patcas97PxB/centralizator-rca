@@ -249,6 +249,7 @@ export function ParcareLogin({ taste }: { taste: number }) {
     let actori: Actor[] = [] // actorii activitatii in constructie
     let activitati: { actori: Actor[] }[] = [] // ce se intampla acum (mai multe deodata)
     let lacat: Actor | null = null // masina care manevreaza acum prin parcare
+    let iesiri = 0 // masini cu oameni in ele care vor sa iasa (au prioritate fata de cele care intra)
     let poarta: Actor | null = null // masina de pe aleea de iesire / de la marginea bulevardului
     let faza: 'normal' | 'golire' | 'umplere' = 'normal' // uneori pleaca aproape toate masinile
     let tFaza = 180
@@ -379,6 +380,7 @@ export function ParcareLogin({ taste }: { taste: number }) {
       activitati = []
       lacat = null
       poarta = null
+      iesiri = 0
       faza = 'normal'
       tFaza = intre(120, 240)
       fundalActori = []
@@ -1591,6 +1593,7 @@ export function ParcareLogin({ taste }: { taste: number }) {
       const a: Actor = { m, t: 0, coada: [] }
       a.coada = [
         pana(o.urcat ?? 'urcat'),
+        fa(() => iesiri++),
         ...iaLacat(a),
         fa(() => (m.loc = null)),
         stai(0.4),
@@ -1615,6 +1618,7 @@ export function ParcareLogin({ taste }: { taste: number }) {
         lasaPoarta(a),
         fa(() => {
           m.semnal = false
+          iesiri--
           laTrafic(m)
         }),
         sem(o.plecat ?? 'plecat'),
@@ -1659,13 +1663,14 @@ export function ParcareLogin({ taste }: { taste: number }) {
         fa(() => (a.m!.semnal = true)),
         // daca e liber, intra direct; altfel franeaza pana la intrare si asteapta acolo
         fa(() => {
-          if ((!lacat || lacat === a) && (!poarta || poarta === a)) {
+          if (iesiri === 0 && (!lacat || lacat === a) && (!poarta || poarta === a)) {
             lacat = a
             poarta = a
           }
         }),
         conduce((p) => (lacat === a && poarta === a ? [p] : [p, laIntrare()]), U * 1.3, 'fran'),
-        ...iaLacat(a),
+        cand(() => lacat === a || (iesiri === 0 && !lacat)),
+        fa(() => (lacat = a)),
         ...iaPoarta(a),
         fa(() => (a.m!.laIntrare = false)),
         conduce((p) => [p, ...in1], U * 1.6),
@@ -1727,13 +1732,14 @@ export function ParcareLogin({ taste }: { taste: number }) {
         fa(() => (a.m!.semnal = true)),
         // daca e liber, intra direct; altfel franeaza pana la intrare si asteapta acolo
         fa(() => {
-          if ((!lacat || lacat === a) && (!poarta || poarta === a)) {
+          if (iesiri === 0 && (!lacat || lacat === a) && (!poarta || poarta === a)) {
             lacat = a
             poarta = a
           }
         }),
         conduce((p) => (lacat === a && poarta === a ? [p] : [p, laIntrare()]), U * 1.3, 'fran'),
-        ...iaLacat(a),
+        cand(() => lacat === a || (iesiri === 0 && !lacat)),
+        fa(() => (lacat = a)),
         ...iaPoarta(a),
         fa(() => (a.m!.laIntrare = false)),
         conduce((p) => [p, ...in1], U * 1.6),
