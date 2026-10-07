@@ -39,6 +39,7 @@ interface Masina {
   farPana: number
   farMouse: number // 0..1, farurile aprinse de apropierea cursorului
   taxi?: boolean
+  tip?: TipMasina
   pasaj?: boolean // pe drumul din dreapta (coboara / urca din pasajul de sub bulevard)
   laIntrare?: boolean // asteapta pe bulevard sa intre in parcare (nu incurca masina care iese)
   cedeaza?: boolean // sta pe loc ca sa treaca un om (omul nu o mai asteapta)
@@ -58,6 +59,13 @@ interface Om {
   merge: boolean
   alpha: number
   tigara?: boolean
+  piele?: string
+  coafura?: 'scurt' | 'sapca' | 'chel'
+  sapca?: string
+  haina?: boolean // clientul poarta geaca (maneci lungi, gluga)
+  rucsac?: string
+  pantaloni?: string
+  pantofi?: string
   pufStart?: number
   ocupat?: boolean // condus de un scenariu (nu sta la tigara)
   spot?: number // locul de pe platforma de fumat
@@ -91,8 +99,60 @@ interface Actor {
   asteapta?: number // cat a stat masina dupa un om din cale
 }
 
-const CULORI = ['#e5e7eb', '#94a3b8', '#3b82f6', '#7c3aed', '#0ea5e9', '#334155', '#10b981', '#cbd5e1', '#1d4ed8', '#a855f7', '#dc2626', '#f8fafc']
-const TRICOURI_CLIENT = ['#334155', '#1e3a5f', '#7f1d1d', '#365314', '#4c1d95', '#78350f', '#0f766e']
+// culorile flotei (ca in pozele masinilor): mult gri metalizat, alb, argintiu, negru, cateva colorate
+const CULORI = ['#3d4249', '#e9ebee', '#b8bdc4', '#17191d', '#5b6470', '#2c4a6e', '#f4f4f2', '#8a9099', '#4a5560', '#7d1f25', '#3b5d3f', '#c9ccd1']
+
+// formele masinilor vazute de sus (fractii din lungime): parbriz ws0 (la capota) -> ws1 (la plafon), plafon pana la rf1,
+// luneta pana la rw1. Dupa modelele din flota: SUV (Duster, Kuga, Tiguan, X3), sedan (Logan, Octavia, Passat),
+// hatchback (Polo, Golf, i20), break (Jogger, Superb), electrica (Tesla, Ariya, EX30), pick-up (Hilux).
+type TipMasina = 'suv' | 'sedan' | 'hatch' | 'break' | 'ev' | 'pickup'
+interface Forma {
+  len: number
+  lat: number
+  ws0: number
+  ws1: number
+  rf1: number
+  rw1: number
+  rFata: number
+  rSpate: number
+  usi: number[]
+  far: number
+  rotiMari?: boolean
+  protectii?: boolean
+  bare?: boolean
+  portbagaj?: boolean
+  panoramic?: boolean
+  stopBara?: boolean
+  bena?: boolean
+}
+const FORME: Record<TipMasina, Forma> = {
+  suv: { len: 1.04, lat: 0.52, ws0: 0.26, ws1: 0.14, rf1: -0.34, rw1: -0.42, rFata: 0.3, rSpate: 0.22, usi: [0.05, -0.17], far: 0.14, rotiMari: true, protectii: true, bare: true },
+  sedan: { len: 1, lat: 0.48, ws0: 0.2, ws1: 0.08, rf1: -0.2, rw1: -0.32, rFata: 0.42, rSpate: 0.3, usi: [0.02, -0.17], far: 0.16, portbagaj: true },
+  hatch: { len: 0.86, lat: 0.47, ws0: 0.2, ws1: 0.09, rf1: -0.3, rw1: -0.42, rFata: 0.44, rSpate: 0.34, usi: [0, -0.2], far: 0.17 },
+  break: { len: 1.04, lat: 0.48, ws0: 0.22, ws1: 0.1, rf1: -0.38, rw1: -0.46, rFata: 0.42, rSpate: 0.22, usi: [0.04, -0.16], far: 0.15, bare: true },
+  ev: { len: 0.98, lat: 0.5, ws0: 0.26, ws1: 0.1, rf1: -0.3, rw1: -0.42, rFata: 0.5, rSpate: 0.34, usi: [0.02, -0.17], far: 0.1, panoramic: true, stopBara: true },
+  pickup: { len: 1.12, lat: 0.52, ws0: 0.28, ws1: 0.18, rf1: -0.06, rw1: -0.1, rFata: 0.26, rSpate: 0.12, usi: [0.12, -0.02], far: 0.14, rotiMari: true, protectii: true, bena: true },
+}
+const TIPURI: [TipMasina, number][] = [
+  ['suv', 34],
+  ['sedan', 26],
+  ['hatch', 18],
+  ['break', 8],
+  ['ev', 9],
+  ['pickup', 5],
+]
+function alegeTip(): TipMasina {
+  let r = Math.random() * 100
+  for (const [t, p] of TIPURI) {
+    r -= p
+    if (r <= 0) return t
+  }
+  return 'sedan'
+}
+const TRICOURI_CLIENT = ['#334155', '#1e3a5f', '#7f1d1d', '#365314', '#4c1d95', '#78350f', '#0f766e', '#9ca3af', '#b45309', '#1f2937', '#be185d']
+const PIELE = ['#f1d3b8', '#e8c4a0', '#e8c4a0', '#d9a77f', '#c08a62', '#8d5a3b']
+const PAR = ['#1f1a17', '#3f2a1d', '#5b3a24', '#2b2b2b', '#8a6a4a', '#a3a3a3']
+const PANTALONI = ['#2d3e5e', '#27272a', '#4b5563', '#6b5b45', '#1e293b']
 
 // ---- drum: lista de puncte, cu lungimi cumulate ----
 interface Drum {
@@ -288,6 +348,7 @@ export function ParcareLogin({ taste }: { taste: number }) {
       farPana: 0,
       farMouse: 0,
       loc: null,
+      tip: alegeTip(),
     })
     const omNou = (tricou: string, angajat: boolean): Om => ({
       x: -50,
@@ -299,6 +360,14 @@ export function ParcareLogin({ taste }: { taste: number }) {
       dispozitie: 0,
       merge: false,
       alpha: 0,
+      piele: unul(PIELE),
+      par: unul(PAR),
+      coafura: angajat ? (Math.random() < 0.85 ? 'scurt' : 'chel') : unul(['scurt', 'scurt', 'sapca', 'chel'] as const),
+      sapca: unul(['#1e3a5f', '#111827', '#7f1d1d', '#e5e7eb']),
+      haina: !angajat && Math.random() < 0.4,
+      rucsac: !angajat && Math.random() < 0.25 ? unul(['#111827', '#374151', '#1e3a5f', '#7c2d12']) : undefined,
+      pantaloni: angajat ? undefined : unul(PANTALONI),
+      pantofi: unul(['#0b0f19', '#e5e7eb', '#78350f']),
     })
 
     function construieste() {
@@ -663,11 +732,12 @@ export function ParcareLogin({ taste }: { taste: number }) {
       c.fillRect(usaX - U * 0.16, y + h - 3, U * 0.32, 4)
     }
 
-    // ---- desen masina, vazuta de sus: caroserie cu bot rotunjit, bari, roti, geamuri cu reflexii, faruri, semnalizare ----
+    // ---- desen masina, vazuta de sus, dupa tipurile din flota (SUV, sedan, hatchback, break, electrica, pick-up) ----
     function deseneazaMasina(m: Masina, acum: number) {
       if (!m.vizibila) return
-      const L = U
-      const w = U * 0.48
+      const F = FORME[m.tip ?? 'sedan']
+      const L = U * F.len
+      const w = U * F.lat
       const far = Math.max(acum < m.farPana ? 1 : 0, m.farMouse, m.loc ? 0 : 0.55)
       if (far > 0.02) {
         // lumina se opreste in peretele sediului si in copacii din capat: doar pe parcare, drum, trotuar, bulevard
@@ -679,14 +749,14 @@ export function ParcareLogin({ taste }: { taste: number }) {
         ctx!.clip()
         ctx!.translate(m.x, m.y)
         ctx!.rotate(m.h)
-        const g = ctx!.createRadialGradient(L * 0.5, 0, 2, L * 0.5, 0, L * 1.5)
+        const g = ctx!.createRadialGradient(L * 0.5, 0, 2, L * 0.5, 0, U * 1.5)
         g.addColorStop(0, `rgba(255,248,220,${0.32 * far})`)
         g.addColorStop(1, 'rgba(255,248,220,0)')
         ctx!.fillStyle = g
         ctx!.beginPath()
         ctx!.moveTo(L * 0.46, -w * 0.38)
-        ctx!.lineTo(L * 1.9, -w * 1.3)
-        ctx!.lineTo(L * 1.9, w * 1.3)
+        ctx!.lineTo(L * 0.5 + U * 1.4, -w * 1.3)
+        ctx!.lineTo(L * 0.5 + U * 1.4, w * 1.3)
         ctx!.lineTo(L * 0.46, w * 0.38)
         ctx!.closePath()
         ctx!.fill()
@@ -696,7 +766,9 @@ export function ParcareLogin({ taste }: { taste: number }) {
       c.save()
       c.translate(m.x, m.y)
       c.rotate(m.h)
-      const raze: [number, number, number, number] = [w * 0.3, w * 0.44, w * 0.44, w * 0.3] // spate stanga, fata stanga, fata dreapta, spate dreapta
+      const rf = w * F.rFata
+      const rs = w * F.rSpate
+      const raze: [number, number, number, number] = [rs, rf, rf, rs]
       // umbra moale
       c.fillStyle = 'rgba(0,0,0,.22)'
       c.beginPath()
@@ -706,22 +778,23 @@ export function ParcareLogin({ taste }: { taste: number }) {
       c.beginPath()
       c.roundRect(-L / 2 + 2, -w / 2 + 2.5, L, w, raze)
       c.fill()
-      // roti
+      // roti (la SUV si pick-up mai mari, ies mai mult din caroserie)
       c.fillStyle = '#05070d'
-      for (const rx of [L * 0.3, -L * 0.29])
+      const rw = F.rotiMari ? 0.19 : 0.16
+      for (const rx of [L * 0.31, -L * 0.29])
         for (const sy of [-1, 1]) {
           c.beginPath()
-          c.roundRect(rx - L * 0.09, sy > 0 ? w * 0.39 : -w * 0.55, L * 0.18, w * 0.16, 2.5)
+          c.roundRect(rx - L * 0.09, sy > 0 ? w * (0.5 - rw + 0.06) : -w * (0.5 + 0.06), L * 0.18, w * rw, 2.5)
           c.fill()
         }
-      // caroserie cu volum
+      // caroserie cu volum (metalizat: luciu pe mijloc)
       const gc = c.createLinearGradient(0, -w / 2, 0, w / 2)
-      gc.addColorStop(0, nuanta(m.culoare, -0.42))
-      gc.addColorStop(0.16, nuanta(m.culoare, -0.05))
-      gc.addColorStop(0.42, nuanta(m.culoare, 0.18))
-      gc.addColorStop(0.58, nuanta(m.culoare, 0.18))
-      gc.addColorStop(0.84, nuanta(m.culoare, -0.05))
-      gc.addColorStop(1, nuanta(m.culoare, -0.42))
+      gc.addColorStop(0, nuanta(m.culoare, -0.45))
+      gc.addColorStop(0.14, nuanta(m.culoare, -0.06))
+      gc.addColorStop(0.4, nuanta(m.culoare, 0.2))
+      gc.addColorStop(0.6, nuanta(m.culoare, 0.2))
+      gc.addColorStop(0.86, nuanta(m.culoare, -0.06))
+      gc.addColorStop(1, nuanta(m.culoare, -0.45))
       c.fillStyle = gc
       c.beginPath()
       c.roundRect(-L / 2, -w / 2, L, w, raze)
@@ -729,86 +802,123 @@ export function ParcareLogin({ taste }: { taste: number }) {
       c.strokeStyle = 'rgba(0,0,0,.45)'
       c.lineWidth = 0.8
       c.stroke()
+      // SUV / pick-up: protectii negre pe aripi si praguri
+      if (F.protectii) {
+        c.fillStyle = 'rgba(15,18,24,.75)'
+        for (const sy of [-1, 1]) {
+          c.fillRect(-L * 0.42, sy > 0 ? w * 0.43 : -w * 0.5, L * 0.84, w * 0.07)
+        }
+      }
       // bari fata/spate
       c.fillStyle = 'rgba(15,23,42,.55)'
       c.beginPath()
       c.roundRect(L * 0.47, -w * 0.36, L * 0.035, w * 0.72, 2)
       c.roundRect(-L * 0.505, -w * 0.34, L * 0.035, w * 0.68, 2)
       c.fill()
-      // capota (nervuri), portbagaj, usi, manere
+      // capota cu nervuri, usi, manere
       c.strokeStyle = 'rgba(0,0,0,.22)'
       c.lineWidth = 0.7
       c.beginPath()
-      c.moveTo(L * 0.34, -w * 0.38)
-      c.quadraticCurveTo(L * 0.39, 0, L * 0.34, w * 0.38)
-      c.moveTo(L * 0.44, -w * 0.18)
-      c.lineTo(L * 0.34, -w * 0.12)
-      c.moveTo(L * 0.44, w * 0.18)
-      c.lineTo(L * 0.34, w * 0.12)
-      c.moveTo(-L * 0.41, -w * 0.36)
-      c.quadraticCurveTo(-L * 0.45, 0, -L * 0.41, w * 0.36)
-      for (const ux of [L * 0.04, -L * 0.17]) {
-        c.moveTo(ux, -w * 0.5)
-        c.lineTo(ux, -w * 0.39)
-        c.moveTo(ux, w * 0.5)
-        c.lineTo(ux, w * 0.39)
+      c.moveTo(L * (F.ws0 + 0.13), -w * 0.4)
+      c.quadraticCurveTo(L * (F.ws0 + 0.18), 0, L * (F.ws0 + 0.13), w * 0.4)
+      c.moveTo(L * 0.45, -w * 0.2)
+      c.lineTo(L * (F.ws0 + 0.04), -w * 0.13)
+      c.moveTo(L * 0.45, w * 0.2)
+      c.lineTo(L * (F.ws0 + 0.04), w * 0.13)
+      if (F.portbagaj) {
+        c.moveTo(L * (F.rw1 - 0.02), -w * 0.37)
+        c.quadraticCurveTo(L * (F.rw1 - 0.05), 0, L * (F.rw1 - 0.02), w * 0.37)
+      }
+      const usi = F.usi
+      for (const ux of usi) {
+        c.moveTo(L * ux, -w * 0.5)
+        c.lineTo(L * ux, -w * 0.39)
+        c.moveTo(L * ux, w * 0.5)
+        c.lineTo(L * ux, w * 0.39)
       }
       c.stroke()
       c.strokeStyle = 'rgba(255,255,255,.35)'
       c.beginPath()
-      for (const ux of [L * 0.0, -L * 0.21]) {
-        c.moveTo(ux, -w * 0.48)
-        c.lineTo(ux - L * 0.03, -w * 0.48)
-        c.moveTo(ux, w * 0.48)
-        c.lineTo(ux - L * 0.03, w * 0.48)
+      for (const ux of usi) {
+        c.moveTo(L * (ux - 0.03), -w * 0.47)
+        c.lineTo(L * (ux - 0.07), -w * 0.47)
+        c.moveTo(L * (ux - 0.03), w * 0.47)
+        c.lineTo(L * (ux - 0.07), w * 0.47)
       }
       c.stroke()
-      // geamuri cu reflexii
-      const gg = c.createLinearGradient(L * 0.3, -w * 0.4, L * 0.15, w * 0.4)
-      gg.addColorStop(0, '#1e3a5f')
+      // geamuri cu reflexii: parbriz, laterale, luneta
+      const gg = c.createLinearGradient(L * F.ws0, -w * 0.4, L * F.ws1, w * 0.4)
+      gg.addColorStop(0, '#24456e')
       gg.addColorStop(0.5, '#0b1222')
       gg.addColorStop(1, '#16253f')
       c.fillStyle = gg
       c.beginPath()
-      c.moveTo(L * 0.16, -w * 0.39)
-      c.quadraticCurveTo(L * 0.25, -w * 0.4, L * 0.31, -w * 0.31)
-      c.lineTo(L * 0.31, w * 0.31)
-      c.quadraticCurveTo(L * 0.25, w * 0.4, L * 0.16, w * 0.39)
+      c.moveTo(L * F.ws1, -w * 0.4)
+      c.quadraticCurveTo(L * (F.ws0 - 0.02), -w * 0.41, L * F.ws0, -w * 0.31)
+      c.lineTo(L * F.ws0, w * 0.31)
+      c.quadraticCurveTo(L * (F.ws0 - 0.02), w * 0.41, L * F.ws1, w * 0.4)
       c.closePath()
       c.fill()
       c.beginPath()
-      c.moveTo(-L * 0.29, -w * 0.36)
-      c.quadraticCurveTo(-L * 0.36, -w * 0.34, -L * 0.385, -w * 0.27)
-      c.lineTo(-L * 0.385, w * 0.27)
-      c.quadraticCurveTo(-L * 0.36, w * 0.34, -L * 0.29, w * 0.36)
+      c.moveTo(L * F.rf1, -w * 0.37)
+      c.quadraticCurveTo(L * (F.rw1 + 0.02), -w * 0.35, L * F.rw1, -w * 0.27)
+      c.lineTo(L * F.rw1, w * 0.27)
+      c.quadraticCurveTo(L * (F.rw1 + 0.02), w * 0.35, L * F.rf1, w * 0.37)
       c.closePath()
       c.fill()
-      c.fillStyle = 'rgba(15,23,42,.75)'
+      c.fillStyle = 'rgba(15,23,42,.78)'
       c.beginPath()
-      c.roundRect(-L * 0.27, -w * 0.43, L * 0.42, w * 0.075, 1.5)
-      c.roundRect(-L * 0.27, w * 0.355, L * 0.42, w * 0.075, 1.5)
+      c.roundRect(L * F.rf1, -w * 0.43, L * (F.ws1 - F.rf1), w * 0.075, 1.5)
+      c.roundRect(L * F.rf1, w * 0.355, L * (F.ws1 - F.rf1), w * 0.075, 1.5)
       c.fill()
-      // plafon
+      // plafon: vopsit, sau panoramic din sticla (electrice)
       const gp = c.createLinearGradient(0, -w * 0.34, 0, w * 0.34)
-      gp.addColorStop(0, nuanta(m.culoare, -0.08))
-      gp.addColorStop(0.5, nuanta(m.culoare, 0.12))
-      gp.addColorStop(1, nuanta(m.culoare, -0.08))
+      if (F.panoramic) {
+        gp.addColorStop(0, '#0b1222')
+        gp.addColorStop(0.5, '#1d3557')
+        gp.addColorStop(1, '#0b1222')
+      } else {
+        gp.addColorStop(0, nuanta(m.culoare, -0.08))
+        gp.addColorStop(0.5, nuanta(m.culoare, 0.14))
+        gp.addColorStop(1, nuanta(m.culoare, -0.08))
+      }
       c.fillStyle = gp
       c.beginPath()
-      c.roundRect(-L * 0.28, -w * 0.34, L * 0.44, w * 0.68, 3)
+      c.roundRect(L * F.rf1, -w * 0.345, L * (F.ws1 - F.rf1), w * 0.69, 3)
       c.fill()
-      c.fillStyle = 'rgba(255,255,255,.13)'
+      c.fillStyle = F.panoramic ? 'rgba(147,197,253,.18)' : 'rgba(255,255,255,.14)'
       c.beginPath()
-      c.roundRect(-L * 0.24, -w * 0.29, L * 0.34, w * 0.13, 2)
+      c.roundRect(L * (F.rf1 + 0.04), -w * 0.29, L * (F.ws1 - F.rf1 - 0.08), w * 0.13, 2)
       c.fill()
+      if (F.bare) {
+        // bare longitudinale pe plafon (SUV)
+        c.fillStyle = 'rgba(20,24,32,.85)'
+        c.fillRect(L * (F.rf1 + 0.02), -w * 0.33, L * (F.ws1 - F.rf1 - 0.04), w * 0.045)
+        c.fillRect(L * (F.rf1 + 0.02), w * 0.285, L * (F.ws1 - F.rf1 - 0.04), w * 0.045)
+      }
+      if (F.bena) {
+        // bena deschisa a pick-up-ului
+        c.fillStyle = 'rgba(12,15,22,.9)'
+        c.beginPath()
+        c.roundRect(-L * 0.47, -w * 0.4, L * (F.rw1 + 0.44), w * 0.8, 2)
+        c.fill()
+        c.strokeStyle = 'rgba(148,163,184,.35)'
+        c.lineWidth = 0.8
+        c.beginPath()
+        for (let i = 1; i < 5; i++) {
+          c.moveTo(-L * 0.46, -w * 0.4 + (w * 0.8 * i) / 5)
+          c.lineTo(L * (F.rw1 - 0.03), -w * 0.4 + (w * 0.8 * i) / 5)
+        }
+        c.stroke()
+      }
       // reflexii pe parbriz si luneta
       c.strokeStyle = 'rgba(255,255,255,.3)'
       c.lineWidth = 1
       c.beginPath()
-      c.moveTo(L * 0.2, -w * 0.3)
-      c.lineTo(L * 0.28, -w * 0.08)
-      c.moveTo(-L * 0.33, w * 0.05)
-      c.lineTo(-L * 0.36, w * 0.2)
+      c.moveTo(L * (F.ws1 + 0.04), -w * 0.3)
+      c.lineTo(L * (F.ws0 - 0.02), -w * 0.08)
+      c.moveTo(L * (F.rw1 + 0.05), w * 0.05)
+      c.lineTo(L * (F.rw1 + 0.02), w * 0.2)
       c.stroke()
       if (m.taxi) {
         // lampa TAXI pe plafon + dunga in carouri
@@ -820,36 +930,40 @@ export function ParcareLogin({ taste }: { taste: number }) {
         for (let i = 0; i < 6; i++) c.fillRect(-L * 0.26 + i * L * 0.07, (i % 2 ? 1 : -1) * w * 0.46 - w * 0.02, L * 0.035, w * 0.04)
       }
       // oglinzi
-      c.fillStyle = nuanta(m.culoare, -0.25)
+      c.fillStyle = nuanta(m.culoare, -0.3)
       c.beginPath()
-      c.roundRect(L * 0.1, -w * 0.66, L * 0.08, w * 0.17, 2)
-      c.roundRect(L * 0.1, w * 0.49, L * 0.08, w * 0.17, 2)
+      c.roundRect(L * (F.ws1 + 0.02), -w * 0.66, L * 0.08, w * 0.17, 2)
+      c.roundRect(L * (F.ws1 + 0.02), w * 0.49, L * 0.08, w * 0.17, 2)
       c.fill()
       c.fillStyle = 'rgba(148,163,184,.6)'
-      c.fillRect(L * 0.115, -w * 0.64, L * 0.02, w * 0.12)
-      c.fillRect(L * 0.115, w * 0.52, L * 0.02, w * 0.12)
-      // faruri cu lumina de zi, numere, stopuri
-      c.fillStyle = far > 0.02 ? '#fffbe6' : 'rgba(226,232,240,.75)'
+      c.fillRect(L * (F.ws1 + 0.035), -w * 0.64, L * 0.02, w * 0.12)
+      c.fillRect(L * (F.ws1 + 0.035), w * 0.52, L * 0.02, w * 0.12)
+      // faruri (LED subtiri), lumina de zi, grila/sigla, numere, stopuri
+      c.fillStyle = far > 0.02 ? '#fffbe6' : 'rgba(226,232,240,.8)'
       c.beginPath()
-      c.roundRect(L * 0.43, -w * 0.42, L * 0.07, w * 0.17, [1, 4, 4, 1])
-      c.roundRect(L * 0.43, w * 0.25, L * 0.07, w * 0.17, [1, 4, 4, 1])
+      c.roundRect(L * 0.44, -w * 0.42, L * 0.06, w * F.far, [1, 4, 4, 1])
+      c.roundRect(L * 0.44, w * (0.42 - F.far), L * 0.06, w * F.far, [1, 4, 4, 1])
       c.fill()
-      c.strokeStyle = 'rgba(191,219,254,.8)'
-      c.lineWidth = 0.9
+      if (!F.panoramic) {
+        c.fillStyle = 'rgba(10,12,18,.8)'
+        c.fillRect(L * 0.475, -w * 0.2, L * 0.025, w * 0.4)
+      }
+      c.fillStyle = 'rgba(203,213,225,.9)'
       c.beginPath()
-      c.moveTo(L * 0.44, -w * 0.25)
-      c.lineTo(L * 0.47, -w * 0.18)
-      c.moveTo(L * 0.44, w * 0.25)
-      c.lineTo(L * 0.47, w * 0.18)
-      c.stroke()
+      c.arc(L * 0.47, 0, w * 0.045, 0, Math.PI * 2)
+      c.fill()
       c.fillStyle = '#e5e7eb'
-      c.fillRect(L * 0.49, -w * 0.11, L * 0.018, w * 0.22)
       c.fillRect(-L * 0.508, -w * 0.11, L * 0.018, w * 0.22)
-      c.fillStyle = m.loc ? 'rgba(220,38,38,.8)' : 'rgba(248,80,80,1)'
-      c.beginPath()
-      c.roundRect(-L * 0.5, -w * 0.42, L * 0.05, w * 0.16, [3, 1, 1, 3])
-      c.roundRect(-L * 0.5, w * 0.26, L * 0.05, w * 0.16, [3, 1, 1, 3])
-      c.fill()
+      c.fillStyle = m.loc ? 'rgba(220,38,38,.85)' : 'rgba(248,80,80,1)'
+      if (F.stopBara) {
+        // stop continuu pe toata latimea (electrice / SUV noi)
+        c.fillRect(-L * 0.5, -w * 0.4, L * 0.03, w * 0.8)
+      } else {
+        c.beginPath()
+        c.roundRect(-L * 0.5, -w * 0.42, L * 0.05, w * 0.16, [3, 1, 1, 3])
+        c.roundRect(-L * 0.5, w * 0.26, L * 0.05, w * 0.16, [3, 1, 1, 3])
+        c.fill()
+      }
       const lumina = (px: number, py: number, r: number) => {
         const g = c.createRadialGradient(px, py, 0, px, py, r)
         g.addColorStop(0, 'rgba(255,190,80,.95)')
@@ -860,7 +974,6 @@ export function ParcareLogin({ taste }: { taste: number }) {
         c.arc(px, py, r, 0, Math.PI * 2)
         c.fill()
       }
-      // avarii (toate colturile)
       if (acum < m.avariiPana && Math.floor((acum - m.avariiStart) / 160) % 2 === 0)
         for (const [px, py] of [
           [L * 0.47, -w * 0.47],
@@ -877,7 +990,7 @@ export function ParcareLogin({ taste }: { taste: number }) {
       c.restore()
     }
 
-    // ---- desen om, vazut de sus: umeri, brate cu maneci, picioare cu pantofi, cap cu par ----
+    // ---- desen om, vazut de sus: ten, coafura / sapca, haina, rucsac, brate cu maneci, pantofi ----
     function deseneazaOm(o: Om, acum: number) {
       if (!o.vizibil || o.alpha <= 0.01) return
       const s = (U / 46) * 1.35
@@ -887,7 +1000,7 @@ export function ParcareLogin({ taste }: { taste: number }) {
       c.translate(o.x, o.y)
       c.rotate(o.h)
       const leg = o.merge ? Math.sin(acum / 150) : 0
-      const piele = '#e8c4a0'
+      const piele = o.piele ?? '#e8c4a0'
       // umbra
       c.fillStyle = 'rgba(0,0,0,.28)'
       c.beginPath()
@@ -896,15 +1009,15 @@ export function ParcareLogin({ taste }: { taste: number }) {
       // picioare (pantaloni) si pantofi
       for (const sy of [-1, 1]) {
         const px = 3.4 * s * leg * -sy
-        c.fillStyle = o.angajat ? '#1f2a44' : '#27272a'
+        c.fillStyle = o.pantaloni ?? (o.angajat ? '#1f2a44' : '#27272a')
         c.beginPath()
         c.ellipse(px * 0.55, sy * 3 * s, 3.1 * s, 2.2 * s, 0, 0, Math.PI * 2)
         c.fill()
-        c.fillStyle = '#0b0f19'
+        c.fillStyle = o.angajat ? '#0b0f19' : (o.pantofi ?? '#0b0f19')
         c.beginPath()
         c.ellipse(px + 2.6 * s, sy * 3 * s, 1.9 * s, 1.5 * s, 0, 0, Math.PI * 2)
         c.fill()
-        c.fillStyle = 'rgba(255,255,255,.18)'
+        c.fillStyle = 'rgba(255,255,255,.2)'
         c.beginPath()
         c.ellipse(px + 3.2 * s, sy * 3 * s - 0.4 * s, 0.7 * s, 0.4 * s, 0, 0, Math.PI * 2)
         c.fill()
@@ -916,9 +1029,8 @@ export function ParcareLogin({ taste }: { taste: number }) {
         const ridicat = sy > 0 && o.tigara && !o.merge
         const mx = ridicat ? (puf ? 5.6 * s : 3.8 * s) : ax + 1.6 * s
         const my = ridicat ? (puf ? 2.8 * s : 7.2 * s) : sy * 7.8 * s
-        // antebrat (piele) de la maneca la mana
-        c.strokeStyle = piele
-        c.lineWidth = 2.2 * s
+        c.strokeStyle = o.haina ? nuanta(o.tricou, -0.1) : piele // la haina: maneca lunga
+        c.lineWidth = 2.3 * s
         c.lineCap = 'round'
         c.beginPath()
         c.moveTo(ax * 0.4, sy * 7.2 * s)
@@ -933,6 +1045,15 @@ export function ParcareLogin({ taste }: { taste: number }) {
         c.arc(mx, my, 1.35 * s, 0, Math.PI * 2)
         c.fill()
       }
+      // rucsac (pe spate)
+      if (o.rucsac) {
+        c.fillStyle = o.rucsac
+        c.beginPath()
+        c.roundRect(-6.6 * s, -4.4 * s, 3.4 * s, 8.8 * s, 1.6 * s)
+        c.fill()
+        c.fillStyle = 'rgba(0,0,0,.3)'
+        c.fillRect(-6.2 * s, -1 * s, 2.6 * s, 2 * s)
+      }
       // trunchi: umeri cu volum
       const gt = c.createLinearGradient(0, -8 * s, 0, 8 * s)
       gt.addColorStop(0, nuanta(o.tricou, -0.22))
@@ -945,6 +1066,19 @@ export function ParcareLogin({ taste }: { taste: number }) {
       c.strokeStyle = 'rgba(0,0,0,.25)'
       c.lineWidth = 0.6
       c.stroke()
+      if (o.haina) {
+        // haina deschisa: fermoar si gluga
+        c.strokeStyle = 'rgba(0,0,0,.35)'
+        c.lineWidth = 0.8
+        c.beginPath()
+        c.moveTo(3.4 * s, -1 * s)
+        c.lineTo(3.4 * s, 1 * s)
+        c.stroke()
+        c.fillStyle = nuanta(o.tricou, -0.15)
+        c.beginPath()
+        c.ellipse(-2.6 * s, 0, 1.8 * s, 3.6 * s, 0, 0, Math.PI * 2)
+        c.fill()
+      }
       if (o.angajat) {
         // dungile cu culorile logo-ului pe umeri (verde, albastru, mov)
         ;['#00A848', '#0060F0', '#6000C0'].forEach((cl, i) => {
@@ -976,7 +1110,7 @@ export function ParcareLogin({ taste }: { taste: number }) {
         c.fill()
         c.shadowBlur = 0
       }
-      // cap: urechi, fata (spre fata), par cu luciu
+      // cap: urechi, fata, nas (arata incotro priveste), par / sapca
       c.fillStyle = piele
       c.beginPath()
       c.ellipse(0.4 * s, -3.9 * s, 0.9 * s, 1.2 * s, 0, 0, Math.PI * 2)
@@ -984,6 +1118,10 @@ export function ParcareLogin({ taste }: { taste: number }) {
       c.fill()
       c.beginPath()
       c.arc(0.7 * s, 0, 3.9 * s, 0, Math.PI * 2)
+      c.fill()
+      c.fillStyle = nuanta(piele, -0.12)
+      c.beginPath()
+      c.ellipse(4.5 * s, 0, 0.9 * s, 0.7 * s, 0, 0, Math.PI * 2)
       c.fill()
       const par = o.par ?? (o.angajat ? '#3f2a1d' : '#1f2937')
       const gh = c.createRadialGradient(-1.2 * s, -1.2 * s, 0.3 * s, -0.5 * s, 0, 5 * s)
@@ -1004,10 +1142,37 @@ export function ParcareLogin({ taste }: { taste: number }) {
         c.moveTo(-3.6 * s, 0)
         c.lineTo(-8.6 * s, 0)
         c.stroke()
+      } else if (o.coafura === 'sapca') {
+        c.fillStyle = o.sapca ?? '#1e3a5f'
+        c.beginPath()
+        c.arc(-0.2 * s, 0, 3.9 * s, 0, Math.PI * 2)
+        c.fill()
+        c.beginPath()
+        c.ellipse(3.6 * s, 0, 2.2 * s, 3 * s, 0, -Math.PI / 2, Math.PI / 2)
+        c.fill()
+        c.fillStyle = 'rgba(255,255,255,.2)'
+        c.beginPath()
+        c.arc(-0.6 * s, -0.8 * s, 1.2 * s, 0, Math.PI * 2)
+        c.fill()
+      } else if (o.coafura === 'chel') {
+        c.fillStyle = 'rgba(255,255,255,.25)'
+        c.beginPath()
+        c.ellipse(-0.4 * s, -1 * s, 1.6 * s, 1 * s, 0.4, 0, Math.PI * 2)
+        c.fill()
+        c.fillStyle = par
+        c.beginPath()
+        c.arc(-0.4 * s, 0, 3.8 * s, Math.PI * 0.7, Math.PI * 1.3)
+        c.fill()
       } else {
         c.beginPath()
         c.ellipse(-0.4 * s, 0, 3.6 * s, 3.9 * s, 0, 0, Math.PI * 2)
         c.fill()
+        c.strokeStyle = nuanta(par, -0.35)
+        c.lineWidth = 0.5
+        c.beginPath()
+        c.moveTo(-0.4 * s, -3 * s)
+        c.quadraticCurveTo(1.8 * s, -1 * s, 2.4 * s, 1.5 * s)
+        c.stroke()
       }
       c.restore()
       if (o.dispozitie) {
@@ -1728,6 +1893,7 @@ export function ParcareLogin({ taste }: { taste: number }) {
           const tx = masinaNoua(W + U * 1.5, benzi[0], Math.PI, '#facc15')
           tx.laIntrare = true
           tx.taxi = true
+          tx.tip = 'sedan'
           masini.push(tx)
           a.m = tx
         }),
