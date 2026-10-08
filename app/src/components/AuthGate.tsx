@@ -8,11 +8,10 @@ import { ESTE_DEMO } from '@/lib/demo'
 import { SiteFooter } from '@/components/layout/SiteFooter'
 import { DOMENIU_PERMIS } from '@/lib/autentificare'
 import { FundalLogin } from '@/components/login/FundalLogin'
-import { ParcareLogin } from '@/components/login/ParcareLogin'
 
-// Pagina de login: parcarea sediului Autonom vazuta de sus (ParcareLogin), dupa locul real — scenarii de
-// predare a masinilor de inlocuire, click pe masini = deblocare cu „bip-bip", fiecare tasta din parola face
-// o masina sa clipeasca. Formularul din sticla mata, compact, sus in dreapta (pe telefon in centru). Fara poze/video.
+// Pagina de login: fundalul din meniul lateral pe tot ecranul (FundalLogin) si un card din sticla mata, in
+// centru, cu o raza de lumina in culorile logo-ului care se plimba lent pe margine (.login-raza). Campurile
+// email / parola nu au animatii. (Parcarea animata de dinainte e acum un proiect separat: autonom-oradea-game.)
 
 const CHEIE_EMAIL = 'rca-ultim-email'
 function emailSalvat(): string {
@@ -30,7 +29,6 @@ export function AuthGate({ children }: { children: ReactNode }) {
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
   const [submitting, setSubmitting] = useState(false)
-  const [taste, setTaste] = useState(0)
 
   // La delogare formularul revine gol (parola nu ramane completata).
   const [eraLogat, setEraLogat] = useState(isAuthenticated)
@@ -77,24 +75,33 @@ export function AuthGate({ children }: { children: ReactNode }) {
   }
 
   const campCls =
-    'camp-glow h-10 rounded-xl border-white/15 bg-[#060c1c]/80 text-[15px] text-white placeholder:text-[#64748b] focus-visible:border-[#60a5fa] focus-visible:ring-0'
+    'h-11 rounded-xl border-white/12 bg-[#060c1c]/70 text-[15px] text-white placeholder:text-[#64748b] focus-visible:border-[#60a5fa] focus-visible:ring-[3px] focus-visible:ring-[#3d8bff]/20'
 
   return (
     <div className="relative flex min-h-svh flex-col overflow-hidden bg-[#070b14]">
       <FundalLogin reduced={fara} />
-      <ParcareLogin taste={taste} />
 
-      <main className="pointer-events-none relative z-10 flex flex-1 items-center justify-center px-4 py-10 md:items-start md:justify-end md:px-5 md:py-5">
+      <main className="relative z-10 flex flex-1 items-center justify-center px-4 py-10">
+        <div className="relative w-full max-w-[400px]">
+          {/* halou moale in culorile logo-ului, in spatele cardului */}
+          <span
+            aria-hidden="true"
+            className="pointer-events-none absolute -inset-10 -z-10 rounded-[48px] opacity-70 blur-3xl"
+            style={{ background: 'radial-gradient(60% 55% at 30% 30%, rgba(0,96,240,.35), transparent 70%), radial-gradient(55% 50% at 75% 75%, rgba(96,0,192,.35), transparent 70%)' }}
+          />
+          {/* marginea cu raza de lumina */}
+          <div className="login-raza rounded-[24px] p-[1.5px] shadow-[0_40px_90px_-30px_rgba(0,0,0,.9)]">
         <form
           onSubmit={handleSubmit}
           noValidate
-          className="pointer-events-auto relative w-full max-w-[340px] overflow-hidden rounded-[20px] border border-white/12 bg-[#0a1226]/75 p-6 shadow-[0_30px_80px_-30px_#000] backdrop-blur-xl md:max-w-[300px] md:p-5"
+          className="relative overflow-hidden rounded-[22.5px] p-7 backdrop-blur-xl sm:p-9"
+          style={{ background: 'radial-gradient(70% 28% at 50% 0%, rgba(61,139,255,.16), transparent 100%), rgba(10,18,38,.86)' }}
         >
-          <span aria-hidden="true" className="absolute inset-x-0 top-0 h-[3px] bg-gradient-to-r from-[#00A848] via-[#0060F0] to-[#6000C0]" />
-          <div className="mb-5 flex flex-col items-center gap-2 text-center">
-            <img src={assetUrl('/icons/logo.png')} alt="Centralizator RCA" className="h-11 w-auto drop-shadow-[0_6px_18px_rgba(0,96,240,.35)]" />
+          <div className="relative mb-7 flex flex-col items-center gap-3 text-center">
+            <img src={assetUrl('/icons/logo.png')} alt="Centralizator RCA" className="h-14 w-auto drop-shadow-[0_8px_24px_rgba(0,96,240,.45)]" />
+            <span aria-hidden="true" className="h-px w-24 bg-gradient-to-r from-transparent via-[#3d8bff]/70 to-transparent" />
             <div>
-              <h1 className="text-lg font-extrabold tracking-[-.01em] text-white">Bine ai revenit</h1>
+              <h1 className="text-xl font-extrabold tracking-[-.01em] text-white">Bine ai revenit</h1>
               <p className="mt-1 text-[13px] text-[#9fb3d9]">
                 {ESTE_DEMO ? 'Intră cu parola variantei de test.' : 'Intră cu contul tău Autonom.'}
               </p>
@@ -134,10 +141,7 @@ export function AuthGate({ children }: { children: ReactNode }) {
             autoFocus={ESTE_DEMO || !!email}
             placeholder="Introdu parola"
             value={password}
-            onChange={(e) => {
-              if (e.target.value.length > password.length) setTaste((n) => n + 1)
-              setPassword(e.target.value)
-            }}
+            onChange={(e) => setPassword(e.target.value)}
             className={campCls}
           />
           <p role="alert" className="min-h-5 pt-2 text-[13px] font-medium text-[#fca5a5]">
@@ -146,12 +150,14 @@ export function AuthGate({ children }: { children: ReactNode }) {
           <button
             type="submit"
             disabled={submitting}
-            className="btn-brand-gradient mt-1 flex h-10 w-full items-center justify-center gap-2 rounded-xl text-[15px] font-extrabold tracking-[.01em] disabled:cursor-wait disabled:opacity-80"
+            className="btn-brand-gradient mt-1 flex h-11 w-full items-center justify-center gap-2 rounded-xl text-[15px] font-extrabold tracking-[.01em] disabled:cursor-wait disabled:opacity-80"
           >
             {submitting && <Loader2 className="size-4 animate-spin" aria-hidden="true" />}
             {submitting ? 'Se verifică…' : 'Intră'}
           </button>
         </form>
+          </div>
+        </div>
       </main>
       <SiteFooter className="relative z-10 pb-4" />
     </div>

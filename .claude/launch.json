@@ -12,6 +12,12 @@
       "runtimeExecutable": "npm",
       "runtimeArgs": ["run", "dev", "--prefix", "app", "--", "--port", "5180", "--strictPort"],
       "port": 5180
+    },
+    {
+      "name": "autonom-oradea",
+      "runtimeExecutable": "node",
+      "runtimeArgs": ["../Autonom Oradea/node_modules/vite/bin/vite.js", "../Autonom Oradea", "--port", "5190", "--strictPort"],
+      "port": 5190
     }
   ]
 }
