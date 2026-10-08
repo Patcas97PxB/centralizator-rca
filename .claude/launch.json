@@ -14,6 +14,13 @@
       "port": 5180
     },
     {
+      "name": "rca-demo",
+      "runtimeExecutable": "node",
+      "runtimeArgs": ["app/node_modules/vite/bin/vite.js", "preview", "app", "--outDir", "dist-demo", "--base", "/centralizator-rca/demo/", "--port", "5199", "--strictPort"],
+      "port": 5199,
+      "url": "http://localhost:5199"
+    },
+    {
       "name": "autonom-oradea",
       "runtimeExecutable": "node",
       "runtimeArgs": ["../Autonom Oradea/node_modules/vite/bin/vite.js", "../Autonom Oradea", "--port", "5190", "--strictPort"],

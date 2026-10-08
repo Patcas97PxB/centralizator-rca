@@ -74,7 +74,8 @@ export function PreluareDateSection({
 
   function aplicaAnaliza(an: AnalizaDeviz | null) {
     setAnaliza(an)
-    if (an && !draft.zileDeviz) {
+    // un deviz nou inlocuieste zilele vechi (si, prin formular, data preluarii)
+    if (an && String(an.total) !== draft.zileDeviz) {
       onPatch({ zileDeviz: String(an.total), zileDevizExplicatie: an.explicatie, zileDevizFormula: an.formulaCalcul })
     }
   }

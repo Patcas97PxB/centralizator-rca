@@ -69,22 +69,25 @@ export function DosarFormModal({
   const [duplicat, setDuplicat] = useState<Dosar | null>(null)
   const [shakeKey, setShakeKey] = useState(0)
   // Data preluare se completeaza automat din calcul (deviz + weekend + 1 zi) cat timp nu a fost
-  // scrisa de mana. La un dosar existent cu data deja completata, se actualizeaza doar dupa
-  // "Calculează zile din deviz".
+  // scrisa de mana. Se recalculeaza imediat si la un dosar existent cand se schimba zilele din deviz
+  // (de mana, din „Calculează zile din deviz" sau dintr-un deviz nou incarcat la PRELUARE DATE).
   const [endAuto, setEndAuto] = useState(true)
 
   useEffect(() => {
     if (open) {
-      setDraft(majuscule(dosar ?? { ...dosarGol(), ...initialDraft, id: 'd' + Date.now(), start: todayStr() }))
+      // dosar nou: starea porneste din start „DE PREDAT"
+      setDraft(majuscule(dosar ?? { ...dosarGol(), status: 'de_predat', ...initialDraft, id: 'd' + Date.now(), start: todayStr() }))
       setEndAuto(!dosar?.end)
       setEroare('')
     }
   }, [open, dosar, initialDraft])
 
   function set<K extends keyof Dosar>(key: K, value: Dosar[K]) {
+    if (key === 'zileDeviz') setEndAuto(true) // zile noi -> data preluarii se recalculeaza
     setDraft((d) => ({ ...d, ...majuscule({ [key]: value } as Partial<Dosar>) }))
   }
   function patch(p: Partial<Dosar>) {
+    if ('zileDeviz' in p) setEndAuto(true)
     setDraft((d) => ({ ...d, ...majuscule(p) }))
   }
 
