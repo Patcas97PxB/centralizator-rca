@@ -224,15 +224,28 @@
   inherits: false;
 }
 .login-raza {
+  position: relative;
+}
+/* raza e desenata doar pe margine (masca decupeaza interiorul), deci nu se vede prin sticla cardului */
+.login-raza::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  padding: 1.5px;
+  border-radius: inherit;
+  pointer-events: none;
   background: conic-gradient(
     from var(--raza),
-    rgba(255, 255, 255, .09) 0deg,
-    rgba(255, 255, 255, .09) 210deg,
-    rgba(0, 168, 72, .9) 260deg,
+    rgba(255, 255, 255, .1) 0deg,
+    rgba(255, 255, 255, .1) 210deg,
+    rgba(0, 168, 72, .95) 260deg,
     rgba(0, 96, 240, 1) 300deg,
     rgba(96, 0, 192, .95) 335deg,
-    rgba(255, 255, 255, .09) 360deg
+    rgba(255, 255, 255, .1) 360deg
   );
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0);
   animation: loginRaza 9s linear infinite;
 }
 @keyframes loginRaza { to { --raza: 560deg; } }
