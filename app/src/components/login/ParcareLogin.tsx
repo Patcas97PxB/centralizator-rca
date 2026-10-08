@@ -89,7 +89,16 @@ type Pas =
   | { k: 'apare'; a: 0 | 1 }
   | { k: 'cand'; f: () => boolean }
   | { k: 'fa'; f: () => void }
-  | { k: 'conduce'; pts: Vec[] | ((p: Vec) => Vec[]); v: number; spate?: boolean | (() => boolean); mod?: 'lin' | 'acc' | 'fran' | 'ease'; d?: Drum }
+  | {
+      k: 'conduce'
+      pts: Vec[] | ((p: Vec) => Vec[])
+      v: number // viteza maxima pe bucata asta
+      spate?: boolean | (() => boolean)
+      mod?: 'lin' | 'acc' | 'fran' | 'ease' // lin/acc = continua fara oprire; altfel opreste la capat
+      opreste?: boolean | (() => boolean) // opreste la capat (are prioritate fata de mod)
+      d?: Drum
+      s?: number
+    }
 
 interface Actor {
   om?: Om
@@ -97,6 +106,7 @@ interface Actor {
   coada: Pas[]
   t: number
   asteapta?: number // cat a stat masina dupa un om din cale
+  v?: number // viteza masinii (px/s): accelereaza si franeaza lin, fara smucituri
 }
 
 // culorile flotei (ca in pozele masinilor): mult gri metalizat, alb, argintiu, negru, cateva colorate
@@ -1279,27 +1289,28 @@ export function ParcareLogin({ taste }: { taste: number }) {
     // ---- motorul scenariilor: fiecare actor isi executa coada de pasi ----
     // un om in calea masinii (in parcare / pe trotuar): masina asteapta
     // ce e in calea masinii: alta masina (oriunde) sau un om (in parcare / pe trotuar) -> masina asteapta
-    function blocat(m: Masina, spate: boolean): Om | Masina | null {
+    function blocat(m: Masina, spate: boolean): { d: number; om?: Om } | null {
       if (m.pasaj) return null
       const h = spate ? m.h + Math.PI : m.h
       const cx = Math.cos(h)
       const cy = Math.sin(h)
+      let best: { d: number; om?: Om } | null = null
       for (const o of [...trafic.map((t) => t.m), ...masini]) {
         if (o === m || !o.vizibila || o.pasaj || o.loc) continue
         const dx = o.x - m.x
         const dy = o.y - m.y
         const f = dx * cx + dy * cy
-        if (f > U * 0.3 && f < U * 1.5 && Math.abs(dy * cx - dx * cy) < U * 0.5) return o
+        if (f > U * 0.3 && f < U * 2.4 && Math.abs(dy * cx - dx * cy) < U * 0.5 && (!best || f < best.d)) best = { d: f }
       }
-      if (m.y > yBul0 + U * 0.1) return null
+      if (m.y > yBul0 + U * 0.1) return best
       for (const o of oameni) {
         if (!o.vizibil || o.alpha < 0.6) continue
         const dx = o.x - m.x
         const dy = o.y - m.y
         const f = dx * cx + dy * cy
-        if (f > U * 0.25 && f < U * 1.2 && Math.abs(dy * cx - dx * cy) < U * 0.38) return o
+        if (f > U * 0.2 && f < U * 2.2 && Math.abs(dy * cx - dx * cy) < U * 0.42 && (!best || f < best.d)) best = { d: f, om: o }
       }
-      return null
+      return best
     }
     // omul nu intra in masini: asteapta masina care trece / iese de pe trotuar (nu si pe cea care il asteapta pe el)
     function omBlocat(q: Vec): Masina | null {
@@ -1370,6 +1381,7 @@ export function ParcareLogin({ taste }: { taste: number }) {
             break
           }
           case 'stai':
+            if (a.m) a.v = 0
             if (a.om) {
               a.om.merge = false
               if (p.h !== undefined) a.om.h = p.h
@@ -1390,6 +1402,7 @@ export function ParcareLogin({ taste }: { taste: number }) {
           case 'cand':
             if (a.om) a.om.merge = false
             gata = p.f()
+            if (!gata && a.m) a.v = 0
             break
           case 'fa':
             p.f()
@@ -1398,14 +1411,30 @@ export function ParcareLogin({ taste }: { taste: number }) {
           case 'conduce': {
             const m = a.m!
             p.d ??= drum(typeof p.pts === 'function' ? p.pts({ x: m.x, y: m.y }) : p.pts)
+            p.s ??= 0
             const spate = typeof p.spate === 'function' ? p.spate() : !!p.spate
-            const ob = a.t > dt ? blocat(m, spate) : null
-            m.cedeaza = !!ob && !('culoare' in ob)
+            const ACC = U * 1.4
+            const DEC = U * 2.4
+            const opreste =
+              p.opreste === undefined ? !(p.mod === 'lin' || p.mod === 'acc') : typeof p.opreste === 'function' ? p.opreste() : p.opreste
+            const rest = p.d.total - p.s
+            let tinta = p.v
+            if (opreste) tinta = Math.min(tinta, Math.sqrt(2 * DEC * Math.max(0, rest)) + U * 0.08)
+            // ce e in fata: se apropie incet, se opreste doar aproape (fara smucituri)
+            const ob = blocat(m, spate)
             if (ob) {
-              a.t -= dt
+              const lim = ob.om ? U * 0.85 : U * 1.35
+              tinta = ob.d <= lim ? 0 : Math.min(tinta, p.v * Math.min(1, (ob.d - lim) / U) * (ob.om ? 0.5 : 1) + U * 0.05)
+            }
+            let v = a.v ?? 0
+            v = tinta < v ? Math.max(tinta, v - DEC * dt) : Math.min(tinta, v + ACC * dt)
+            if (ob && ob.d <= (ob.om ? U * 0.5 : U * 1.05)) v = 0 // siguranta: nu atinge pe nimeni
+            a.v = v
+            m.cedeaza = !!ob?.om && v < U * 0.15
+            if (m.cedeaza) {
               a.asteapta = (a.asteapta ?? 0) + dt
-              const om = 'culoare' in ob ? null : ob
-              if (om && a.asteapta > 1.2 && !om.merge) {
+              const om = ob!.om!
+              if (a.asteapta > 1.2 && !om.merge) {
                 // omul care sta pe loc in calea masinii se da putin la o parte
                 const h = spate ? m.h + Math.PI : m.h
                 const lat = (om.y - m.y) * Math.cos(h) - (om.x - m.x) * Math.sin(h)
@@ -1413,17 +1442,14 @@ export function ParcareLogin({ taste }: { taste: number }) {
                 om.x += -Math.sin(h) * sgn * U * 1.2 * dt
                 om.y += Math.cos(h) * sgn * U * 1.2 * dt
               }
-              return
-            }
-            a.asteapta = 0
-            const dur = Math.max(0.05, p.d.total / p.v)
-            const u = Math.min(1, a.t / dur)
-            const e = p.mod === 'lin' ? u : p.mod === 'acc' ? u * u : p.mod === 'fran' ? 1 - (1 - u) * (1 - u) : easeInOut(u)
-            const { p: q, dir } = peDrum(p.d, p.d.total * e)
+            } else a.asteapta = 0
+            p.s = Math.min(p.d.total, p.s + v * dt)
+            const { p: q, dir } = peDrum(p.d, p.s)
             m.x = q.x
             m.y = q.y
-            m.h = spate ? dir + Math.PI : dir
-            gata = u >= 1
+            if (p.d.total > 0.5) m.h = spate ? dir + Math.PI : dir
+            gata = p.s >= p.d.total - 0.01
+            if (gata && opreste) a.v = 0
             break
           }
         }
@@ -1468,11 +1494,11 @@ export function ParcareLogin({ taste }: { taste: number }) {
     }
     // cat de aproape de mijlocul benzii trebuie sa fie o masina ca sa conteze pe banda aceea
     const tolBanda = () => Math.min(U * 0.45, bulH * 0.26)
-    function laTrafic(m: Masina) {
+    function laTrafic(m: Masina, v = U * 2.6) {
       masini = masini.filter((x) => x !== m)
       m.loc = null
       m.ocupata = false
-      trafic.push({ m, banda: 0, v: U * 2.6, vmax: U * intre(3, 3.6) })
+      trafic.push({ m, banda: 0, v, vmax: U * intre(3, 3.6) })
     }
     function actualizeazaTrafic(dt: number, acum: number) {
       tSpawn -= dt
@@ -1752,6 +1778,16 @@ export function ParcareLogin({ taste }: { taste: number }) {
       }
     }
 
+    // drumul pana la marginea bulevardului: se opreste acolo doar daca trebuie (alta masina iese, trafic,
+    // sau se chinuie); altfel continua direct in bulevard
+    function spreBulevard(a: Actor, m: Masina | undefined, pts: Vec[], v: number, chinuie = false): Pas {
+      return {
+        k: 'conduce',
+        pts,
+        v,
+        opreste: () => chinuie || !((!poarta || poarta === a) && liber(0, xA, U * 3, U * 8, m ?? a.m, true)),
+      }
+    }
     // ---- masina pleaca: iese din loc direct spre iesire; pe aleea de iesire asteapta sa fie libera, iar la
     // bulevard intra doar cand e loc (uneori se chinuie din cauza traficului) ----
     function plecare(m: Masina, chinuie: boolean, o: { urcat?: string; plecat?: string } = {}): Actor {
@@ -1766,7 +1802,9 @@ export function ParcareLogin({ taste }: { taste: number }) {
         fa(() => (m.loc = null)),
         stai(0.4),
         // pana la marginea bulevardului; daca acolo asteapta deja una, se opreste in spatele ei pe alee
-        ...(dr.spate ? [conduce(dr.man, U * 0.75, 'ease', true), conduce([...ruta1, ...ruta2.slice(1)], U * 1.9)] : [conduce([...dr.man, ...ruta1, ...ruta2.slice(1)], U * 1.8)]),
+        ...(dr.spate
+          ? [conduce(dr.man, U * 0.75, 'ease', true), spreBulevard(a, m, [...ruta1, ...ruta2.slice(1)], U * 1.9, chinuie)]
+          : [spreBulevard(a, m, [...dr.man, ...ruta1, ...ruta2.slice(1)], U * 1.8, chinuie)]),
         ...iaPoarta(a),
         lasaLacat(a), // alta masina poate porni (si sa astepte in spatele ei)
         fa(() => {
@@ -1782,12 +1820,12 @@ export function ParcareLogin({ taste }: { taste: number }) {
             ]
           : []),
         cand(() => liber(0, xA, U * 3, U * 8, m, true)),
-        conduce((p) => inBulevard(p), U * 1.5, 'acc'),
+        conduce((p) => inBulevard(p), U * 2.2, 'acc'),
         lasaPoarta(a),
         fa(() => {
           m.semnal = false
           iesiri--
-          laTrafic(m)
+          laTrafic(m, a.v)
         }),
         sem(o.plecat ?? 'plecat'),
       ]
@@ -1836,17 +1874,16 @@ export function ParcareLogin({ taste }: { taste: number }) {
             poarta = a
           }
         }),
-        conduce((p) => (lacat === a && poarta === a ? [p] : [p, laIntrare()]), U * 1.3, 'fran'),
+        { k: 'conduce', pts: (p: Vec) => (lacat === a && poarta === a ? [p] : [p, laIntrare()]), v: U * 1.3, opreste: () => !(lacat === a && poarta === a) },
         cand(() => lacat === a || (iesiri === 0 && !lacat)),
         fa(() => (lacat = a)),
         ...iaPoarta(a),
         fa(() => (a.m!.laIntrare = false)),
-        conduce((p) => [p, ...in1], U * 1.6),
+        conduce((p) => [p, ...in1], U * 1.6, 'lin'),
         fa(() => (a.m!.semnal = false)),
         lasaPoarta(a),
-        conduce(() => in2, U * 1.8),
-        stai(0.2),
-        { k: 'conduce', pts: () => dr!.man, v: U * 0.7, mod: 'ease', spate: () => dr!.spate },
+        { k: 'conduce', pts: () => in2, v: U * 1.8, opreste: () => !!dr!.spate }, // se opreste doar inainte sa dea cu spatele
+        { k: 'conduce', pts: () => dr!.man, v: U * 0.8, spate: () => dr!.spate },
         fa(() => {
           const m = a.m!
           m.loc = l
@@ -1906,12 +1943,12 @@ export function ParcareLogin({ taste }: { taste: number }) {
             poarta = a
           }
         }),
-        conduce((p) => (lacat === a && poarta === a ? [p] : [p, laIntrare()]), U * 1.3, 'fran'),
+        { k: 'conduce', pts: (p: Vec) => (lacat === a && poarta === a ? [p] : [p, laIntrare()]), v: U * 1.3, opreste: () => !(lacat === a && poarta === a) },
         cand(() => lacat === a || (iesiri === 0 && !lacat)),
         fa(() => (lacat = a)),
         ...iaPoarta(a),
         fa(() => (a.m!.laIntrare = false)),
-        conduce((p) => [p, ...in1], U * 1.6),
+        conduce((p) => [p, ...in1], U * 1.6, 'lin'),
         fa(() => (a.m!.semnal = false)),
         lasaPoarta(a),
         conduce(in2, U * 1.8),
@@ -1930,16 +1967,16 @@ export function ParcareLogin({ taste }: { taste: number }) {
               ),
               conduce(arc({ x: xa, y: yL2 - r }, r, Math.PI / 2, Math.PI), U * 0.55, 'ease', true),
             ]),
-        conduce([...ies1, ...ies2.slice(1)], U * 1.8),
+        spreBulevard(a, undefined, [...ies1, ...ies2.slice(1)], U * 1.8),
         ...iaPoarta(a),
         lasaLacat(a),
         fa(() => (a.m!.semnal = true)),
         cand(() => liber(0, xA, U * 3, U * 8, a.m, true)),
-        conduce((p) => inBulevard(p), U * 1.5, 'acc'),
+        conduce((p) => inBulevard(p), U * 2.2, 'acc'),
         lasaPoarta(a),
         fa(() => {
           a.m!.semnal = false
-          laTrafic(a.m!)
+          laTrafic(a.m!, a.v)
         }),
       ]
       return a
