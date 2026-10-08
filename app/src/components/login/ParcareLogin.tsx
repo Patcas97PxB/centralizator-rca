@@ -70,6 +70,7 @@ interface Om {
   pantofi?: string
   pufStart?: number
   ocupat?: boolean // condus de un scenariu (nu sta la tigara)
+  lat?: number // pas lateral cand trece pe langa alt om
   spot?: number // locul de pe platforma de fumat
   fata?: boolean // colegele care ies uneori la tigara
   panaLa?: number // cand intra inapoi de la tigara
@@ -108,7 +109,6 @@ interface Actor {
   coada: Pas[]
   t: number
   asteapta?: number // cat a stat masina dupa un om din cale
-  astOm?: number // cat a stat omul dupa alt om din fata lui
   v?: number // viteza masinii (px/s): accelereaza si franeaza lin, fara smucituri
 }
 
@@ -258,6 +258,14 @@ function nuanta(hex: string, k: number): string {
   const n = parseInt(hex.slice(1), 16)
   const f = (v: number) => Math.round(k >= 0 ? v + (255 - v) * k : v * (1 + k))
   return `rgb(${f((n >> 16) & 255)},${f((n >> 8) & 255)},${f(n & 255)})`
+}
+// un drum nu are niciodata prea multe puncte (pastreaza capetele, sare peste punctele foarte apropiate)
+function subtiaza(pts: Vec[], max = 160): Vec[] {
+  if (pts.length <= max) return pts
+  const pas = Math.ceil(pts.length / max)
+  const out = pts.filter((_, i) => i % pas === 0)
+  if (out[out.length - 1] !== pts[pts.length - 1]) out.push(pts[pts.length - 1])
+  return out
 }
 // imparte un drum in doua la distanta s (de la inceput)
 function taie(pts: Vec[], s: number): [Vec[], Vec[]] {
@@ -417,7 +425,8 @@ export function ParcareLogin({ taste }: { taste: number }) {
     })
 
     function construieste() {
-      dpr = Math.min(2.5, window.devicePixelRatio || 1)
+      // claritate fara sa sufoce placa video: cel mult ~5 milioane de pixeli redesenati pe cadru
+      dpr = Math.max(1, Math.min(2, window.devicePixelRatio || 1, Math.sqrt(5e6 / (window.innerWidth * window.innerHeight))))
       W = window.innerWidth
       H = window.innerHeight
       for (const c of [canvas!, fundal]) {
@@ -490,6 +499,7 @@ export function ParcareLogin({ taste }: { taste: number }) {
         m.loc = l
         masini.push(m)
       }
+      sprites.clear()
       trafic = []
       actori = []
       activitati = []
@@ -1067,10 +1077,63 @@ export function ParcareLogin({ taste }: { taste: number }) {
         ctx!.fill()
         ctx!.restore()
       }
+      // corpul masinii vine dintr-o imagine pregatita o data (nu se redeseneaza la fiecare cadru)
+      const sp = spriteMasina(m, far > 0.02)
       const c = ctx!
       c.save()
       c.translate(m.x, m.y)
       c.rotate(m.h)
+      c.drawImage(sp.can, -sp.cx, -sp.cy, sp.w, sp.h)
+      const lumina = (px: number, py: number, r: number) => {
+        const g = c.createRadialGradient(px, py, 0, px, py, r)
+        g.addColorStop(0, 'rgba(255,190,80,.95)')
+        g.addColorStop(0.35, 'rgba(251,146,60,.55)')
+        g.addColorStop(1, 'rgba(251,146,60,0)')
+        c.fillStyle = g
+        c.beginPath()
+        c.arc(px, py, r, 0, Math.PI * 2)
+        c.fill()
+      }
+      if (acum < m.avariiPana && Math.floor((acum - m.avariiStart) / 160) % 2 === 0)
+        for (const [px, py] of [
+          [L * 0.47, -w * 0.47],
+          [L * 0.47, w * 0.47],
+          [-L * 0.47, -w * 0.47],
+          [-L * 0.47, w * 0.47],
+        ])
+          lumina(px, py, U * 0.28)
+      // semnalizare dreapta (partea dreapta a masinii = +y in sistemul ei)
+      if (m.semnal && Math.floor(acum / 380) % 2 === 0) {
+        lumina(L * 0.47, w * 0.47, U * 0.22)
+        lumina(-L * 0.47, w * 0.47, U * 0.22)
+      }
+      c.restore()
+    }
+
+    // imaginile masinilor, pe model / culoare / stare (parcata sau in mers, cu farurile aprinse sau nu)
+    const sprites = new Map<string, { can: HTMLCanvasElement; cx: number; cy: number; w: number; h: number }>()
+    function spriteMasina(m: Masina, aprins: boolean) {
+      const key = [m.model, m.tip, m.culoare, m.taxi ? 1 : 0, m.loc ? 1 : 0, aprins ? 1 : 0].join('|')
+      let sp = sprites.get(key)
+      if (!sp) {
+        const F = FORME[m.tip ?? 'sedan']
+        const L = U * F.len
+        const w = U * F.lat
+        const pad = U * 0.3
+        const sw = L + pad * 2
+        const sh = w * 1.4 + pad * 2
+        const can = document.createElement('canvas')
+        can.width = Math.ceil(sw * dpr)
+        can.height = Math.ceil(sh * dpr)
+        const c = can.getContext('2d')!
+        c.setTransform(dpr, 0, 0, dpr, (sw / 2) * dpr, (sh / 2) * dpr)
+        corpMasina(c, m, F, L, w, aprins ? 1 : 0)
+        sp = { can, cx: sw / 2, cy: sh / 2, w: sw, h: sh }
+        sprites.set(key, sp)
+      }
+      return sp
+    }
+    function corpMasina(c: CanvasRenderingContext2D, m: Masina, F: Forma, L: number, w: number, far: number) {
       const rf = w * F.rFata
       const rs = w * F.rSpate
       const raze: [number, number, number, number] = [rs, rf, rf, rs]
@@ -1244,30 +1307,6 @@ export function ParcareLogin({ taste }: { taste: number }) {
       c.fillRect(L * (F.ws1 + 0.035), -w * 0.64, L * 0.02, w * 0.12)
       c.fillRect(L * (F.ws1 + 0.035), w * 0.52, L * 0.02, w * 0.12)
       deseneazaLumini(c, m, F, L, w, far)
-      const lumina = (px: number, py: number, r: number) => {
-        const g = c.createRadialGradient(px, py, 0, px, py, r)
-        g.addColorStop(0, 'rgba(255,190,80,.95)')
-        g.addColorStop(0.35, 'rgba(251,146,60,.55)')
-        g.addColorStop(1, 'rgba(251,146,60,0)')
-        c.fillStyle = g
-        c.beginPath()
-        c.arc(px, py, r, 0, Math.PI * 2)
-        c.fill()
-      }
-      if (acum < m.avariiPana && Math.floor((acum - m.avariiStart) / 160) % 2 === 0)
-        for (const [px, py] of [
-          [L * 0.47, -w * 0.47],
-          [L * 0.47, w * 0.47],
-          [-L * 0.47, -w * 0.47],
-          [-L * 0.47, w * 0.47],
-        ])
-          lumina(px, py, U * 0.28)
-      // semnalizare dreapta (partea dreapta a masinii = +y in sistemul ei)
-      if (m.semnal && Math.floor(acum / 380) % 2 === 0) {
-        lumina(L * 0.47, w * 0.47, U * 0.22)
-        lumina(-L * 0.47, w * 0.47, U * 0.22)
-      }
-      c.restore()
     }
 
     // ---- desen om, vazut de sus: ten, coafura / sapca, haina, rucsac, brate cu maneci, pantofi ----
@@ -1600,7 +1639,7 @@ export function ParcareLogin({ taste }: { taste: number }) {
         if (x === o || !x.vizibil || x.alpha < 0.5) continue
         const dx = x.x - o.x
         const dy = x.y - o.y
-        if (Math.hypot(x.x - q.x, x.y - q.y) < U * 0.42 && dx * Math.cos(dir) + dy * Math.sin(dir) > 0) return x
+        if (Math.hypot(x.x - q.x, x.y - q.y) < U * 0.6 && dx * Math.cos(dir) + dy * Math.sin(dir) > 0) return x
       }
       return null
     }
@@ -1660,7 +1699,10 @@ export function ParcareLogin({ taste }: { taste: number }) {
         switch (p.k) {
           case 'mergi': {
             const o = a.om!
-            p.d ??= drum(colturi([{ x: o.x, y: o.y }, ...p.pts], U * 0.45))
+            if (!p.d) {
+              p.d = drum(colturi([{ x: o.x, y: o.y }, ...p.pts], U * 0.45))
+              o.lat = 0
+            }
             const s = a.t * vOm()
             const { p: q, dir } = peDrum(p.d, s)
             const bl = a.t > dt && s < p.d.total ? omBlocat(q) : null
@@ -1670,33 +1712,26 @@ export function ParcareLogin({ taste }: { taste: number }) {
               a.asteapta = (a.asteapta ?? 0) + dt
               if (a.asteapta > 0.6) {
                 // masina sta pe loc (ex. asteapta sa intre in trafic): omul o ocoleste prin parcare
-                p.d = drum(ocolire(bl, { x: o.x, y: o.y }, p.d, a.t * vOm()))
+                p.d = drum(subtiaza(ocolire(bl, { x: o.x, y: o.y }, p.d, a.t * vOm())))
                 a.t = 0
                 a.asteapta = 0
               }
               return
             }
             a.asteapta = 0
-            // alt om chiar in fata: astept putin, apoi il ocolesc pe dreapta
-            const alt = s < p.d.total && a.t > dt ? omInFata(o, q, dir) : null
+            // alt om in fata: daca merge in acelasi sens, il urmeaza mai incet; altfel trece pe langa el pe dreapta
+            // (un pas lateral, fara sa se opreasca) -> nu se suprapun si nici nu se blocheaza unii pe altii
+            const alt = s < p.d.total ? omInFata(o, q, dir) : null
+            let tintaLat = 0
             if (alt) {
-              a.t -= dt
-              o.merge = false
-              a.astOm = (a.astOm ?? 0) + dt
-              if (a.astOm > 0.5) {
-                const rx = -Math.sin(dir)
-                const ry = Math.cos(dir)
-                const p1 = { x: o.x + rx * U * 0.5 + Math.cos(dir) * U * 0.2, y: o.y + ry * U * 0.5 + Math.sin(dir) * U * 0.2 }
-                const p2 = { x: alt.x + rx * U * 0.5 + Math.cos(dir) * U * 0.45, y: alt.y + ry * U * 0.5 + Math.sin(dir) * U * 0.45 }
-                p.d = drum(colturi([{ x: o.x, y: o.y }, p1, p2, ...taie(p.d.pts, s)[1].slice(1)], U * 0.3))
-                a.t = 0
-                a.astOm = 0
-              }
-              return
+              const acelasiSens = alt.merge && Math.cos(alt.h - dir) > 0.7
+              if (acelasiSens) {
+                if (Math.hypot(alt.x - q.x, alt.y - q.y) < U * 0.45) a.t -= dt * 0.7
+              } else tintaLat = U * 0.42
             }
-            a.astOm = 0
-            o.x = q.x
-            o.y = q.y
+            o.lat = (o.lat ?? 0) + (tintaLat - (o.lat ?? 0)) * Math.min(1, dt * 6)
+            o.x = q.x - Math.sin(dir) * o.lat
+            o.y = q.y + Math.cos(dir) * o.lat
             if (p.d.total > 0.5) o.h = dir
             o.merge = s < p.d.total
             gata = s >= p.d.total
