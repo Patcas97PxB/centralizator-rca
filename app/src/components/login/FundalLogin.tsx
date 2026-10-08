@@ -79,15 +79,15 @@ export function FundalLogin({ reduced }: { reduced: boolean }) {
       {/* lumina de sub cursor: halou albastru + punctele grilei aprinse in jurul lui */}
       <span
         className="absolute inset-0 transition-opacity duration-500"
-        style={{ background: 'radial-gradient(420px circle at var(--mx) var(--my), rgba(61,139,255,.13), transparent 70%)' }}
+        style={{ background: 'radial-gradient(520px circle at var(--mx) var(--my), rgba(61,139,255,.06), transparent 70%)' }}
       />
       <span
         className="absolute inset-0"
         style={{
-          backgroundImage: 'radial-gradient(rgba(147,197,253,.85) 1px, transparent 1.4px)',
+          backgroundImage: 'radial-gradient(rgba(147,197,253,.5) 1px, transparent 1.4px)',
           backgroundSize: '18px 18px',
-          maskImage: 'radial-gradient(190px circle at var(--mx) var(--my), rgba(0,0,0,.9), transparent 75%)',
-          WebkitMaskImage: 'radial-gradient(190px circle at var(--mx) var(--my), rgba(0,0,0,.9), transparent 75%)',
+          maskImage: 'radial-gradient(240px circle at var(--mx) var(--my), rgba(0,0,0,.35), transparent 80%)',
+          WebkitMaskImage: 'radial-gradient(240px circle at var(--mx) var(--my), rgba(0,0,0,.35), transparent 80%)',
         }}
       />
       {/* liniile ondulate din meniul lateral, pe toata latimea, in partea de jos */}
