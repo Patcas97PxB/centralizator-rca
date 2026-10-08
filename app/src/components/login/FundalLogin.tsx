@@ -3,7 +3,7 @@ import { useEffect, useRef } from 'react'
 // Fundalul paginii de login: decorul din meniul lateral (SidebarDecor din AppSidebar.tsx) intins pe tot
 // ecranul — degrade inchis, grila de puncte, lumini albastre/turcoaz/mov care plutesc lent, stele care
 // sclipesc si liniile ondulate din meniu (albastru, mov, verde punctat care curge, albastru punctat invers).
-// Efecte: o lumina care urmareste mouse-ul (aprinde punctele de sub cursor) si scantei in culorile logo-ului
+// Efecte: sub cursor se aprind (fin) punctele grilei si scantei in culorile logo-ului
 // care urca incet. Cu animatiile oprite: fara stele si scantei, lumina sta in centru.
 
 // scanteile: pozitie, culoare (verde / albastru / mov), durata, intarziere, deriva laterala
@@ -54,40 +54,40 @@ export function FundalLogin({ reduced }: { reduced: boolean }) {
 
   return (
     <div ref={ref} aria-hidden className="pointer-events-none fixed inset-0 overflow-hidden" style={{ ['--mx' as string]: '50vw', ['--my' as string]: '42vh' }}>
-      <span className="absolute inset-0" style={{ background: 'linear-gradient(160deg, #0a1224 0%, #070b14 45%, #0b0a1c 100%)' }} />
+      {/* baza: mai inchisa, ca culorile sa iasa in evidenta (contrast) */}
+      <span className="absolute inset-0" style={{ background: 'linear-gradient(160deg, #060a17 0%, #03050b 50%, #070418 100%)' }} />
       <span
         className="absolute inset-0"
         style={{
-          backgroundImage: 'radial-gradient(rgba(96,165,250,.26) 1px, transparent 1.3px)',
+          backgroundImage: 'radial-gradient(rgba(96,165,250,.3) 1px, transparent 1.3px)',
           backgroundSize: '18px 18px',
-          maskImage: 'radial-gradient(ellipse at 50% 80%, rgba(0,0,0,.5) 0%, rgba(0,0,0,.16) 45%, rgba(0,0,0,0) 75%)',
-          WebkitMaskImage: 'radial-gradient(ellipse at 50% 80%, rgba(0,0,0,.5) 0%, rgba(0,0,0,.16) 45%, rgba(0,0,0,0) 75%)',
+          maskImage: 'radial-gradient(ellipse at 50% 80%, rgba(0,0,0,.55) 0%, rgba(0,0,0,.18) 45%, rgba(0,0,0,0) 75%)',
+          WebkitMaskImage: 'radial-gradient(ellipse at 50% 80%, rgba(0,0,0,.55) 0%, rgba(0,0,0,.18) 45%, rgba(0,0,0,0) 75%)',
         }}
       />
+      {/* lumini colorate, saturate si concentrate (nu un val deschis peste tot) */}
       <span
-        className="absolute -left-[12vw] -top-[18vh] size-[55vmax] animate-[orbDrift_14s_ease-in-out_infinite] rounded-full"
-        style={{ background: 'radial-gradient(circle, rgba(37,99,235,.24) 0%, rgba(37,99,235,0) 66%)' }}
+        className="absolute -left-[8vw] -top-[12vh] size-[36vmax] animate-[orbDrift_14s_ease-in-out_infinite] rounded-full"
+        style={{ background: 'radial-gradient(circle, rgba(29,78,216,.32) 0%, rgba(29,78,216,.1) 38%, rgba(29,78,216,0) 62%)' }}
       />
       <span
-        className="absolute -left-[20vw] top-[35%] size-[40vmax] animate-[orbDrift_20s_ease-in-out_-4s_infinite] rounded-full"
-        style={{ background: 'radial-gradient(circle, rgba(34,194,255,.16) 0%, rgba(34,194,255,0) 66%)' }}
+        className="absolute -bottom-[22vh] -right-[12vw] size-[52vmax] animate-[orbDrift_18s_ease-in-out_-6s_infinite_reverse] rounded-full"
+        style={{ background: 'radial-gradient(circle, rgba(109,40,217,.5) 0%, rgba(109,40,217,.16) 36%, rgba(109,40,217,0) 60%)' }}
       />
       <span
-        className="absolute -bottom-[25vh] -right-[15vw] size-[60vmax] animate-[orbDrift_18s_ease-in-out_-6s_infinite_reverse] rounded-full"
-        style={{ background: 'radial-gradient(circle, rgba(124,58,237,.38) 0%, rgba(124,58,237,0) 64%)' }}
+        className="absolute -bottom-[14vh] left-[18vw] size-[26vmax] animate-[orbDrift_22s_ease-in-out_-9s_infinite] rounded-full"
+        style={{ background: 'radial-gradient(circle, rgba(0,168,72,.16) 0%, rgba(0,168,72,0) 62%)' }}
       />
-      {/* lumina de sub cursor: halou albastru + punctele grilei aprinse in jurul lui */}
-      <span
-        className="absolute inset-0 transition-opacity duration-500"
-        style={{ background: 'radial-gradient(520px circle at var(--mx) var(--my), rgba(61,139,255,.06), transparent 70%)' }}
-      />
+      {/* vigneta: marginile mai intunecate -> mai mult contrast */}
+      <span className="absolute inset-0" style={{ background: 'radial-gradient(ellipse at 50% 45%, transparent 50%, rgba(0,0,0,.55) 100%)' }} />
+      {/* sub cursor se aprind doar punctele grilei (fara val de lumina) */}
       <span
         className="absolute inset-0"
         style={{
-          backgroundImage: 'radial-gradient(rgba(147,197,253,.5) 1px, transparent 1.4px)',
+          backgroundImage: 'radial-gradient(rgba(61,139,255,.75) 1px, transparent 1.4px)',
           backgroundSize: '18px 18px',
-          maskImage: 'radial-gradient(240px circle at var(--mx) var(--my), rgba(0,0,0,.35), transparent 80%)',
-          WebkitMaskImage: 'radial-gradient(240px circle at var(--mx) var(--my), rgba(0,0,0,.35), transparent 80%)',
+          maskImage: 'radial-gradient(200px circle at var(--mx) var(--my), rgba(0,0,0,.55), transparent 80%)',
+          WebkitMaskImage: 'radial-gradient(200px circle at var(--mx) var(--my), rgba(0,0,0,.55), transparent 80%)',
         }}
       />
       {/* liniile ondulate din meniul lateral, pe toata latimea, in partea de jos */}
