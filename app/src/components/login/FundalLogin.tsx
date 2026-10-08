@@ -1,6 +1,20 @@
+import { useEffect, useRef } from 'react'
+
 // Fundalul paginii de login: decorul din meniul lateral (SidebarDecor din AppSidebar.tsx) intins pe tot
 // ecranul — degrade inchis, grila de puncte, lumini albastre/turcoaz/mov care plutesc lent, stele care
 // sclipesc si liniile ondulate din meniu (albastru, mov, verde punctat care curge, albastru punctat invers).
+// Efecte: o lumina care urmareste mouse-ul (aprinde punctele de sub cursor) si scantei in culorile logo-ului
+// care urca incet. Cu animatiile oprite: fara stele si scantei, lumina sta in centru.
+
+// scanteile: pozitie, culoare (verde / albastru / mov), durata, intarziere, deriva laterala
+const SCANTEI = Array.from({ length: 18 }, (_, i) => ({
+  left: `${(i * 37 + 11) % 100}%`,
+  size: 2 + (i % 3),
+  cul: ['#00e07a', '#3d8bff', '#a66bff'][i % 3],
+  durata: `${14 + ((i * 7) % 11)}s`,
+  intarziere: `${-((i * 3.3) % 18).toFixed(1)}s`,
+  deriva: `${((i % 5) - 2) * 22}px`,
+}))
 
 const STELE = [
   { left: '7%', top: '22%', size: 2, delay: '2.3s' },
@@ -18,8 +32,28 @@ const STELE = [
 ]
 
 export function FundalLogin({ reduced }: { reduced: boolean }) {
+  const ref = useRef<HTMLDivElement>(null)
+  // lumina urmareste cursorul (fara re-randare: doar doua variabile CSS)
+  useEffect(() => {
+    const el = ref.current
+    if (!el || reduced) return
+    let raf = 0
+    const muta = (e: PointerEvent) => {
+      cancelAnimationFrame(raf)
+      raf = requestAnimationFrame(() => {
+        el.style.setProperty('--mx', `${e.clientX}px`)
+        el.style.setProperty('--my', `${e.clientY}px`)
+      })
+    }
+    window.addEventListener('pointermove', muta)
+    return () => {
+      cancelAnimationFrame(raf)
+      window.removeEventListener('pointermove', muta)
+    }
+  }, [reduced])
+
   return (
-    <div aria-hidden className="pointer-events-none fixed inset-0 overflow-hidden">
+    <div ref={ref} aria-hidden className="pointer-events-none fixed inset-0 overflow-hidden" style={{ ['--mx' as string]: '50vw', ['--my' as string]: '42vh' }}>
       <span className="absolute inset-0" style={{ background: 'linear-gradient(160deg, #0a1224 0%, #070b14 45%, #0b0a1c 100%)' }} />
       <span
         className="absolute inset-0"
@@ -41,6 +75,20 @@ export function FundalLogin({ reduced }: { reduced: boolean }) {
       <span
         className="absolute -bottom-[25vh] -right-[15vw] size-[60vmax] animate-[orbDrift_18s_ease-in-out_-6s_infinite_reverse] rounded-full"
         style={{ background: 'radial-gradient(circle, rgba(124,58,237,.38) 0%, rgba(124,58,237,0) 64%)' }}
+      />
+      {/* lumina de sub cursor: halou albastru + punctele grilei aprinse in jurul lui */}
+      <span
+        className="absolute inset-0 transition-opacity duration-500"
+        style={{ background: 'radial-gradient(420px circle at var(--mx) var(--my), rgba(61,139,255,.13), transparent 70%)' }}
+      />
+      <span
+        className="absolute inset-0"
+        style={{
+          backgroundImage: 'radial-gradient(rgba(147,197,253,.85) 1px, transparent 1.4px)',
+          backgroundSize: '18px 18px',
+          maskImage: 'radial-gradient(190px circle at var(--mx) var(--my), rgba(0,0,0,.9), transparent 75%)',
+          WebkitMaskImage: 'radial-gradient(190px circle at var(--mx) var(--my), rgba(0,0,0,.9), transparent 75%)',
+        }}
       />
       {/* liniile ondulate din meniul lateral, pe toata latimea, in partea de jos */}
       <svg viewBox="0 0 1440 900" preserveAspectRatio="none" className="absolute inset-0 size-full">
@@ -76,6 +124,23 @@ export function FundalLogin({ reduced }: { reduced: boolean }) {
         />
         <path d="M-20 840 C 360 790, 780 920, 1120 840 S 1380 790, 1460 820" fill="none" stroke="rgba(178,107,255,.26)" strokeWidth="1" />
       </svg>
+      {!reduced &&
+        SCANTEI.map((p, i) => (
+          <span
+            key={i}
+            className="login-scanteie absolute -bottom-3 rounded-full"
+            style={{
+              left: p.left,
+              width: p.size,
+              height: p.size,
+              background: p.cul,
+              boxShadow: `0 0 8px 2px ${p.cul}`,
+              ['--durata' as string]: p.durata,
+              ['--intarziere' as string]: p.intarziere,
+              ['--deriva' as string]: p.deriva,
+            }}
+          />
+        ))}
       {!reduced &&
         STELE.map((t) => (
           <span

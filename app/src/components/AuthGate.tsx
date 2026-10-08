@@ -75,14 +75,14 @@ export function AuthGate({ children }: { children: ReactNode }) {
   }
 
   const campCls =
-    'h-11 rounded-xl border-white/12 bg-[#060c1c]/70 text-[15px] text-white placeholder:text-[#64748b] focus-visible:border-[#60a5fa] focus-visible:ring-[3px] focus-visible:ring-[#3d8bff]/20'
+    'h-11 rounded-xl border-white/12 bg-[#060c1c]/70 text-[15px] text-white placeholder:text-[#64748b] transition-[border-color,box-shadow] duration-300 focus-visible:border-[#60a5fa] focus-visible:ring-[3px] focus-visible:ring-[#3d8bff]/20 focus-visible:shadow-[0_0_26px_-6px_rgba(61,139,255,.75)]'
 
   return (
     <div className="relative flex min-h-svh flex-col overflow-hidden bg-[#070b14]">
       <FundalLogin reduced={fara} />
 
       <main className="relative z-10 flex flex-1 items-center justify-center px-4 py-10">
-        <div className="relative w-full max-w-[400px]">
+        <div className="login-intrare relative w-full max-w-[400px]">
           {/* halou moale in culorile logo-ului, in spatele cardului */}
           <span
             aria-hidden="true"
@@ -98,7 +98,22 @@ export function AuthGate({ children }: { children: ReactNode }) {
           style={{ background: 'radial-gradient(70% 28% at 50% 0%, rgba(61,139,255,.16), transparent 100%), rgba(10,18,38,.86)' }}
         >
           <div className="relative mb-7 flex flex-col items-center gap-3 text-center">
-            <img src={assetUrl('/icons/logo.png')} alt="Centralizator RCA" className="h-14 w-auto drop-shadow-[0_8px_24px_rgba(0,96,240,.45)]" />
+            {/* logo cu o lumina care trece peste el din cand in cand */}
+            <span className="relative inline-block">
+              <img src={assetUrl('/icons/logo.png')} alt="Centralizator RCA" className="h-14 w-auto drop-shadow-[0_8px_24px_rgba(0,96,240,.45)]" />
+              <span
+                aria-hidden="true"
+                className="pointer-events-none absolute inset-0 overflow-hidden"
+                style={{
+                  maskImage: `url(${assetUrl('/icons/logo.png')})`,
+                  WebkitMaskImage: `url(${assetUrl('/icons/logo.png')})`,
+                  maskSize: '100% 100%',
+                  WebkitMaskSize: '100% 100%',
+                }}
+              >
+                <span className="login-logo-luciu absolute inset-y-0 left-0 w-1/3 -skew-x-12 bg-gradient-to-r from-transparent via-white/70 to-transparent" />
+              </span>
+            </span>
             <span aria-hidden="true" className="h-px w-24 bg-gradient-to-r from-transparent via-[#3d8bff]/70 to-transparent" />
             <div>
               <h1 className="text-xl font-extrabold tracking-[-.01em] text-white">Bine ai revenit</h1>

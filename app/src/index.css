@@ -236,3 +236,16 @@
   animation: loginRaza 9s linear infinite;
 }
 @keyframes loginRaza { to { --raza: 560deg; } }
+
+/* Login: cardul intra lin, scantei de lumina care urca, lumina care trece peste logo */
+@keyframes loginIntra { from { opacity: 0; transform: translateY(16px) scale(.985); } to { opacity: 1; transform: none; } }
+.login-intrare { animation: loginIntra .8s cubic-bezier(.2, .8, .2, 1) both; }
+@keyframes loginUrca {
+  0% { transform: translateY(0) translateX(0); opacity: 0; }
+  12% { opacity: .9; }
+  70% { opacity: .55; }
+  100% { transform: translateY(-105vh) translateX(var(--deriva, 30px)); opacity: 0; }
+}
+.login-scanteie { animation: loginUrca var(--durata, 16s) linear var(--intarziere, 0s) infinite; }
+@keyframes loginLogoLuciu { 0%, 70% { transform: translateX(-120%); } 100% { transform: translateX(220%); } }
+.login-logo-luciu { animation: loginLogoLuciu 6.5s ease-in-out 1.2s infinite; }
