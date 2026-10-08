@@ -40,6 +40,8 @@ interface Masina {
   farMouse: number // 0..1, farurile aprinse de apropierea cursorului
   taxi?: boolean
   tip?: TipMasina
+  model?: string
+  lumini?: Lumini
   pasaj?: boolean // pe drumul din dreapta (coboara / urca din pasajul de sub bulevard)
   laIntrare?: boolean // asteapta pe bulevard sa intre in parcare (nu incurca masina care iese)
   cedeaza?: boolean // sta pe loc ca sa treaca un om (omul nu o mai asteapta)
@@ -106,6 +108,7 @@ interface Actor {
   coada: Pas[]
   t: number
   asteapta?: number // cat a stat masina dupa un om din cale
+  astOm?: number // cat a stat omul dupa alt om din fata lui
   v?: number // viteza masinii (px/s): accelereaza si franeaza lin, fara smucituri
 }
 
@@ -143,22 +146,52 @@ const FORME: Record<TipMasina, Forma> = {
   ev: { len: 0.98, lat: 0.5, ws0: 0.26, ws1: 0.1, rf1: -0.3, rw1: -0.42, rFata: 0.5, rSpate: 0.34, usi: [0.02, -0.17], far: 0.1, panoramic: true, stopBara: true },
   pickup: { len: 1.12, lat: 0.52, ws0: 0.28, ws1: 0.18, rf1: -0.06, rw1: -0.1, rFata: 0.26, rSpate: 0.12, usi: [0.12, -0.02], far: 0.14, rotiMari: true, protectii: true, bena: true },
 }
-const TIPURI: [TipMasina, number][] = [
-  ['suv', 34],
-  ['sedan', 26],
-  ['hatch', 18],
-  ['break', 8],
-  ['ev', 9],
-  ['pickup', 5],
+// modelele din flota (File/Cars/car_nobg): forma vazuta de sus + semnatura farurilor si a stopurilor marcii
+type Lumini = 'dacia' | 'renault' | 'vw' | 'skoda' | 'peugeot' | 'bmw' | 'merc' | 'toyota' | 'tesla' | 'volvo' | 'audi' | 'bara' | 'hyundai' | 'seat' | 'generic'
+const FLOTA: [string, TipMasina, Lumini][] = [
+  ['Dacia Logan', 'sedan', 'dacia'],
+  ['Dacia Duster', 'suv', 'dacia'],
+  ['Dacia Jogger', 'break', 'dacia'],
+  ['Dacia Bigster', 'suv', 'dacia'],
+  ['Renault Arkana', 'suv', 'renault'],
+  ['Renault Megane', 'hatch', 'renault'],
+  ['VW Golf', 'hatch', 'vw'],
+  ['VW Polo', 'hatch', 'vw'],
+  ['VW Passat', 'break', 'vw'],
+  ['VW Tiguan', 'suv', 'vw'],
+  ['VW T-Cross', 'suv', 'vw'],
+  ['VW Touareg', 'suv', 'vw'],
+  ['Skoda Octavia', 'sedan', 'skoda'],
+  ['Skoda Superb', 'break', 'skoda'],
+  ['Peugeot 208', 'hatch', 'peugeot'],
+  ['Peugeot 2008', 'suv', 'peugeot'],
+  ['Peugeot 508', 'sedan', 'peugeot'],
+  ['Peugeot 5008', 'suv', 'peugeot'],
+  ['BMW Seria 3', 'sedan', 'bmw'],
+  ['BMW X3', 'suv', 'bmw'],
+  ['BMW X5', 'suv', 'bmw'],
+  ['Mercedes C', 'sedan', 'merc'],
+  ['Mercedes GLC', 'suv', 'merc'],
+  ['Mercedes GLE', 'suv', 'merc'],
+  ['Toyota Corolla', 'sedan', 'toyota'],
+  ['Toyota C-HR', 'suv', 'toyota'],
+  ['Toyota RAV4', 'suv', 'toyota'],
+  ['Toyota Hilux', 'pickup', 'toyota'],
+  ['Tesla Model 3', 'ev', 'tesla'],
+  ['Tesla Model Y', 'ev', 'tesla'],
+  ['Nissan Ariya', 'ev', 'bara'],
+  ['Volvo EX30', 'ev', 'volvo'],
+  ['Audi A4', 'sedan', 'audi'],
+  ['Audi A6', 'sedan', 'audi'],
+  ['Ford Kuga', 'suv', 'generic'],
+  ['Ford Focus', 'hatch', 'generic'],
+  ['Hyundai i20', 'hatch', 'hyundai'],
+  ['Hyundai Elantra', 'sedan', 'hyundai'],
+  ['Kia Ceed', 'hatch', 'generic'],
+  ['Seat Formentor', 'suv', 'seat'],
+  ['Seat Arona', 'suv', 'seat'],
 ]
-function alegeTip(): TipMasina {
-  let r = Math.random() * 100
-  for (const [t, p] of TIPURI) {
-    r -= p
-    if (r <= 0) return t
-  }
-  return 'sedan'
-}
+
 const TRICOURI_CLIENT = ['#334155', '#1e3a5f', '#7f1d1d', '#365314', '#4c1d95', '#78350f', '#0f766e', '#9ca3af', '#b45309', '#1f2937', '#be185d']
 const PIELE = ['#f1d3b8', '#e8c4a0', '#e8c4a0', '#d9a77f', '#c08a62', '#8d5a3b']
 const PAR = ['#1f1a17', '#3f2a1d', '#5b3a24', '#2b2b2b', '#8a6a4a', '#a3a3a3']
@@ -358,7 +391,10 @@ export function ParcareLogin({ taste }: { taste: number }) {
       farPana: 0,
       farMouse: 0,
       loc: null,
-      tip: alegeTip(),
+      ...(() => {
+        const [model, tip, lumini] = unul(FLOTA)
+        return { model, tip, lumini }
+      })(),
     })
     const omNou = (tricou: string, angajat: boolean): Om => ({
       x: -50,
@@ -372,7 +408,7 @@ export function ParcareLogin({ taste }: { taste: number }) {
       alpha: 0,
       piele: unul(PIELE),
       par: unul(PAR),
-      coafura: angajat ? (Math.random() < 0.85 ? 'scurt' : 'chel') : unul(['scurt', 'scurt', 'sapca', 'chel'] as const),
+      coafura: angajat ? 'scurt' : unul(['scurt', 'scurt', 'sapca', 'chel'] as const),
       sapca: unul(['#1e3a5f', '#111827', '#7f1d1d', '#e5e7eb']),
       haina: !angajat && Math.random() < 0.4,
       rucsac: !angajat && Math.random() < 0.25 ? unul(['#111827', '#374151', '#1e3a5f', '#7c2d12']) : undefined,
@@ -655,91 +691,350 @@ export function ParcareLogin({ taste }: { taste: number }) {
       c.fillRect(x + U * 0.06, y + h * 0.3, U * 0.16, h * 0.45)
     }
 
-    // Sediul Autonom vazut de sus: acoperis cu parapet, luminator, aparate de aer conditionat, numele
-    // pe acoperis cu dunga in culorile logo-ului, intrare cu copertina spre trotuar, ferestre luminate.
+    // Sediul Autonom vazut de sus, ca o cladire reala: terasa cu membrana si pietris, atic cu copertina de tabla,
+    // trapa, luminator, aparate de climatizare cu ventilatoare, aerisiri, antena; pe fata dinspre trotuar firma
+    // AUTONOM (panou cu dunga in culorile logo-ului), vitrina, intrarea cu copertina de sticla, ghivece, cos de gunoi.
     function deseneazaSediu(c: CanvasRenderingContext2D) {
       const { x, y, w, h, usaX } = sediu
-      c.fillStyle = 'rgba(0,0,0,.45)'
-      c.beginPath()
-      c.roundRect(x + 7, y + 9, w, h, 10)
-      c.fill()
-      c.fillStyle = '#1b2438'
-      c.beginPath()
-      c.roundRect(x, y, w, h, 10)
-      c.fill()
-      c.strokeStyle = '#3a4a6e'
-      c.lineWidth = 3
-      c.beginPath()
-      c.roundRect(x + 2.5, y + 2.5, w - 5, h - 5, 8)
-      c.stroke()
-      c.fillStyle = '#141c2e'
-      c.fillRect(x + 7, y + 7, w - 14, h - 14)
-      // luminator (sticla)
-      const lx = x + 12
-      const ly = y + 12
-      const lw = w - 24 - U * 0.9
-      const lh = Math.min(h * 0.32, U * 1.6)
-      const g = c.createLinearGradient(lx, ly, lx + lw, ly + lh)
-      g.addColorStop(0, 'rgba(96,165,250,.45)')
-      g.addColorStop(1, 'rgba(124,58,237,.3)')
+      const a = U * 0.14 // grosimea aticului
+      // umbra cladirii (lumina din stanga-sus)
+      c.fillStyle = 'rgba(0,0,0,.42)'
+      c.fillRect(x + U * 0.12, y + U * 0.16, w, h)
+      // terasa: membrana bituminoasa, putin mai deschisa spre lumina
+      const g = c.createLinearGradient(x, y, x + w, y + h)
+      g.addColorStop(0, '#45464b')
+      g.addColorStop(1, '#2f3034')
       c.fillStyle = g
-      c.fillRect(lx, ly, lw, lh)
-      c.strokeStyle = 'rgba(191,219,254,.35)'
+      c.fillRect(x, y, w, h)
+      // rosturile foilor de membrana
+      c.strokeStyle = 'rgba(0,0,0,.18)'
       c.lineWidth = 1
-      for (let i = 1; i < 4; i++) {
+      for (let yy = y + a + U * 0.55; yy < y + h - a; yy += U * 0.55) {
         c.beginPath()
-        c.moveTo(lx + (lw * i) / 4, ly)
-        c.lineTo(lx + (lw * i) / 4, ly + lh)
+        c.moveTo(x + a, yy)
+        c.lineTo(x + w - a, yy)
         c.stroke()
       }
+      // pietris (textura)
+      for (let i = 0; i < (w * h) / 55; i++) {
+        c.fillStyle = Math.random() < 0.5 ? 'rgba(255,255,255,.07)' : 'rgba(0,0,0,.12)'
+        c.fillRect(x + a + Math.random() * (w - 2 * a), y + a + Math.random() * (h - 2 * a), 1.2, 1.2)
+      }
+      // pete de apa / murdarie
+      for (let i = 0; i < 5; i++) {
+        const px = x + a + Math.random() * (w - 2 * a)
+        const py = y + a + Math.random() * (h - 2 * a)
+        const r = U * intre(0.3, 0.7)
+        const gp = c.createRadialGradient(px, py, 0, px, py, r)
+        gp.addColorStop(0, 'rgba(20,20,22,.22)')
+        gp.addColorStop(1, 'rgba(20,20,22,0)')
+        c.fillStyle = gp
+        c.fillRect(px - r, py - r, 2 * r, 2 * r)
+      }
+      // atic cu copertina de tabla (lumina pe muchia de sus/stanga, umbra pe interior)
+      c.strokeStyle = '#8b9099'
+      c.lineWidth = a
+      c.strokeRect(x + a / 2, y + a / 2, w - a, h - a)
+      c.strokeStyle = 'rgba(255,255,255,.35)'
+      c.lineWidth = 1
       c.beginPath()
-      c.moveTo(lx, ly + lh / 2)
-      c.lineTo(lx + lw, ly + lh / 2)
+      c.moveTo(x + 0.5, y + h)
+      c.lineTo(x + 0.5, y + 0.5)
+      c.lineTo(x + w, y + 0.5)
       c.stroke()
-      // aparate de aer conditionat
-      for (const [ax, ay] of [
-        [x + w - U * 0.8, y + 12],
-        [x + w - U * 0.8, y + 12 + U * 0.5],
+      c.strokeStyle = 'rgba(0,0,0,.35)'
+      c.beginPath()
+      c.moveTo(x + a, y + h - a)
+      c.lineTo(x + a, y + a)
+      c.lineTo(x + w - a, y + a)
+      c.stroke()
+      // luminator piramidal (doua fete luminate diferit)
+      const lx = x + a + U * 0.35
+      const ly = y + a + U * 0.4
+      const lw = Math.min(U * 1.4, w - 2 * a - U * 1.6)
+      const lh = Math.min(U * 1.0, h * 0.18)
+      c.fillStyle = '#56606e'
+      c.fillRect(lx - 2, ly - 2, lw + 4, lh + 4)
+      const gl = c.createLinearGradient(lx, ly, lx + lw, ly + lh)
+      gl.addColorStop(0, '#9fb8d6')
+      gl.addColorStop(0.5, '#4d6a8c')
+      gl.addColorStop(1, '#2c3f57')
+      c.fillStyle = gl
+      c.fillRect(lx, ly, lw, lh)
+      c.strokeStyle = 'rgba(255,255,255,.35)'
+      c.beginPath()
+      c.moveTo(lx, ly)
+      c.lineTo(lx + lw / 2, ly + lh / 2)
+      c.lineTo(lx + lw, ly)
+      c.moveTo(lx, ly + lh)
+      c.lineTo(lx + lw / 2, ly + lh / 2)
+      c.lineTo(lx + lw, ly + lh)
+      c.stroke()
+      // trapa de acces pe acoperis
+      c.fillStyle = '#5b616b'
+      c.fillRect(x + w - a - U * 0.75, y + h * 0.42, U * 0.5, U * 0.5)
+      c.strokeStyle = 'rgba(0,0,0,.4)'
+      c.strokeRect(x + w - a - U * 0.75, y + h * 0.42, U * 0.5, U * 0.5)
+      // aparate de climatizare cu ventilatoare
+      for (let i = 0; i < 2; i++) {
+        const ax = x + w - a - U * 0.95
+        const ay = y + a + U * 0.3 + i * U * 0.62
+        c.fillStyle = 'rgba(0,0,0,.35)'
+        c.fillRect(ax + 3, ay + 4, U * 0.72, U * 0.46)
+        c.fillStyle = '#c7ccd3'
+        c.fillRect(ax, ay, U * 0.72, U * 0.46)
+        c.fillStyle = '#2a2f36'
+        for (const fxc of [0.2, 0.52]) {
+          c.beginPath()
+          c.arc(ax + U * fxc, ay + U * 0.23, U * 0.15, 0, Math.PI * 2)
+          c.fill()
+          c.strokeStyle = '#7a828d'
+          c.lineWidth = 1
+          c.beginPath()
+          for (let k = 0; k < 3; k++) {
+            const an = (k * Math.PI * 2) / 3
+            c.moveTo(ax + U * fxc, ay + U * 0.23)
+            c.lineTo(ax + U * fxc + Math.cos(an) * U * 0.12, ay + U * 0.23 + Math.sin(an) * U * 0.12)
+          }
+          c.stroke()
+        }
+      }
+      // tubulatura si aerisiri
+      c.strokeStyle = '#9ca3af'
+      c.lineWidth = U * 0.07
+      c.beginPath()
+      c.moveTo(x + w - a - U * 0.6, y + a + U * 1.4)
+      c.lineTo(x + w - a - U * 0.6, y + h * 0.38)
+      c.stroke()
+      for (const [vx, vy] of [
+        [x + a + U * 0.5, y + h * 0.55],
+        [x + a + U * 0.9, y + h * 0.7],
+        [x + w * 0.5, y + h * 0.45],
       ]) {
-        c.fillStyle = '#475569'
-        c.fillRect(ax, ay, U * 0.62, U * 0.38)
+        c.fillStyle = '#6b7280'
+        c.beginPath()
+        c.arc(vx, vy, U * 0.09, 0, Math.PI * 2)
+        c.fill()
         c.fillStyle = '#1f2937'
         c.beginPath()
-        c.arc(ax + U * 0.2, ay + U * 0.19, U * 0.13, 0, Math.PI * 2)
-        c.arc(ax + U * 0.44, ay + U * 0.19, U * 0.13, 0, Math.PI * 2)
+        c.arc(vx, vy, U * 0.04, 0, Math.PI * 2)
         c.fill()
       }
-      // numele pe acoperis + dunga logo
-      const tx = x + w / 2
-      const ty = Math.max(ly + lh + U * 0.6, y + h * 0.62)
-      c.fillStyle = '#f8fafc'
-      c.font = `800 ${Math.round(U * 0.32)}px 'Plus Jakarta Sans Variable', system-ui, sans-serif`
-      c.textAlign = 'center'
-      c.textBaseline = 'middle'
-      c.fillText('AUTONOM', tx, ty)
-      const sl = U * 1.4
-      const dg = c.createLinearGradient(tx - sl / 2, 0, tx + sl / 2, 0)
+      // antena parabolica
+      c.fillStyle = '#d1d5db'
+      c.beginPath()
+      c.ellipse(x + a + U * 0.45, y + h * 0.82, U * 0.2, U * 0.14, -0.6, 0, Math.PI * 2)
+      c.fill()
+      c.fillStyle = 'rgba(0,0,0,.25)'
+      c.beginPath()
+      c.ellipse(x + a + U * 0.48, y + h * 0.83, U * 0.11, U * 0.07, -0.6, 0, Math.PI * 2)
+      c.fill()
+      // firma AUTONOM pe fata dinspre trotuar (panou luminat, cu dunga logo-ului)
+      const fh = U * 0.34
+      const fy = y + h - fh
+      c.fillStyle = '#0f1729'
+      c.fillRect(x + a, fy, w - 2 * a, fh)
+      const dg = c.createLinearGradient(x + a, 0, x + w - a, 0)
       dg.addColorStop(0, '#00A848')
       dg.addColorStop(0.5, '#0060F0')
       dg.addColorStop(1, '#6000C0')
       c.fillStyle = dg
-      c.fillRect(tx - sl / 2, ty + U * 0.26, sl, 3)
-      // ferestre (vitrina) luminate pe fata dinspre trotuar
-      c.fillStyle = 'rgba(253,230,138,.55)'
-      for (let wx = x + 14; wx < x + w - 14; wx += U * 0.42) {
-        if (Math.abs(wx - usaX) < U * 0.6) continue
-        c.fillRect(wx, y + h - 4, U * 0.24, 3)
+      c.fillRect(x + a, fy, w - 2 * a, U * 0.05)
+      c.fillStyle = '#f8fafc'
+      c.font = `800 ${Math.round(U * 0.24)}px 'Plus Jakarta Sans Variable', system-ui, sans-serif`
+      c.textAlign = 'center'
+      c.textBaseline = 'middle'
+      c.shadowColor = 'rgba(96,165,250,.8)'
+      c.shadowBlur = 6
+      c.fillText('AUTONOM', x + w / 2, fy + fh * 0.58)
+      c.shadowBlur = 0
+      // vitrina (geamuri luminate) sub firma
+      c.fillStyle = 'rgba(253,230,138,.6)'
+      for (let wx = x + a + U * 0.1; wx < x + w - a - U * 0.3; wx += U * 0.45) {
+        if (Math.abs(wx + U * 0.13 - usaX) < U * 0.55) continue
+        c.fillRect(wx, y + h - 3, U * 0.3, 3)
       }
-      // intrare cu copertina, pe trotuar
-      c.fillStyle = 'rgba(96,165,250,.35)'
-      c.strokeStyle = 'rgba(147,197,253,.7)'
-      c.lineWidth = 1.5
+      // intrarea: usa de sticla cu copertina
+      c.fillStyle = 'rgba(15,23,42,.6)'
+      c.fillRect(usaX - U * 0.55 + 3, y + h + 3, U * 1.1, U * 0.3)
+      const gc = c.createLinearGradient(0, y + h, 0, y + h + U * 0.3)
+      gc.addColorStop(0, 'rgba(147,197,253,.55)')
+      gc.addColorStop(1, 'rgba(96,165,250,.25)')
+      c.fillStyle = gc
+      c.strokeStyle = 'rgba(191,219,254,.8)'
+      c.lineWidth = 1.2
       c.beginPath()
-      c.roundRect(usaX - U * 0.5, y + h - 2, U, U * 0.3, 4)
+      c.roundRect(usaX - U * 0.55, y + h - 1, U * 1.1, U * 0.3, 3)
       c.fill()
       c.stroke()
+      c.strokeStyle = 'rgba(191,219,254,.45)'
+      c.beginPath()
+      for (let k = 1; k < 4; k++) {
+        c.moveTo(usaX - U * 0.55 + (U * 1.1 * k) / 4, y + h - 1)
+        c.lineTo(usaX - U * 0.55 + (U * 1.1 * k) / 4, y + h + U * 0.29)
+      }
+      c.stroke()
       c.fillStyle = '#0b1222'
-      c.fillRect(usaX - U * 0.16, y + h - 3, U * 0.32, 4)
+      c.fillRect(usaX - U * 0.18, y + h - 3, U * 0.36, 4)
+      // ghivece cu arbusti si cos de gunoi langa intrare
+      for (const px of [usaX - U * 0.85, usaX + U * 0.85]) {
+        c.fillStyle = '#3f3f46'
+        c.fillRect(px - U * 0.13, y + h + U * 0.04, U * 0.26, U * 0.26)
+        c.fillStyle = '#166534'
+        c.beginPath()
+        c.arc(px, y + h + U * 0.17, U * 0.15, 0, Math.PI * 2)
+        c.fill()
+        c.fillStyle = 'rgba(134,239,172,.35)'
+        c.beginPath()
+        c.arc(px - U * 0.04, y + h + U * 0.13, U * 0.07, 0, Math.PI * 2)
+        c.fill()
+      }
+      c.fillStyle = '#4b5563'
+      c.beginPath()
+      c.arc(usaX + U * 1.3, y + h + U * 0.16, U * 0.1, 0, Math.PI * 2)
+      c.fill()
+      c.fillStyle = '#111827'
+      c.beginPath()
+      c.arc(usaX + U * 1.3, y + h + U * 0.16, U * 0.06, 0, Math.PI * 2)
+      c.fill()
+    }
+
+    // Farurile si stopurile dupa semnatura reala a marcii (vazute de sus, pe colturile din fata si din spate):
+    // Dacia „Y", Renault „C", VW banda pe toata latimea, Skoda cristal, Peugeot colti + 3 gheare, BMW doi ochi,
+    // Mercedes spranceana, Toyota bumerang, Tesla subtiri + stop in „L", Volvo ciocanul lui Thor, Audi in trepte,
+    // Hyundai/Seat/Nissan stop (sau far) pe toata latimea.
+    function deseneazaLumini(c: CanvasRenderingContext2D, m: Masina, F: Forma, L: number, w: number, far: number) {
+      const st = m.lumini ?? 'generic'
+      const fx = L * 0.5
+      const rx = -L * 0.5
+      // carcasa farurilor (sticla fumurie) si grila
+      c.fillStyle = 'rgba(15,23,42,.85)'
+      for (const sy of [-1, 1]) {
+        c.beginPath()
+        c.roundRect(fx - L * 0.08, sy > 0 ? w * 0.2 : -w * 0.45, L * 0.075, w * 0.25, 3)
+        c.fill()
+      }
+      if (!F.panoramic) {
+        c.fillStyle = 'rgba(10,12,18,.85)'
+        c.fillRect(fx - L * 0.032, -w * 0.18, L * 0.026, w * 0.36)
+      }
+      const linie = (baza: number, semn: number, pts: [number, number][], sy: number) => {
+        c.beginPath()
+        pts.forEach(([px, py], i) => (i ? c.lineTo(baza + semn * L * px, sy * w * py) : c.moveTo(baza + semn * L * px, sy * w * py)))
+        c.stroke()
+      }
+      // lumini de zi / faruri (albe)
+      c.save()
+      const drl = far > 0.02 ? '#ffffff' : 'rgba(235,245,255,.95)'
+      c.strokeStyle = drl
+      c.fillStyle = drl
+      c.lineWidth = Math.max(1, U * 0.035)
+      c.lineCap = 'round'
+      c.lineJoin = 'round'
+      c.shadowColor = 'rgba(220,235,255,.95)'
+      c.shadowBlur = far > 0.02 ? 9 : 3
+      const F_ = (pts: [number, number][], sy: number) => linie(fx, -1, pts, sy)
+      for (const sy of [-1, 1]) {
+        switch (st) {
+          case 'dacia': // „Y"
+            F_([[0.012, 0.43], [0.045, 0.33], [0.012, 0.23]], sy)
+            F_([[0.045, 0.33], [0.075, 0.33]], sy)
+            break
+          case 'renault': // „C" care coboara pe bara
+            F_([[0.012, 0.43], [0.06, 0.43], [0.06, 0.27], [0.02, 0.22], [0.006, 0.15]], sy)
+            break
+          case 'skoda': // cristal
+            F_([[0.014, 0.43], [0.04, 0.37], [0.014, 0.31], [0.04, 0.25]], sy)
+            break
+          case 'peugeot': // far ascutit + „colt"
+            F_([[0.012, 0.43], [0.065, 0.3]], sy)
+            F_([[0.02, 0.29], [0.004, 0.19]], sy)
+            break
+          case 'bmw': // doi ochi
+            for (const py of [0.37, 0.27]) {
+              c.beginPath()
+              c.arc(fx - L * 0.035, sy * w * py, w * 0.045, 0, Math.PI * 2)
+              c.stroke()
+            }
+            break
+          case 'merc': // spranceana
+            c.beginPath()
+            c.moveTo(fx - L * 0.07, sy * w * 0.43)
+            c.quadraticCurveTo(fx - L * 0.008, sy * w * 0.41, fx - L * 0.02, sy * w * 0.22)
+            c.stroke()
+            break
+          case 'toyota': // bumerang
+            F_([[0.065, 0.44], [0.02, 0.38], [0.012, 0.22]], sy)
+            break
+          case 'tesla': // subtiri, aerodinamice
+            F_([[0.04, 0.43], [0.012, 0.33], [0.008, 0.25]], sy)
+            break
+          case 'volvo': // ciocanul lui Thor
+            F_([[0.012, 0.4], [0.065, 0.4]], sy)
+            F_([[0.038, 0.4], [0.038, 0.25]], sy)
+            break
+          case 'audi': // in trepte
+            F_([[0.012, 0.43], [0.032, 0.43], [0.032, 0.35], [0.012, 0.31], [0.012, 0.23]], sy)
+            break
+          default:
+            F_([[0.016, 0.43], [0.016, 0.25]], sy)
+        }
+      }
+      if (st === 'vw' || st === 'bara') F_([[0.006, -0.42], [0.006, 0.42]], 1) // banda luminoasa pe toata latimea
+      c.restore()
+      // sigla in mijlocul grilei
+      c.fillStyle = 'rgba(203,213,225,.9)'
+      c.beginPath()
+      c.arc(fx - L * 0.035, 0, w * 0.045, 0, Math.PI * 2)
+      c.fill()
+      // numarul din spate
+      c.fillStyle = '#e5e7eb'
+      c.fillRect(rx - L * 0.008, -w * 0.11, L * 0.018, w * 0.22)
+      // stopuri (rosii; mai aprinse cand masina e in mers)
+      c.save()
+      const rosu = m.loc ? 'rgba(220,38,38,.92)' : 'rgba(255,72,72,1)'
+      c.strokeStyle = rosu
+      c.fillStyle = rosu
+      c.lineWidth = Math.max(1.2, U * 0.04)
+      c.lineCap = 'round'
+      c.lineJoin = 'round'
+      c.shadowColor = 'rgba(239,68,68,.85)'
+      c.shadowBlur = m.loc ? 2 : 7
+      const S_ = (pts: [number, number][], sy: number) => linie(rx, 1, pts, sy)
+      const lampa = (sy: number) => {
+        c.beginPath()
+        c.roundRect(rx, sy > 0 ? w * 0.26 : -w * 0.42, L * 0.05, w * 0.16, [3, 1, 1, 3])
+        c.fill()
+      }
+      for (const sy of [-1, 1]) {
+        switch (st) {
+          case 'dacia':
+            S_([[0.012, 0.42], [0.045, 0.33], [0.012, 0.24]], sy)
+            S_([[0.045, 0.33], [0.07, 0.33]], sy)
+            break
+          case 'renault':
+          case 'skoda': // „C"
+            S_([[0.012, 0.42], [0.05, 0.42], [0.05, 0.27], [0.02, 0.24]], sy)
+            break
+          case 'peugeot': // trei gheare
+            for (let k = 0; k < 3; k++) S_([[0.01, 0.41 - k * 0.065], [0.05, 0.41 - k * 0.065]], sy)
+            break
+          case 'bmw':
+          case 'tesla': // „L"
+            S_([[0.065, 0.43], [0.012, 0.43], [0.012, 0.26]], sy)
+            break
+          case 'toyota':
+          case 'volvo':
+            S_([[0.012, 0.43], [0.012, 0.24]], sy)
+            S_([[0.012, 0.43], [0.05, 0.43]], sy)
+            break
+          default:
+            lampa(sy)
+        }
+      }
+      if (st === 'audi' || st === 'seat' || st === 'hyundai' || st === 'bara' || st === 'vw')
+        S_([[0.008, -0.4], [0.008, 0.4]], 1) // stop pe toata latimea
+      c.restore()
     }
 
     // ---- desen masina, vazuta de sus, dupa tipurile din flota (SUV, sedan, hatchback, break, electrica, pick-up) ----
@@ -948,32 +1243,7 @@ export function ParcareLogin({ taste }: { taste: number }) {
       c.fillStyle = 'rgba(148,163,184,.6)'
       c.fillRect(L * (F.ws1 + 0.035), -w * 0.64, L * 0.02, w * 0.12)
       c.fillRect(L * (F.ws1 + 0.035), w * 0.52, L * 0.02, w * 0.12)
-      // faruri (LED subtiri), lumina de zi, grila/sigla, numere, stopuri
-      c.fillStyle = far > 0.02 ? '#fffbe6' : 'rgba(226,232,240,.8)'
-      c.beginPath()
-      c.roundRect(L * 0.44, -w * 0.42, L * 0.06, w * F.far, [1, 4, 4, 1])
-      c.roundRect(L * 0.44, w * (0.42 - F.far), L * 0.06, w * F.far, [1, 4, 4, 1])
-      c.fill()
-      if (!F.panoramic) {
-        c.fillStyle = 'rgba(10,12,18,.8)'
-        c.fillRect(L * 0.475, -w * 0.2, L * 0.025, w * 0.4)
-      }
-      c.fillStyle = 'rgba(203,213,225,.9)'
-      c.beginPath()
-      c.arc(L * 0.47, 0, w * 0.045, 0, Math.PI * 2)
-      c.fill()
-      c.fillStyle = '#e5e7eb'
-      c.fillRect(-L * 0.508, -w * 0.11, L * 0.018, w * 0.22)
-      c.fillStyle = m.loc ? 'rgba(220,38,38,.85)' : 'rgba(248,80,80,1)'
-      if (F.stopBara) {
-        // stop continuu pe toata latimea (electrice / SUV noi)
-        c.fillRect(-L * 0.5, -w * 0.4, L * 0.03, w * 0.8)
-      } else {
-        c.beginPath()
-        c.roundRect(-L * 0.5, -w * 0.42, L * 0.05, w * 0.16, [3, 1, 1, 3])
-        c.roundRect(-L * 0.5, w * 0.26, L * 0.05, w * 0.16, [3, 1, 1, 3])
-        c.fill()
-      }
+      deseneazaLumini(c, m, F, L, w, far)
       const lumina = (px: number, py: number, r: number) => {
         const g = c.createRadialGradient(px, py, 0, px, py, r)
         g.addColorStop(0, 'rgba(255,190,80,.95)')
@@ -1324,6 +1594,40 @@ export function ParcareLogin({ taste }: { taste: number }) {
       }
       return null
     }
+    // alt om chiar in fata (la mai putin de o jumatate de masina), pe directia de mers
+    function omInFata(o: Om, q: Vec, dir: number): Om | null {
+      for (const x of oameni) {
+        if (x === o || !x.vizibil || x.alpha < 0.5) continue
+        const dx = x.x - o.x
+        const dy = x.y - o.y
+        if (Math.hypot(x.x - q.x, x.y - q.y) < U * 0.42 && dx * Math.cos(dir) + dy * Math.sin(dir) > 0) return x
+      }
+      return null
+    }
+    // cei care stau pe loc prea aproape unul de altul se dau putin la o parte (nu se suprapun niciodata)
+    function departeOameni(dt: number) {
+      for (let i = 0; i < oameni.length; i++) {
+        const a = oameni[i]
+        if (!a.vizibil || a.alpha < 0.5) continue
+        for (let j = i + 1; j < oameni.length; j++) {
+          const b = oameni[j]
+          if (!b.vizibil || b.alpha < 0.5 || (a.merge && b.merge)) continue
+          const dx = b.x - a.x
+          const dy = b.y - a.y
+          const d = Math.hypot(dx, dy) || 0.01
+          if (d >= U * 0.4) continue
+          const k = Math.min(U * 0.4 - d, U * 0.8 * dt) / d
+          if (!a.merge) {
+            a.x -= dx * k * (b.merge ? 1 : 0.5)
+            a.y -= dy * k * (b.merge ? 1 : 0.5)
+          }
+          if (!b.merge) {
+            b.x += dx * k * (a.merge ? 1 : 0.5)
+            b.y += dy * k * (a.merge ? 1 : 0.5)
+          }
+        }
+      }
+    }
     // ocolirea unei masini oprite in drum: prin spatele ei, pe partea dinspre parcare (niciodata prin bulevard),
     // apoi omul isi continua drumul de dupa masina
     function ocolire(m: Masina, cur: Vec, d: Drum, s: number): Vec[] {
@@ -1373,6 +1677,24 @@ export function ParcareLogin({ taste }: { taste: number }) {
               return
             }
             a.asteapta = 0
+            // alt om chiar in fata: astept putin, apoi il ocolesc pe dreapta
+            const alt = s < p.d.total && a.t > dt ? omInFata(o, q, dir) : null
+            if (alt) {
+              a.t -= dt
+              o.merge = false
+              a.astOm = (a.astOm ?? 0) + dt
+              if (a.astOm > 0.5) {
+                const rx = -Math.sin(dir)
+                const ry = Math.cos(dir)
+                const p1 = { x: o.x + rx * U * 0.5 + Math.cos(dir) * U * 0.2, y: o.y + ry * U * 0.5 + Math.sin(dir) * U * 0.2 }
+                const p2 = { x: alt.x + rx * U * 0.5 + Math.cos(dir) * U * 0.45, y: alt.y + ry * U * 0.5 + Math.sin(dir) * U * 0.45 }
+                p.d = drum(colturi([{ x: o.x, y: o.y }, p1, p2, ...taie(p.d.pts, s)[1].slice(1)], U * 0.3))
+                a.t = 0
+                a.astOm = 0
+              }
+              return
+            }
+            a.astOm = 0
             o.x = q.x
             o.y = q.y
             if (p.d.total > 0.5) o.h = dir
@@ -1931,6 +2253,8 @@ export function ParcareLogin({ taste }: { taste: number }) {
           tx.laIntrare = true
           tx.taxi = true
           tx.tip = 'sedan'
+          tx.model = 'Dacia Logan'
+          tx.lumini = 'dacia'
           masini.push(tx)
           a.m = tx
         }),
@@ -2379,6 +2703,7 @@ export function ParcareLogin({ taste }: { taste: number }) {
       actualizeazaTrafic(dt, acum)
       actualizeazaFum(dt, acum)
       actualizeazaFumatori(dt, acum)
+      departeOameni(dt)
       const cx = plat.x + plat.w / 2
       const cy = plat.y + plat.h / 2
       for (const o of fumatori) if (!o.ocupat && o.vizibil) o.h = Math.atan2(cy - o.y, cx - o.x)
