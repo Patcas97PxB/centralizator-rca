@@ -15,6 +15,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import type { DeSunat, TipAviz } from '@/lib/rca-calc'
 import type { Dosar } from '@/lib/types'
 import { BackupButtons } from './BackupButtons'
+import { FolderLocalButton } from './FolderLocalButton'
 import { ESTE_DEMO } from '@/lib/demo'
 import { initiale, numeDinEmail } from '@/lib/autentificare'
 
@@ -98,6 +99,7 @@ export function Header({
 
       <div className="ml-auto flex flex-wrap items-center justify-end gap-2.5">
         <div className="hidden items-center gap-1.5 lg:flex">
+          <FolderLocalButton />
           <BackupButtons />
         </div>
         <div className="hidden items-center gap-[9px] rounded-xl border border-[#253150] bg-[#10172a] px-3 py-1.5 lg:flex">

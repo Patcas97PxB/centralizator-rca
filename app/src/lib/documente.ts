@@ -39,10 +39,11 @@ export interface DocStatus {
 
 type DocInput = Pick<Dosar, 'documente' | 'etichetaOptionale'> & Partial<Pick<Dosar, 'contractFinalIncarcat' | 'zileContractFinal'>>
 
-export function docStatus(d: DocInput): DocStatus {
+/** `locale`: tipurile gasite in folderul dosarului de pe laptop (lib/folder-local.ts) — conteaza ca prezente. */
+export function docStatus(d: DocInput, locale: string[] = []): DocStatus {
   const docs = Array.isArray(d.documente) ? d.documente : []
   const optionale = Array.isArray(d.etichetaOptionale) ? d.etichetaOptionale : []
-  const prezente = new Set(docs.map((x) => ETICHETE_VECHI[x.eticheta] ?? x.eticheta))
+  const prezente = new Set([...docs.map((x) => ETICHETE_VECHI[x.eticheta] ?? x.eticheta), ...locale])
   // Contractul final se considera prezent si cand a fost preluat prin "Contract final" din formular.
   if (d.contractFinalIncarcat || d.zileContractFinal) prezente.add('contract')
   // Contractul final e mereu obligatoriu (nu se poate marca "nu se aplica").
@@ -54,8 +55,8 @@ export function docStatus(d: DocInput): DocStatus {
 }
 
 // Ce lipseste ca un dosar sa poata fi marcat "Finalizat": documentele obligatorii + contractul final.
-export function lipsuriFinalizare(d: DocInput): string[] {
-  return docStatus(d).missing.map(docLabelText)
+export function lipsuriFinalizare(d: DocInput, locale: string[] = []): string[] {
+  return docStatus(d, locale).missing.map(docLabelText)
 }
 
 export function docLabelText(key: string): string {

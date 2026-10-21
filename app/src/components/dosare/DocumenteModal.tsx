@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, type DragEvent } from 'react'
-import { AlertTriangle, Check, FolderPlus, Trash2, Upload, X } from 'lucide-react'
+import { AlertTriangle, Check, FolderPlus, Laptop, Trash2, Upload, X } from 'lucide-react'
+import { cheiLocale, fisiereLocale, useFolderLocal } from '@/lib/folder-local'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import {
   DOCUMENT_LABELS,
@@ -53,12 +54,16 @@ export function DocumenteModal({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, dosar?.id])
 
+  const folder = useFolderLocal()
+
   if (!draft) return null
 
   const documente = Array.isArray(draft.documente) ? draft.documente : []
   const optionale = Array.isArray(draft.etichetaOptionale) ? draft.etichetaOptionale : []
-  const st = docStatus(draft)
-  const lipsuri = lipsuriFinalizare(draft)
+  const peLaptop = fisiereLocale(folder, draft.nrAutoPagubit)
+  const docLocale = cheiLocale(folder, draft.nrAutoPagubit)
+  const st = docStatus(draft, docLocale)
+  const lipsuri = lipsuriFinalizare(draft, docLocale)
   const procent = st.total > 0 ? Math.round((st.have / st.total) * 100) : 0
 
   function patch(p: Partial<Dosar>) {
@@ -202,6 +207,17 @@ export function DocumenteModal({
             </div>
           </div>
 
+          {folder.nume && (
+            <p className="flex items-center gap-1.5 text-[11.5px] text-[#8b9ab5]">
+              <Laptop className="size-3.5 shrink-0 text-[#93c5fd]" aria-hidden="true" />
+              {folder.permis !== 'granted'
+                ? `Folderul „${folder.nume}” de pe laptop așteaptă permisiunea — apasă iconița cu laptop din antet.`
+                : peLaptop.length > 0
+                  ? `${peLaptop.length} ${peLaptop.length === 1 ? 'fișier găsit' : 'fișiere găsite'} în „${folder.nume}/${draft.nrAutoPagubit}” pe laptop.`
+                  : `Nu am găsit folderul „${draft.nrAutoPagubit || '?'}” în „${folder.nume}” pe laptop.`}
+            </p>
+          )}
+
           <button
             type="button"
             disabled={seIncarca}
@@ -239,8 +255,9 @@ export function DocumenteModal({
           <div className="flex flex-col gap-2">
             {chei.map((key) => {
               const fisiere = documente.filter((d) => d.eticheta === key)
+              const locale = peLaptop.filter((f) => f.chei.includes(key))
               const doarFlag = key === 'contract' && fisiere.length === 0 && !!(draft.contractFinalIncarcat || draft.zileContractFinal)
-              const are = fisiere.length > 0 || doarFlag
+              const are = fisiere.length > 0 || locale.length > 0 || doarFlag
               const optional = key !== 'contract' && optionale.includes(key)
               return (
                 <div
@@ -271,6 +288,12 @@ export function DocumenteModal({
                       <div className="truncate text-[11.5px] text-[#3ddc97]">încărcat din „Editează” (Contract final)</div>
                     ) : are ? (
                       <div className="mt-0.5 flex flex-col gap-0.5">
+                        {locale.map((f) => (
+                          <div key={'loc-' + f.nume} className="flex items-center gap-1.5 text-[11.5px] text-[#93c5fd]" title="Găsit în folderul dosarului de pe laptop">
+                            <Laptop className="size-3.5 shrink-0" aria-hidden="true" />
+                            <span className="min-w-0 flex-1 truncate">{f.nume}</span>
+                          </div>
+                        ))}
                         {fisiere.map((f) => (
                           <div key={f.id} className="flex items-center gap-1.5 text-[11.5px] text-[#3ddc97]">
                             <span className="min-w-0 flex-1 truncate">{f.nume}</span>

@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { AlertTriangle, ArrowDown, Bell, BellOff, Check, ChevronDown, FolderPlus, ImageIcon, Pencil } from 'lucide-react'
 import { imagineMasina } from '@/lib/cars'
+import { cheiLocale, useFolderLocal } from '@/lib/folder-local'
 import { ALPHA, accentStyle, hex } from '@/lib/color'
 import { docStatus, docLabelText, lipsuriFinalizare } from '@/lib/documente'
 import { calculRCA, etapaDosar, fmtDate, prioritateDosar, todayStr, urgentaDosar, zileScurseDeLaPredare } from '@/lib/rca-calc'
@@ -42,7 +43,9 @@ export function DosarCard({
 }) {
   const meta = ETAPA_META[etapaDosar(dosar)]
   const urgenta = urgentaDosar(dosar)
-  const dst = docStatus(dosar)
+  const folder = useFolderLocal()
+  const docLocale = cheiLocale(folder, dosar.nrAutoPagubit)
+  const dst = docStatus(dosar, docLocale)
   const rca = calculRCA(dosar)
   const accent = accentStyle(meta.color)
   const cardColor = RANK_COLOR[prioritateDosar(dosar)]
@@ -90,7 +93,7 @@ export function DosarCard({
       onStatusChange(dosar.id, 'in_asteptare') // etapa revine din bife
       return
     }
-    const lipsuri = lipsuriFinalizare(dosar)
+    const lipsuri = lipsuriFinalizare(dosar, docLocale)
     if (lipsuri.length > 0) {
       setBlocat(null)
       setTimeout(() => setBlocat('Lipsește: ' + lipsuri.join(', ')), 0)
