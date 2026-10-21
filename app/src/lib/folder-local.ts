@@ -161,8 +161,9 @@ export function useFolderLocal(): StareFolder {
   )
 }
 
-/** Fisierele din subfolderul dosarului (dupa nr. auto pagubit). Accepta si „B768SBG - Allianz". */
-export function fisiereLocale(s: StareFolder, nrAuto: string): FisierLocal[] {
+type DosarFolder = { nrAutoPagubit: string; categoriiFolder?: Record<string, string> }
+
+function gasesteFisiere(s: StareFolder, nrAuto: string): FisierLocal[] {
   const n = normAuto(nrAuto)
   if (n.length < 4 || s.dosare.size === 0) return []
   const exact = s.dosare.get(n)
@@ -171,6 +172,15 @@ export function fisiereLocale(s: StareFolder, nrAuto: string): FisierLocal[] {
   return []
 }
 
-export function cheiLocale(s: StareFolder, nrAuto: string): string[] {
-  return [...new Set(fisiereLocale(s, nrAuto).flatMap((f) => f.chei))]
+/** Fisierele din subfolderul dosarului (dupa nr. auto pagubit; accepta si „B768SBG - Allianz"),
+ *  cu categoriile alese de mana (`categoriiFolder`) in locul celor ghicite din nume. */
+export function fisiereLocale(s: StareFolder, d: DosarFolder): FisierLocal[] {
+  const alese = d.categoriiFolder ?? {}
+  return gasesteFisiere(s, d.nrAutoPagubit).map((f) =>
+    alese[f.nume] ? { ...f, chei: alese[f.nume] === 'altele' ? [] : [alese[f.nume]] } : f,
+  )
+}
+
+export function cheiLocale(s: StareFolder, d: DosarFolder): string[] {
+  return [...new Set(fisiereLocale(s, d).flatMap((f) => f.chei))]
 }

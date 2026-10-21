@@ -44,7 +44,7 @@ export function DosarCard({
   const meta = ETAPA_META[etapaDosar(dosar)]
   const urgenta = urgentaDosar(dosar)
   const folder = useFolderLocal()
-  const docLocale = cheiLocale(folder, dosar.nrAutoPagubit)
+  const docLocale = cheiLocale(folder, dosar)
   const dst = docStatus(dosar, docLocale)
   const rca = calculRCA(dosar)
   const accent = accentStyle(meta.color)

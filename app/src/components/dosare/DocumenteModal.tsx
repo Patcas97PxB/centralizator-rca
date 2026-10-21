@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, type DragEvent } from 'react'
-import { AlertTriangle, Check, FolderPlus, Laptop, Trash2, Upload, X } from 'lucide-react'
-import { cheiLocale, fisiereLocale, useFolderLocal } from '@/lib/folder-local'
+import { AlertTriangle, ArrowLeftRight, Check, FolderPlus, Laptop, Trash2, Upload, X } from 'lucide-react'
+import { cheiLocale, fisiereLocale, useFolderLocal, type FisierLocal } from '@/lib/folder-local'
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import {
   DOCUMENT_LABELS,
@@ -16,6 +17,32 @@ import { majuscule } from '@/lib/majuscule'
 import { stergeDocumentStocare } from '@/lib/documente-storage'
 import type { Dosar, DocumentDosar } from '@/lib/types'
 import { cn } from '@/lib/utils'
+
+// Butonul mic de langa fiecare fisier: il muti in alta categorie (cand numele a fost ghicit gresit).
+function MutaCategoria({ curent, nume, onAlege }: { curent: string; nume: string; onAlege: (key: string) => void }) {
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <button
+          type="button"
+          aria-label={'Schimbă categoria pentru ' + nume}
+          title="Schimbă categoria"
+          className="flex size-6 shrink-0 items-center justify-center rounded-md text-[#94a3b8] transition-colors hover:bg-white/10 hover:text-white"
+        >
+          <ArrowLeftRight className="size-3.5" aria-hidden="true" />
+        </button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end" className="w-64">
+        <p className="px-2 py-1.5 text-[11px] text-muted-foreground">Mută „{nume}” la:</p>
+        {DOCUMENT_LABELS.filter((l) => l.key !== curent).map((l) => (
+          <DropdownMenuItem key={l.key} onClick={() => onAlege(l.key)}>
+            {l.label}
+          </DropdownMenuItem>
+        ))}
+      </DropdownMenuContent>
+    </DropdownMenu>
+  )
+}
 
 // Modalul dedicat "Documente dosar": incarci fisiere (se sorteaza automat dupa nume sau le
 // pui pe un anumit tip), vezi ce lipseste si marchezi ce nu se aplica. Salvarea e automata —
@@ -60,8 +87,8 @@ export function DocumenteModal({
 
   const documente = Array.isArray(draft.documente) ? draft.documente : []
   const optionale = Array.isArray(draft.etichetaOptionale) ? draft.etichetaOptionale : []
-  const peLaptop = fisiereLocale(folder, draft.nrAutoPagubit)
-  const docLocale = cheiLocale(folder, draft.nrAutoPagubit)
+  const peLaptop = fisiereLocale(folder, draft)
+  const docLocale = cheiLocale(folder, draft)
   const st = docStatus(draft, docLocale)
   const lipsuri = lipsuriFinalizare(draft, docLocale)
   const procent = st.total > 0 ? Math.round((st.have / st.total) * 100) : 0
@@ -138,6 +165,15 @@ export function DocumenteModal({
     if (doc.assetId) stergeDocumentStocare(doc.assetId).catch(() => {})
   }
 
+  // Categoria aleasa de mana: la fisierele bifate se schimba eticheta, la cele de pe laptop se tine minte
+  // alegerea pe numele fisierului (categoriiFolder).
+  function mutaDocument(doc: DocumentDosar, key: string) {
+    patch({ documente: documente.map((x) => (x.id === doc.id ? { ...x, eticheta: key } : x)) })
+  }
+  function mutaLocal(nume: string, key: string) {
+    patch({ categoriiFolder: { ...(draft?.categoriiFolder ?? {}), [nume]: key } })
+  }
+
   function toggleOptional(key: string) {
     patch({ etichetaOptionale: optionale.includes(key) ? optionale.filter((k) => k !== key) : [...optionale, key] })
   }
@@ -148,10 +184,15 @@ export function DocumenteModal({
     if (e.dataTransfer.files?.length) incarca(e.dataTransfer.files, null)
   }
 
+  const cheiFisier = (f: FisierLocal) => (f.chei.length ? f.chei : ['altele'])
   // Randuri: tipurile numarate + (intrare-iesire / altele doar daca exista fisiere pe ele).
   const chei: string[] = [
     ...DOCUMENT_LABELS_NUMARATE,
-    ...DOCUMENT_LABELS.filter((l) => (l.key === 'intrare_iesire' || l.key === 'altele') && documente.some((d) => d.eticheta === l.key)).map((l) => l.key),
+    ...DOCUMENT_LABELS.filter(
+      (l) =>
+        (l.key === 'intrare_iesire' || l.key === 'altele') &&
+        (documente.some((d) => d.eticheta === l.key) || peLaptop.some((f) => cheiFisier(f).includes(l.key))),
+    ).map((l) => l.key),
   ]
   const subtitlu = [draft.nrAutoPagubit, draft.nrAutoInlocuire].filter(Boolean).join(' → ') + (draft.nrDosar ? ' · ' + draft.nrDosar : '')
 
@@ -247,7 +288,7 @@ export function DocumenteModal({
           <div className="flex flex-col gap-2">
             {chei.map((key) => {
               const fisiere = documente.filter((d) => d.eticheta === key)
-              const locale = peLaptop.filter((f) => f.chei.includes(key))
+              const locale = peLaptop.filter((f) => cheiFisier(f).includes(key))
               const doarFlag = key === 'contract' && fisiere.length === 0 && !!(draft.contractFinalIncarcat || draft.zileContractFinal)
               const are = fisiere.length > 0 || locale.length > 0 || doarFlag
               const optional = key !== 'contract' && optionale.includes(key)
@@ -284,11 +325,13 @@ export function DocumenteModal({
                           <div key={'loc-' + f.nume} className="flex items-center gap-1.5 text-[11.5px] text-[#93c5fd]" title="Găsit în folderul dosarului de pe laptop">
                             <Laptop className="size-3.5 shrink-0" aria-hidden="true" />
                             <span className="min-w-0 flex-1 truncate">{f.nume}</span>
+                            <MutaCategoria curent={key} nume={f.nume} onAlege={(k) => mutaLocal(f.nume, k)} />
                           </div>
                         ))}
                         {fisiere.map((f) => (
                           <div key={f.id} className="flex items-center gap-1.5 text-[11.5px] text-[#3ddc97]">
                             <span className="min-w-0 flex-1 truncate">{f.nume}</span>
+                            <MutaCategoria curent={key} nume={f.nume} onAlege={(k) => mutaDocument(f, k)} />
                             <button
                               type="button"
                               onClick={() => elimina(f)}

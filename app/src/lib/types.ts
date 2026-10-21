@@ -38,6 +38,8 @@ export interface Dosar {
   preluatBifat?: boolean
   /** Ziua bifei Preluat (YYYY-MM-DD) — de aici se numara avizul „netrimis". */
   preluatLa?: string
+  /** Fisierele din folderul de pe laptop mutate de mana in alta categorie: nume fisier → tipul ales. */
+  categoriiFolder?: Record<string, string>
   /** Marcat de mana „Amintește-mi": dosarul apare in clopotel. */
   amintesteMi?: boolean
   clasaAuto: string
