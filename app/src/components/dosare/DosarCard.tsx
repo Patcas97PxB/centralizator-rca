@@ -85,6 +85,14 @@ export function DosarCard({
     }
   }, [blocat])
 
+  // Preluat bifat = masina s-a intors, dar dosarul inca trebuie trimis (mail, link drive) → „Se asteapta documente".
+  // La debifare, daca a ramas pe acel status, revine la „De preluat".
+  function statusLaPreluat(preluat: boolean): Partial<Dosar> {
+    if (finalizat) return {}
+    if (preluat) return { status: 'astept_docum' }
+    return dosar.status === 'astept_docum' && preluatFacut ? { status: 'de_preluat' } : {}
+  }
+
   function toggleFinal() {
     if (finalizat) {
       onStatusChange(dosar.id, 'de_preluat')
@@ -239,7 +247,7 @@ export function DosarCard({
       <div className="relative col-span-full grid grid-cols-2 items-center gap-x-3 gap-y-2 border-t border-[#1e2a45] pt-[7px] sm:grid-cols-[auto_minmax(0,1fr)_auto]">
         <button
           type="button"
-          onClick={() => onPatch(dosar.id, predatFacut ? { predatBifat: false, preluatBifat: false } : { predatBifat: true })}
+          onClick={() => onPatch(dosar.id, predatFacut ? { predatBifat: false, preluatBifat: false, ...statusLaPreluat(false) } : { predatBifat: true })}
           aria-pressed={predatFacut}
           title={predatFacut ? 'Contract început — click pentru a anula' : 'Marchează începutul contractului (mașina predată)'}
           className="order-1 flex items-center gap-2 justify-self-start text-left text-[#9aa8c1] transition-colors hover:text-[#e2e8f5]"
@@ -264,7 +272,7 @@ export function DosarCard({
         <button
           type="button"
           disabled={!predatFacut}
-          onClick={() => onPatch(dosar.id, { preluatBifat: !preluatFacut })}
+          onClick={() => onPatch(dosar.id, { preluatBifat: !preluatFacut, ...statusLaPreluat(!preluatFacut) })}
           aria-pressed={preluatFacut}
           title={
             !predatFacut
