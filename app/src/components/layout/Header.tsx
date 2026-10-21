@@ -98,8 +98,9 @@ export function Header({
       </div>
 
       <div className="ml-auto flex flex-wrap items-center justify-end gap-2.5">
+        {/* folderul de pe laptop: la orice latime (apare doar unde browserul il permite) */}
+        <FolderLocalButton />
         <div className="hidden items-center gap-1.5 lg:flex">
-          <FolderLocalButton />
           <BackupButtons />
         </div>
         <div className="hidden items-center gap-[9px] rounded-xl border border-[#253150] bg-[#10172a] px-3 py-1.5 lg:flex">
