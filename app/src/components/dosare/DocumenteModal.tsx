@@ -13,7 +13,7 @@ import {
 import { citesteContractFinal } from '@/lib/contract-final-import'
 import { ConflictSalvare } from '@/lib/dosare-storage'
 import { majuscule } from '@/lib/majuscule'
-import { incarcaDocument, mesajEroareAsset, stergeDocumentStocare } from '@/lib/documente-storage'
+import { stergeDocumentStocare } from '@/lib/documente-storage'
 import type { Dosar, DocumentDosar } from '@/lib/types'
 import { cn } from '@/lib/utils'
 
@@ -106,19 +106,11 @@ export function DocumenteModal({
         }
       }
 
-      try {
-        const res = await incarcaDocument(file)
-        labels.forEach((lbl) => {
-          noi.push({ id: 'doc' + Date.now() + Math.random().toString(36).slice(2, 6), nume: file.name, eticheta: lbl, assetId: res.id })
-        })
-        if (!eticheta && labels.length > 1) rezumat.push(file.name + ' → ' + labels.map(docLabelText).join(', '))
-      } catch (e) {
-        console.error(e)
-        setStatus('Eroare la „' + file.name + '”: ' + mesajEroareAsset(e), true)
-        setSeIncarca(false)
-        if (noi.length || Object.keys(dePatch).length) patch({ documente: [...((latest.current?.documente as DocumentDosar[]) ?? []), ...noi], ...dePatch })
-        return
-      }
+      // fisierul nu se urca nicaieri: se tine minte doar ca exista (nume + tip)
+      labels.forEach((lbl) => {
+        noi.push({ id: 'doc' + Date.now() + Math.random().toString(36).slice(2, 6), nume: file.name, eticheta: lbl })
+      })
+      if (!eticheta && labels.length > 1) rezumat.push(file.name + ' → ' + labels.map(docLabelText).join(', '))
     }
     if (noi.length || Object.keys(dePatch).length) {
       patch({ documente: [...((latest.current?.documente as DocumentDosar[]) ?? []), ...noi], ...dePatch })
@@ -129,8 +121,8 @@ export function DocumenteModal({
       : noi.length === 0
         ? ''
         : total > 1
-          ? total + ' fișiere încărcate.'
-          : 'Fișier încărcat.'
+          ? total + ' fișiere bifate.'
+          : 'Fișier bifat.'
     setStatus([baza, ...mesaje].filter(Boolean).join(' '), esecuri > 0 && noi.length === 0)
     setSeIncarca(false)
   }
@@ -237,7 +229,7 @@ export function DocumenteModal({
             <span className="text-[13.5px] font-extrabold text-[#e2e8f5]">
               {seIncarca ? 'Se încarcă…' : 'Trage fișierele aici sau click pentru a alege'}
             </span>
-            <span className="text-[11.5px] text-[#8b9ab5]">PDF, JPG sau PNG · se sortează automat pe tip de document</span>
+            <span className="text-[11.5px] text-[#8b9ab5]">Se bifează după nume · fișierul nu se urcă nicăieri, doar contractul final se citește pentru zile și tarif</span>
           </button>
           <input
             ref={inputRef}

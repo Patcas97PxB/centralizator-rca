@@ -142,21 +142,8 @@ export async function demoInlocuiesteServicii(lista: Serviciu[]) {
   await scrie('servicii', lista)
 }
 
-// ---- Documente: doar cele incarcate de tester, tinute local ------------------------------------
+// ---- Documente: doar cele incarcate de tester inainte ca documentele sa nu se mai urce ---------
 export const PREFIX_DOC_DEMO = 'demo:'
-export async function demoIncarcaDocument(file: File): Promise<{ id: string }> {
-  const id = PREFIX_DOC_DEMO + Date.now() + '_' + Math.random().toString(36).slice(2, 8)
-  await op('docs', 'readwrite', (s) => s.put(file, id))
-  return { id }
-}
 export async function demoStergeDocument(id: string) {
   if (id.startsWith(PREFIX_DOC_DEMO)) await op('docs', 'readwrite', (s) => s.delete(id))
-}
-export async function demoDeschideDocument(id: string) {
-  if (!id.startsWith(PREFIX_DOC_DEMO)) {
-    throw new Error('Documentele originale ale dosarelor nu sunt incluse în varianta de test.')
-  }
-  const blob = await op<Blob | undefined>('docs', 'readonly', (s) => s.get(id))
-  if (!blob) throw new Error('Fișierul nu mai există.')
-  window.open(URL.createObjectURL(blob), '_blank', 'noopener')
 }
