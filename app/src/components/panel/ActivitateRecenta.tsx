@@ -1,5 +1,6 @@
 import { Activity } from 'lucide-react'
-import { STATUS_META, type Dosar } from '@/lib/types'
+import { etapaDosar } from '@/lib/rca-calc'
+import { ETAPA_META, type Dosar } from '@/lib/types'
 
 function timpRelativ(iso: string): string {
   const diffMs = Date.now() - new Date(iso).getTime()
@@ -39,7 +40,7 @@ export function ActivitateRecenta({
       ) : (
         <ul className="m-0 flex list-none flex-col gap-1 p-0">
           {recente.map((d) => {
-            const c = STATUS_META[d.status]?.color ?? '#94a3b8'
+            const c = ETAPA_META[etapaDosar(d)].color
             return (
               <li key={d.id}>
                 <button

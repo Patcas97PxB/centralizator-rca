@@ -3,7 +3,7 @@
 // Sursa: index.html, sectiunile "Romanian legal holidays" si "Calcul zile conform grila
 // tarifara RCA" (functiile orthodoxEasterUTC, isHoliday, businessDaysBetween, calculRCA,
 // calculRCAInterna, zileRamase etc.)
-import type { Dosar } from './types'
+import type { Dosar, Etapa } from './types'
 
 export function isoLocal(dateObj: Date): string {
   const y = dateObj.getFullYear()
@@ -357,12 +357,25 @@ export function urgentaDosar(d: Dosar): UrgentaDosar {
   }
 }
 
+// Etapa se deduce din bife, nu se alege de mana. Predarea trecuta fara bifa (dosare vechi) conteaza
+// ca predata — aceeasi regula ca la urgentaDosar.
+export function etapaDosar(d: Dosar): Etapa {
+  if (d.status === 'finalizat') return 'finalizat'
+  if (d.preluatBifat) return 'de_trimis'
+  if (d.predatBifat || (d.start && d.start < todayStr())) return 'la_client'
+  return 'rezervat'
+}
+
+/** Pragul (zile) pentru avizele „lipsește devizul" si „netrimis". */
+export const ZILE_AVIZ = 2
+
+export type TipAviz = 'termen' | 'netrimis' | 'deviz' | 'manual'
+
 export interface DeSunat {
   dosar: Dosar
-  /** Zile pana expira termenul (0 = azi, negativ = depasit); null daca nu se poate calcula. */
+  tip: TipAviz
+  /** termen: zile pana la termen (0 = azi, negativ = depasit); netrimis/deviz: zile de cand asteapta. */
   zile: number | null
-  /** true daca utilizatorul a marcat manual dosarul cu statusul "De sunat". */
-  marcat: boolean
 }
 
 // Zile pana la termenul de preluare; null daca dosarul nu are termen activ (finalizat,
@@ -376,19 +389,41 @@ export function zileLaTermen(d: Dosar): number | null {
   return zileRamase(rca.dataPreluare)
 }
 
-// Alertele din clopotel: dosarele marcate "De sunat" + cele care mai au cel mult 2 zile pana la
-// termen (inclusiv cele expirate). Cand utilizatorul a sunat clientul si a mutat dosarul in
-// "In asteptare" sau "Se asteapta documente", alerta se stinge.
+// Avizele din clopotel (cel mult unul pe dosar, in ordinea importantei):
+// termen — la client, cel mult 2 zile pana la termen (inclusiv expirate);
+// netrimis — preluat de ZILE_AVIZ+ zile, dar nefinalizat (documente/drive/mail);
+// deviz — la client de ZILE_AVIZ+ zile fara zile din deviz (suna service-ul);
+// manual — marcat „Amintește-mi".
 export function dosareDeSunat(dosare: Dosar[]): DeSunat[] {
   const out: DeSunat[] = []
   for (const dosar of dosare) {
-    if (dosar.status === 'in_asteptare' || dosar.status === 'astept_docum' || dosar.status === 'finalizat') continue
-    const zile = zileLaTermen(dosar)
-    const marcat = dosar.status === 'de_sunat'
-    if (!marcat && dosar.preluatBifat) continue
-    if (marcat || (zile !== null && zile <= 2)) out.push({ dosar, zile, marcat })
+    const etapa = etapaDosar(dosar)
+    if (etapa === 'finalizat') continue
+    if (etapa === 'la_client') {
+      const zile = zileLaTermen(dosar)
+      if (zile !== null && zile <= 2) {
+        out.push({ dosar, tip: 'termen', zile })
+        continue
+      }
+      const scurse = zileScurseDeLaPredare(dosar.start)
+      if (!dosar.dte && !Number(dosar.zileDeviz) && scurse !== null && scurse >= ZILE_AVIZ) {
+        out.push({ dosar, tip: 'deviz', zile: scurse })
+        continue
+      }
+    }
+    if (etapa === 'de_trimis') {
+      const deCand = zileScurseDeLaPredare(dosar.preluatLa || dosar.end)
+      if (deCand !== null && deCand >= ZILE_AVIZ) {
+        out.push({ dosar, tip: 'netrimis', zile: deCand })
+        continue
+      }
+    }
+    if (dosar.amintesteMi) out.push({ dosar, tip: 'manual', zile: null })
   }
-  return out.sort((a, b) => (a.zile ?? 99) - (b.zile ?? 99))
+  const ordine: Record<TipAviz, number> = { termen: 0, netrimis: 1, deviz: 2, manual: 3 }
+  return out.sort((a, b) =>
+    ordine[a.tip] - ordine[b.tip] || (a.tip === 'termen' ? (a.zile ?? 99) - (b.zile ?? 99) : (b.zile ?? 0) - (a.zile ?? 0)),
+  )
 }
 
 // Ordinea implicita a cardurilor: 0 rosu, 1 galben, 2 verde, 3 albastru, 4 finalizat (jos).

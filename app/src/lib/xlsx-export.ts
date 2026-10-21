@@ -1,5 +1,5 @@
-import { calculRCA, fmtDate, zileRamase } from './rca-calc'
-import { STATUS_META, type Dosar } from './types'
+import { calculRCA, etapaDosar, fmtDate, zileRamase } from './rca-calc'
+import { ETAPA_META, type Dosar } from './types'
 
 // xlsx (SheetJS) e incarcat global din CDN (vezi index.html) — la fel ca in site-ul
 // actual, nu din npm (pachetul npm are vulnerabilitati fara fix).
@@ -15,7 +15,7 @@ declare const XLSX: {
 export function exportDosareXlsx(dosare: Dosar[]) {
   const header = [
     'Nr. dosar', 'Nr. auto păgubit', 'Marcă/model', 'Asigurator', 'Nr. rezervare (RBH)',
-    'Status', 'Data predare', 'Data preluare', 'Zile rămase', 'Telefon client',
+    'Etapă', 'Data predare', 'Data preluare', 'Zile rămase', 'Telefon client',
     'Service', 'Telefon service',
   ]
   const rows = dosare.map((d) => {
@@ -23,7 +23,7 @@ export function exportDosareXlsx(dosare: Dosar[]) {
     const ramase = zileRamase(rca.dataPreluare)
     return [
       d.nrDosar, d.nrAutoPagubit, d.marcaModel, d.asigurator, d.nrRezervare,
-      STATUS_META[d.status]?.label ?? d.status, fmtDate(d.start), fmtDate(d.end),
+      ETAPA_META[etapaDosar(d)].label, fmtDate(d.start), fmtDate(d.end),
       ramase ?? '', d.telClient, d.service, d.telService,
     ]
   })

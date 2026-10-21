@@ -30,11 +30,10 @@ import {
 import { KNOWN_INSURERS } from '@/lib/asiguratori'
 import { imagineMasina } from '@/lib/cars'
 import { suggestClasaFromModel, vehicleClasses } from '@/lib/clase-auto'
-import { lipsuriFinalizare } from '@/lib/documente'
-import { calculRCA, todayStr } from '@/lib/rca-calc'
+import { calculRCA, etapaDosar, todayStr } from '@/lib/rca-calc'
 import { ConflictSalvare } from '@/lib/dosare-storage'
 import { useDosareContext } from '@/contexts/DosareContext'
-import { STATUS_META, dosarGol, type Dosar, type StatusDosar, type Vehicul } from '@/lib/types'
+import { ETAPA_META, dosarGol, type Dosar, type Vehicul } from '@/lib/types'
 import { majuscule } from '@/lib/majuscule'
 import { normDosar } from '@/lib/contract-final'
 import { PreluareDateSection } from './PreluareDateSection'
@@ -67,7 +66,6 @@ export function DosarFormModal({
   // Alt dosar cu acelasi nr. (normalizat: spatii, cratime, sufixul Hellas) — avertizare, nu blocare.
   const { dosare } = useDosareContext()
   const [duplicat, setDuplicat] = useState<Dosar | null>(null)
-  const [shakeKey, setShakeKey] = useState(0)
   // Data preluare se completeaza automat din calcul (deviz + weekend + 1 zi) cat timp nu a fost
   // scrisa de mana. Se recalculeaza imediat si la un dosar existent cand se schimba zilele din deviz
   // (de mana, din „Calculează zile din deviz" sau dintr-un deviz nou incarcat la PRELUARE DATE).
@@ -75,8 +73,8 @@ export function DosarFormModal({
 
   useEffect(() => {
     if (open) {
-      // dosar nou: starea porneste din start „DE PREDAT"
-      setDraft(majuscule(dosar ?? { ...dosarGol(), status: 'de_predat', ...initialDraft, id: 'd' + Date.now(), start: todayStr() }))
+      // dosar nou: etapa „REZERVAT" (vine din bife), predarea azi
+      setDraft(majuscule(dosar ?? { ...dosarGol(), ...initialDraft, id: 'd' + Date.now(), start: todayStr() }))
       setEndAuto(!dosar?.end)
       setEroare('')
     }
@@ -89,28 +87,6 @@ export function DosarFormModal({
   function patch(p: Partial<Dosar>) {
     if ('zileDeviz' in p) setEndAuto(true)
     setDraft((d) => ({ ...d, ...majuscule(p) }))
-  }
-
-  function blocheazaFinalizare(d: Dosar): boolean {
-    if (d.status !== 'finalizat' || dosar?.status === 'finalizat') return false
-    const lipsuri = lipsuriFinalizare(d)
-    if (lipsuri.length === 0) return false
-    setEroare('Nu poți finaliza dosarul — lipsește: ' + lipsuri.join(', ') + '.')
-    setShakeKey((k) => k + 1)
-    return true
-  }
-
-  // Dosar nou cu predare in viitor → starea porneste direct „DE PREDAT" (daca n-a fost aleasa alta).
-  function cuStatusImplicit(d: Dosar): Dosar {
-    if (!dosar && d.status === 'in_asteptare' && d.start > todayStr()) return { ...d, status: 'de_predat' }
-    return d
-  }
-
-  function onStatusChange(v: StatusDosar) {
-    const next = { ...draft, status: v }
-    if (blocheazaFinalizare(next)) return
-    setEroare('')
-    set('status', v)
   }
 
   function onMarcaModelBlur() {
@@ -149,7 +125,6 @@ export function DosarFormModal({
       setEroare('Alege asiguratorul.')
       return
     }
-    if (blocheazaFinalizare(draft)) return
     if (!fortat) {
       const nr = normDosar(draft.nrDosar)
       const alt = dosare.find((x) => x.id !== draft.id && normDosar(x.nrDosar) === nr)
@@ -158,9 +133,10 @@ export function DosarFormModal({
         return
       }
     }
-    await salveaza(majuscule(cuStatusImplicit(draft)))
+    await salveaza(majuscule(draft))
   }
 
+  const etapa = ETAPA_META[etapaDosar(draft)]
   const rcaPreview = calculRCA(draft)
   const preluareCalculata = draft.dte ? null : rcaPreview.dataPreluare
 
@@ -225,23 +201,16 @@ export function DosarFormModal({
             </Select>
           </div>
           <div className="space-y-1.5">
-            <Label htmlFor="fStatus">Status</Label>
-            <Select value={draft.status} onValueChange={(v) => onStatusChange(v as StatusDosar)}>
-              <SelectTrigger
-                key={shakeKey}
-                id="fStatus"
-                className={shakeKey ? 'w-full animate-[devizShake_.45s_ease-in-out_both] border-[var(--danger-strong)]' : 'w-full'}
-              >
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {Object.entries(STATUS_META).map(([key, meta]) => (
-                  <SelectItem key={key} value={key}>
-                    {meta.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <Label>Etapă</Label>
+            <div
+              className="flex h-9 items-center gap-2 rounded-md border border-input px-3 text-[12.5px] font-extrabold"
+              style={{ color: etapa.color }}
+              title="Se schimbă singură din bifele Predat, Preluat și Finalizat de pe card"
+            >
+              <span className="size-2 shrink-0 rounded-full" style={{ background: etapa.color, boxShadow: `0 0 8px 1px ${etapa.color}` }} />
+              {etapa.label}
+              <span className="ml-auto truncate text-[11px] font-medium text-muted-foreground">din bifele de pe card</span>
+            </div>
           </div>
 
           <div className="space-y-1.5">
@@ -338,7 +307,7 @@ export function DosarFormModal({
 
           <div className="space-y-1.5">
             <Label htmlFor="fStart">Data predare</Label>
-            <Input id="fStart" type="date" value={draft.start} onChange={(e) => setDraft((d) => cuStatusImplicit({ ...d, start: e.target.value }))} />
+            <Input id="fStart" type="date" value={draft.start} onChange={(e) => setDraft((d) => ({ ...d, start: e.target.value }))} />
           </div>
           <div className="space-y-1.5">
             <Label htmlFor="fEnd">Data preluare</Label>
@@ -481,7 +450,7 @@ export function DosarFormModal({
           <AlertDialogHeader>
             <AlertDialogTitle>Există deja dosarul {duplicat?.nrDosar}</AlertDialogTitle>
             <AlertDialogDescription>
-              {[duplicat?.nrAutoPagubit, duplicat?.asigurator, duplicat && STATUS_META[duplicat.status]?.label].filter(Boolean).join(' · ')}
+              {[duplicat?.nrAutoPagubit, duplicat?.asigurator, duplicat && ETAPA_META[etapaDosar(duplicat)].label].filter(Boolean).join(' · ')}
               {' — '}dacă îl salvezi și pe acesta, sumele din Rapoarte se pot dubla. Salvezi totuși?
             </AlertDialogDescription>
           </AlertDialogHeader>

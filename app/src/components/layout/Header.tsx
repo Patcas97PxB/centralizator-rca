@@ -12,10 +12,41 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
-import type { DeSunat } from '@/lib/rca-calc'
+import type { DeSunat, TipAviz } from '@/lib/rca-calc'
+import type { Dosar } from '@/lib/types'
 import { BackupButtons } from './BackupButtons'
 import { ESTE_DEMO } from '@/lib/demo'
 import { initiale, numeDinEmail } from '@/lib/autentificare'
+
+const zileText = (n: number) => (n === 1 ? '1 zi' : `${n} zile`)
+
+// Textul fiecarui aviz din clopotel: culoarea, pastila din dreapta si ce ai de facut.
+function descriereAviz(tip: TipAviz, zile: number | null, d: Dosar): { culoare: string; eticheta: string; detaliu: string } {
+  switch (tip) {
+    case 'termen':
+      return {
+        culoare: zile !== null && zile <= 0 ? '#ff4d6d' : '#fbbf24',
+        eticheta: zile === null ? 'termen' : zile < 0 ? `expirat (+${Math.abs(zile)})` : zile === 0 ? 'azi' : zileText(zile),
+        detaliu: d.telClient
+          ? `Sună clientul: ${d.telClient}`
+          : `${zile !== null && zile < 0 ? 'Termen depășit' : 'Termen aproape'} · fără telefon client`,
+      }
+    case 'deviz':
+      return {
+        culoare: '#60a5fa',
+        eticheta: 'fără deviz',
+        detaliu: `Sună service-ul după deviz${d.telService ? `: ${d.telService}` : ''} · predată de ${zileText(zile ?? 0)}`,
+      }
+    case 'netrimis':
+      return {
+        culoare: '#e879f9',
+        eticheta: 'netrimis',
+        detaliu: `Preluată de ${zileText(zile ?? 0)} · centralizează documentele și trimite mailul`,
+      }
+    default:
+      return { culoare: '#fb923c', eticheta: 'amintește-mi', detaliu: 'Marcat de tine' }
+  }
+}
 
 // Numele celui logat (din adresa Autonom, vezi lib/autentificare.ts). In varianta de test (/demo/)
 // nu apare un nume real.
@@ -82,7 +113,7 @@ export function Header({
             <button
               type="button"
               className="relative flex size-[34px] items-center justify-center rounded-[10px] border border-[#253150] bg-[#253150]/[.28] text-[#cbd5e1] transition-colors hover:bg-[#253150]/60 hover:text-white"
-              aria-label={deSunat.length > 0 ? `${deSunat.length} ${deSunat.length === 1 ? "dosar" : "dosare"} de sunat` : 'Notificări'}
+              aria-label={deSunat.length > 0 ? `${deSunat.length} ${deSunat.length === 1 ? "aviz" : "avize"}` : 'Notificări'}
             >
               <Bell className="size-4" aria-hidden="true" />
               {deSunat.length > 0 && (
@@ -99,18 +130,16 @@ export function Header({
             <div className="flex items-center justify-between border-b border-[#1e2a45] px-4 py-3">
               <span className="flex items-center gap-2 text-[13.5px] font-bold text-[#f1f5f9]">
                 <Bell className="size-4 text-[#fb923c]" aria-hidden="true" />
-                De sunat
+                De făcut
               </span>
               <span className="text-[11px] font-semibold text-[#8b9ab5]">{deSunat.length}</span>
             </div>
             {deSunat.length === 0 ? (
-              <p className="px-4 py-6 text-center text-[12.5px] text-[#8b9ab5]">Niciun dosar de sunat acum.</p>
+              <p className="px-4 py-6 text-center text-[12.5px] text-[#8b9ab5]">Nimic de făcut acum.</p>
             ) : (
               <ul className="max-h-[340px] overflow-y-auto p-1.5">
-                {deSunat.map(({ dosar, zile, marcat }) => {
-                  const culoare = marcat ? '#fb923c' : zile !== null && zile <= 0 ? '#ff4d6d' : '#fbbf24'
-                  const eticheta =
-                    zile === null ? 'de sunat' : zile < 0 ? `expirat (+${Math.abs(zile)})` : zile === 0 ? 'azi' : zile === 1 ? '1 zi' : `${zile} zile`
+                {deSunat.map(({ dosar, zile, tip }) => {
+                  const { culoare, eticheta, detaliu } = descriereAviz(tip, zile, dosar)
                   return (
                     <li key={dosar.id}>
                       <button
@@ -127,9 +156,7 @@ export function Header({
                             {dosar.nrAutoPagubit || dosar.nrDosar || '—'}
                             {dosar.marcaModel && <span className="font-medium text-[#8b9ab5]"> · {dosar.marcaModel}</span>}
                           </span>
-                          <span className="block truncate text-[11px] text-[#8b9ab5]">
-                            {dosar.telClient ? `Client: ${dosar.telClient}` : 'Fără telefon client'}
-                          </span>
+                          <span className="block truncate text-[11px] text-[#8b9ab5]">{detaliu}</span>
                         </span>
                         <span
                           className="shrink-0 rounded-full border px-2 py-0.5 text-[10px] font-extrabold uppercase"

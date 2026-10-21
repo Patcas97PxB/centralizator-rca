@@ -1,5 +1,6 @@
 import { Info } from 'lucide-react'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
+import { ETAPA_META } from '@/lib/types'
 
 const CULOARE_CARD = [
   { color: '#ff4d6d', nume: 'Urgență', detaliu: 'termen expirat sau azi' },
@@ -8,10 +9,11 @@ const CULOARE_CARD = [
   { color: '#3d8bff', nume: 'Programare', detaliu: 'înainte de predare' },
   { color: '#94a3b8', nume: 'Finalizat', detaliu: 'jos, în arhivă' },
 ]
-const STATUS = [
-  { color: '#fb923c', nume: 'De sunat', detaliu: 'marcat de tine' },
-  { color: '#e879f9', nume: 'Blochaj documente', detaliu: 'se așteaptă acte' },
-]
+const STATUS = Object.values(ETAPA_META).map((m) => ({
+  color: m.color,
+  nume: m.label.charAt(0) + m.label.slice(1).toLowerCase(),
+  detaliu: m.detaliu,
+}))
 
 const TITLU = 'mb-2 text-[10px] font-extrabold tracking-[.1em] text-[#5d6b86]'
 
@@ -39,7 +41,7 @@ export function LegendaButton() {
           <Info className="size-4" aria-hidden="true" />
         </button>
       </PopoverTrigger>
-      <PopoverContent align="end" className="w-72 rounded-2xl border-[#253150] bg-[#0d1524] p-4">
+      <PopoverContent align="end" className="w-80 rounded-2xl border-[#253150] bg-[#0d1524] p-4">
         <div className={TITLU}>CULOARE CARD</div>
         <div className="flex flex-col gap-2">
           {CULOARE_CARD.map((l) => (
@@ -47,7 +49,7 @@ export function LegendaButton() {
           ))}
         </div>
         <div className="my-3 h-px bg-[#1e2a45]" />
-        <div className={TITLU}>STATUS</div>
+        <div className={TITLU}>ETAPE (din bife)</div>
         <div className="flex flex-col gap-2">
           {STATUS.map((l) => (
             <Rand key={l.nume} {...l} rotund />

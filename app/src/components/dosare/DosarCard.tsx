@@ -1,10 +1,10 @@
 import { useEffect, useRef, useState } from 'react'
-import { AlertTriangle, ArrowDown, Check, ChevronDown, FolderPlus, ImageIcon, Pencil } from 'lucide-react'
+import { AlertTriangle, ArrowDown, Bell, BellOff, Check, ChevronDown, FolderPlus, ImageIcon, Pencil } from 'lucide-react'
 import { imagineMasina } from '@/lib/cars'
 import { ALPHA, accentStyle, hex } from '@/lib/color'
 import { docStatus, docLabelText, lipsuriFinalizare } from '@/lib/documente'
-import { calculRCA, fmtDate, prioritateDosar, urgentaDosar, zileScurseDeLaPredare } from '@/lib/rca-calc'
-import { STATUS_META, type Dosar, type StatusDosar } from '@/lib/types'
+import { calculRCA, etapaDosar, fmtDate, prioritateDosar, todayStr, urgentaDosar, zileScurseDeLaPredare } from '@/lib/rca-calc'
+import { ETAPA_META, type Dosar, type StatusDosar } from '@/lib/types'
 import { cn } from '@/lib/utils'
 import {
   DropdownMenu,
@@ -40,7 +40,7 @@ export function DosarCard({
   onPatch: (id: string, patch: Partial<Dosar>) => void
   onDocumente: (id: string) => void
 }) {
-  const meta = STATUS_META[dosar.status] ?? STATUS_META.in_asteptare
+  const meta = ETAPA_META[etapaDosar(dosar)]
   const urgenta = urgentaDosar(dosar)
   const dst = docStatus(dosar)
   const rca = calculRCA(dosar)
@@ -85,17 +85,9 @@ export function DosarCard({
     }
   }, [blocat])
 
-  // Preluat bifat = masina s-a intors, dar dosarul inca trebuie trimis (mail, link drive) → „Se asteapta documente".
-  // La debifare, daca a ramas pe acel status, revine la „De preluat".
-  function statusLaPreluat(preluat: boolean): Partial<Dosar> {
-    if (finalizat) return {}
-    if (preluat) return { status: 'astept_docum' }
-    return dosar.status === 'astept_docum' && preluatFacut ? { status: 'de_preluat' } : {}
-  }
-
   function toggleFinal() {
     if (finalizat) {
-      onStatusChange(dosar.id, 'de_preluat')
+      onStatusChange(dosar.id, 'in_asteptare') // etapa revine din bife
       return
     }
     const lipsuri = lipsuriFinalizare(dosar)
@@ -214,18 +206,18 @@ export function DosarCard({
             >
               <span className="size-[7px] rounded-full" style={{ background: meta.color, boxShadow: `0 0 8px 1px ${hex(meta.color, 'cc')}` }} />
               <span className="min-w-0 flex-1 truncate text-left">{meta.label}</span>
+              {dosar.amintesteMi && <Bell className="size-[11px] shrink-0 text-[#fb923c]" strokeWidth={2.5} aria-label="Amintește-mi" />}
               <ChevronDown className="size-[11px]" strokeWidth={2.5} aria-hidden="true" />
             </button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            {Object.entries(STATUS_META)
-              .filter(([val]) => val !== 'finalizat' || dosar.status === 'finalizat')
-              .map(([val, m]) => (
-                <DropdownMenuItem key={val} onClick={() => onStatusChange(dosar.id, val as StatusDosar)}>
-                  <span className="size-2 rounded-full" style={{ background: m.color }} />
-                  {m.label}
-                </DropdownMenuItem>
-              ))}
+          <DropdownMenuContent align="end" className="w-60">
+            <p className="px-2 py-1.5 text-[11px] leading-snug text-muted-foreground">
+              Etapa se schimbă singură din bifele Predat, Preluat și Finalizat.
+            </p>
+            <DropdownMenuItem onClick={() => onPatch(dosar.id, { amintesteMi: !dosar.amintesteMi })}>
+              {dosar.amintesteMi ? <BellOff className="size-4" aria-hidden="true" /> : <Bell className="size-4" aria-hidden="true" />}
+              {dosar.amintesteMi ? 'Gata, scoate din clopoțel' : 'Amintește-mi (apare în clopoțel)'}
+            </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
         <div className="flex min-w-0 flex-col gap-0.5 text-[11px]">
@@ -247,7 +239,7 @@ export function DosarCard({
       <div className="relative col-span-full grid grid-cols-2 items-center gap-x-3 gap-y-2 border-t border-[#1e2a45] pt-[7px] sm:grid-cols-[auto_minmax(0,1fr)_auto]">
         <button
           type="button"
-          onClick={() => onPatch(dosar.id, predatFacut ? { predatBifat: false, preluatBifat: false, ...statusLaPreluat(false) } : { predatBifat: true })}
+          onClick={() => onPatch(dosar.id, predatFacut ? { predatBifat: false, preluatBifat: false, preluatLa: '' } : { predatBifat: true })}
           aria-pressed={predatFacut}
           title={predatFacut ? 'Contract început — click pentru a anula' : 'Marchează începutul contractului (mașina predată)'}
           className="order-1 flex items-center gap-2 justify-self-start text-left text-[#9aa8c1] transition-colors hover:text-[#e2e8f5]"
@@ -272,7 +264,7 @@ export function DosarCard({
         <button
           type="button"
           disabled={!predatFacut}
-          onClick={() => onPatch(dosar.id, { preluatBifat: !preluatFacut, ...statusLaPreluat(!preluatFacut) })}
+          onClick={() => onPatch(dosar.id, { preluatBifat: !preluatFacut, preluatLa: preluatFacut ? '' : todayStr() })}
           aria-pressed={preluatFacut}
           title={
             !predatFacut

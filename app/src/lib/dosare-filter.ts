@@ -1,9 +1,10 @@
-import { calculRCA, urgentaDosar, zileRamase } from './rca-calc'
-import type { Dosar, StatusDosar } from './types'
+import { calculRCA, etapaDosar, urgentaDosar, zileRamase } from './rca-calc'
+import type { Dosar, Etapa } from './types'
 
 export interface DosareFiltre {
   search: string
-  status: StatusDosar | 'toate'
+  /** Etapa (din bife), nu statusul salvat. */
+  status: Etapa | 'toate'
   perioada: 'toate' | '7' | '30'
   sortare: 'actualizare' | 'urgenta' | 'nrDosar'
   service: string
@@ -48,7 +49,7 @@ function corespundePerioadei(d: Dosar, perioada: DosareFiltre['perioada']): bool
 export function filtreazaSiSorteazaDosare(dosare: Dosar[], f: DosareFiltre): Dosar[] {
   const filtrate = dosare.filter((d) => {
     if (!corespundeCautarii(d, f.search)) return false
-    if (f.status !== 'toate' && d.status !== f.status) return false
+    if (f.status !== 'toate' && etapaDosar(d) !== f.status) return false
     if (!corespundePerioadei(d, f.perioada)) return false
     if (f.service && d.service !== f.service) return false
     if (f.startFrom && (!d.start || d.start < f.startFrom)) return false

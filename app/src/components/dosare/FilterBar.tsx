@@ -11,7 +11,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import type { DosareFiltre } from '@/lib/dosare-filter'
-import { STATUS_META } from '@/lib/types'
+import { ETAPA_META } from '@/lib/types'
 import type { Serviciu } from '@/lib/types'
 import { cn } from '@/lib/utils'
 import { LegendaButton } from './LegendaCulori'
@@ -37,7 +37,7 @@ export function FilterBar({
     filtre.perioada !== 'toate' ||
     filtre.sortare !== 'actualizare'
   )
-  const statusColor = filtre.status === 'toate' ? '#8b9ab5' : (STATUS_META[filtre.status]?.color ?? '#8b9ab5')
+  const statusColor = filtre.status === 'toate' ? '#8b9ab5' : (ETAPA_META[filtre.status]?.color ?? '#8b9ab5')
 
   return (
     <div className="flex flex-wrap items-center gap-2.5">
@@ -62,8 +62,8 @@ export function FilterBar({
           </span>
         </SelectTrigger>
         <SelectContent>
-          <SelectItem value="toate">Toate stările</SelectItem>
-          {Object.entries(STATUS_META).map(([key, meta]) => (
+          <SelectItem value="toate">Toate etapele</SelectItem>
+          {Object.entries(ETAPA_META).map(([key, meta]) => (
             <SelectItem key={key} value={key}>
               {meta.label}
             </SelectItem>

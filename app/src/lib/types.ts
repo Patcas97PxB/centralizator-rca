@@ -1,6 +1,8 @@
 // Forma unui dosar, asa cum e stocata azi in Supabase (tabelul `dosare`, coloana `data`
 // jsonb — vezi supabase/migrations/20260921120000_dosare_servicii_per_row.sql). Portata
 // din campurile citite/scrise de saveDosar()/openModal() in index.html.
+// Valorile vechi raman doar pentru dosarele salvate inainte de etape; in aplicatie conteaza doar
+// „finalizat". Etapa afisata se calculeaza din bife (etapaDosar, lib/rca-calc.ts).
 export type StatusDosar =
   | 'in_asteptare'
   | 'de_predat'
@@ -8,6 +10,9 @@ export type StatusDosar =
   | 'de_sunat'
   | 'astept_docum'
   | 'finalizat'
+
+/** Etapa dosarului, pusa automat din bifele de pe card: Predat → Preluat → Finalizat. */
+export type Etapa = 'rezervat' | 'la_client' | 'de_trimis' | 'finalizat'
 
 export type Vehicul = 'deplasabil' | 'nedeplasabil'
 
@@ -27,10 +32,14 @@ export interface Dosar {
   marcaModel: string
   nrAutoInlocuire: string
   marcaModelInlocuire?: string
-  /** Informativ: contractul a inceput (masina predata). Nu schimba statusul dosarului. */
+  /** Masina predata clientului → etapa „La client". */
   predatBifat?: boolean
-  /** Informativ: masina s-a intors la client. Nu schimba statusul dosarului. */
+  /** Masina s-a intors → etapa „De trimis" (documentele, drive-ul si mailul inca nu sunt gata). */
   preluatBifat?: boolean
+  /** Ziua bifei Preluat (YYYY-MM-DD) — de aici se numara avizul „netrimis". */
+  preluatLa?: string
+  /** Marcat de mana „Amintește-mi": dosarul apare in clopotel. */
+  amintesteMi?: boolean
   clasaAuto: string
   valoareContract: string
   valoareContractCuTVA: string
@@ -67,13 +76,11 @@ export interface Serviciu {
   telefon: string
 }
 
-export const STATUS_META: Record<StatusDosar, { label: string; color: string }> = {
-  in_asteptare: { label: 'ÎN AȘTEPTARE', color: '#3d8bff' },
-  de_predat: { label: 'DE PREDAT', color: '#3d8bff' },
-  de_preluat: { label: 'DE PRELUAT', color: '#00f5a0' },
-  de_sunat: { label: 'DE SUNAT', color: '#fb923c' },
-  astept_docum: { label: 'SE AȘTEAPTĂ DOCUMENTE', color: '#e879f9' },
-  finalizat: { label: 'FINALIZAT', color: '#94a3b8' },
+export const ETAPA_META: Record<Etapa, { label: string; color: string; detaliu: string }> = {
+  rezervat: { label: 'REZERVAT', color: '#3d8bff', detaliu: 'mașina nu e încă predată' },
+  la_client: { label: 'LA CLIENT', color: '#00f5a0', detaliu: 'bifa Predat · curge termenul' },
+  de_trimis: { label: 'DE TRIMIS', color: '#e879f9', detaliu: 'bifa Preluat · documente, drive, mail' },
+  finalizat: { label: 'FINALIZAT', color: '#94a3b8', detaliu: 'dosar închis' },
 }
 
 // Dosarele mai vechi (migrate din blob-ul app_storage sau salvate inainte sa existe un
@@ -90,6 +97,8 @@ export function normalizeazaDosar(raw: Partial<Dosar> & { id: string }): Dosar {
   return {
     ...dosarGol(),
     ...raw,
+    // vechiul status „De sunat" devine avizul „Amintește-mi"
+    amintesteMi: raw.amintesteMi ?? raw.status === 'de_sunat',
     documente: Array.isArray(raw.documente) ? raw.documente.map((x) => ({ ...x, eticheta: ETICHETE_VECHI_DOC[x.eticheta] ?? x.eticheta })) : [],
     etichetaOptionale: Array.isArray(raw.etichetaOptionale)
       ? [...new Set(raw.etichetaOptionale.map((k) => ETICHETE_VECHI_DOC[k] ?? k))]
