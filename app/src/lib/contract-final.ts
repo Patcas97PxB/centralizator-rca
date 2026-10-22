@@ -162,7 +162,9 @@ export function parseContractFinalText(fullText: string, dinOcr = false): Contra
     // La scan, un nr. auto care nu arata a nr. romanesc e aproape sigur citit gresit — il ignoram.
     const plate = mRef[1].toUpperCase()
     if (!dinOcr || RE_NR_RO.test(plate)) out.nrAutoPagubit = formatPlate(plate)
-    out.nrDosar = mRef[2].trim()
+    // un nr. de dosar are mereu cifre; un cuvant ("Detalii" de pe randul urmator, cand campul e gol)
+    // nu e nr. de dosar — altfel contractul bun era respins ca "al dosarului Detalii"
+    out.nrDosar = /\d/.test(mRef[2]) ? mRef[2].trim() : ''
     // Hellas Direct: formatul canonic e "HDR 121926" — fara sufixul de dupa liniuta ("HDR121926-4698"),
     // aceeasi regula ca la PRELUARE DATE (shared/extractie.js).
     const mHdr = out.nrDosar.match(/^HDR\s*(\d+)/i)
