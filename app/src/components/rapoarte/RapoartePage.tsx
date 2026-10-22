@@ -1,6 +1,8 @@
 import { Fragment, useMemo, useState } from 'react'
 import { Download, FileSpreadsheet, Search } from 'lucide-react'
 import { useDosareContext } from '@/contexts/DosareContext'
+import { cheiLocale, useFolderLocal } from '@/lib/folder-local'
+import { useStariContracteLaptop } from '@/lib/contracte-laptop'
 import { dosareFinanciarFiltrate, filtruFinanciarImplicit, formatSuma, formatSumePeMoneda, grupeazaPeService, sumeGoale, type FiltruFinanciar } from '@/lib/financiar'
 import { exportFinanciarCSV, exportFinanciarXLSX } from '@/lib/financiar-export'
 import { staggerDelay } from '@/lib/motion'
@@ -34,6 +36,8 @@ const HEADERS: [string, boolean][] = [
 ]
 
 export function RapoartePage() {
+  const folder = useFolderLocal()
+  const stariLaptop = useStariContracteLaptop()
   const { dosare, servicii, salveazaRapid } = useDosareContext()
   const [filtru, setFiltru] = useState<FiltruFinanciar>(filtruFinanciarImplicit)
 
@@ -163,9 +167,22 @@ export function RapoartePage() {
                           </td>
                           <td className="whitespace-nowrap px-3 py-[9px] text-right font-bold tabular-nums text-[#3ddc97]">{formatSuma(r.comision, r.moneda)}</td>
                           <td className={TD}>{r.dosar.nrDosar}</td>
-                          <td className={cn('whitespace-nowrap px-3 py-[9px] font-bold', r.areContract ? 'text-[#3ddc97]' : 'text-[#ff4d6d]')}>
-                            {r.areContract ? 'Încărcat' : 'Lipsă'}
-                          </td>
+                          {(() => {
+                            const st = stariLaptop.get(r.dosar.id)
+                            const peLaptop = !r.areContract && cheiLocale(folder, r.dosar).includes('contract')
+                            const [text, culoare, titlu] = r.areContract
+                              ? ['Încărcat', 'text-[#3ddc97]', '']
+                              : !peLaptop
+                                ? ['Lipsă', 'text-[#ff4d6d]', '']
+                                : st?.stare === 'eroare'
+                                  ? ['Pe laptop — necitit', 'text-[#fbbf24]', st.mesaj]
+                                  : ['Pe laptop — se citește…', 'text-[#93c5fd]', '']
+                            return (
+                              <td className={cn('whitespace-nowrap px-3 py-[9px] font-bold', culoare)} title={titlu || undefined}>
+                                {text}
+                              </td>
+                            )
+                          })()}
                         </tr>
                         {!r.finalizat && (
                           <tr>

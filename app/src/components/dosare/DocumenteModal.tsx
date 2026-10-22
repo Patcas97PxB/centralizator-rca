@@ -12,6 +12,7 @@ import {
   lipsuriFinalizare,
 } from '@/lib/documente'
 import { citesteContractFinal } from '@/lib/contract-final-import'
+import { useStariContracteLaptop } from '@/lib/contracte-laptop'
 import { ConflictSalvare } from '@/lib/dosare-storage'
 import { majuscule } from '@/lib/majuscule'
 import { stergeDocumentStocare } from '@/lib/documente-storage'
@@ -83,15 +84,10 @@ export function DocumenteModal({
 
   const folder = useFolderLocal()
 
-  // Contractul final din folderul de pe laptop se citeste direct de acolo (doar in browser, nu se urca):
-  // altfel ar aparea bifat doar dupa nume, fara zile/valoare — si verificarea tarifului n-ar avea date.
-  const incercate = useRef(new Set<string>())
-  useEffect(() => {
-    if (!open) incercate.current = new Set()
-  }, [open])
+  // Contractul final din folderul de pe laptop se citeste singur in fundal (lib/contracte-laptop.ts);
+  // butonul ⟳ de langa fisier il recitește de mana (doar in browser, nu se urca).
   async function citesteContractLocal(f: FisierLocal, manual = false) {
     if (!f.deschide || seIncarca) return
-    incercate.current.add(f.cale)
     setSeIncarca(true)
     setStatus('Se citește contractul final ' + f.nume + ' de pe laptop…')
     try {
@@ -111,14 +107,8 @@ export function DocumenteModal({
       setSeIncarca(false)
     }
   }
-  const contractLocalNecitit =
-    open && draft && !draft.valoareContract && !draft.zileContractFinal
-      ? fisiereLocale(folder, draft).find((f) => f.deschide && f.chei.includes('contract') && !incercate.current.has(f.cale))
-      : undefined
-  useEffect(() => {
-    if (contractLocalNecitit && !seIncarca) void citesteContractLocal(contractLocalNecitit)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [contractLocalNecitit?.cale, seIncarca])
+  const stariLaptop = useStariContracteLaptop()
+  const stareLaptop = draft ? stariLaptop.get(draft.id) : undefined
 
   if (!draft) return null
 
@@ -320,7 +310,13 @@ export function DocumenteModal({
             }}
           />
 
-          {status && <p className={cn('text-xs leading-snug', statusEroare ? 'font-semibold text-[#ff8a9f]' : 'text-[#aab8d0]')}>{status}</p>}
+          {status ? (
+            <p className={cn('text-xs leading-snug', statusEroare ? 'font-semibold text-[#ff8a9f]' : 'text-[#aab8d0]')}>{status}</p>
+          ) : stareLaptop?.stare === 'citeste' ? (
+            <p className="text-xs leading-snug text-[#aab8d0]">Se citește contractul final de pe laptop…</p>
+          ) : stareLaptop?.stare === 'eroare' && !draft.valoareContract ? (
+            <p className="text-xs font-semibold leading-snug text-[#ff8a9f]">{stareLaptop.mesaj}</p>
+          ) : null}
 
           <div className="flex flex-col gap-2">
             {chei.map((key) => {

@@ -6,6 +6,7 @@ import { dosareDeSunat, urgentaDosar, type DeSunat } from '@/lib/rca-calc'
 import { ConflictSalvare, inlocuiesteToateDosarele } from '@/lib/dosare-storage'
 import { inlocuiesteToateServiciile } from '@/lib/servicii-storage'
 import type { BackupPayload } from '@/lib/backup'
+import { useCitireContracteLaptop } from '@/lib/contracte-laptop'
 import type { Dosar, Serviciu } from '@/lib/types'
 
 interface DosareContextValue {
@@ -45,6 +46,8 @@ export function DosareProvider({ enabled, children }: { enabled: boolean; childr
   const [avertizare, setAvertizare] = useState('')
   const { servicii, reload: reloadServicii, salveazaServiciu, stergeServiciu } = useServicii(enabled)
   const [filtre, setFiltre] = useState<DosareFiltre>(filtreImplicite)
+  // contractele finale din folderul de pe laptop se citesc singure (valoare, zile → Rapoarte, tarif)
+  useCitireContracteLaptop(dosare, salveazaDosar)
 
   const depasiteCount = useMemo(
     () => dosare.filter((d) => d.status !== 'finalizat' && urgentaDosar(d).depasit).length,
