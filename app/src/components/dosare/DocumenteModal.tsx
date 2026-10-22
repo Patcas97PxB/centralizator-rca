@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, type DragEvent } from 'react'
-import { AlertTriangle, ArrowLeftRight, Check, FolderPlus, Laptop, Trash2, Upload, X } from 'lucide-react'
+import { AlertTriangle, ArrowLeftRight, Check, FolderPlus, Laptop, RefreshCw, Trash2, Upload, X } from 'lucide-react'
 import { cheiLocale, fisiereLocale, useFolderLocal, type FisierLocal } from '@/lib/folder-local'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
@@ -82,6 +82,43 @@ export function DocumenteModal({
   }, [open, dosar?.id])
 
   const folder = useFolderLocal()
+
+  // Contractul final din folderul de pe laptop se citeste direct de acolo (doar in browser, nu se urca):
+  // altfel ar aparea bifat doar dupa nume, fara zile/valoare — si verificarea tarifului n-ar avea date.
+  const incercate = useRef(new Set<string>())
+  useEffect(() => {
+    if (!open) incercate.current = new Set()
+  }, [open])
+  async function citesteContractLocal(f: FisierLocal, manual = false) {
+    if (!f.deschide || seIncarca) return
+    incercate.current.add(f.cale)
+    setSeIncarca(true)
+    setStatus('Se citește contractul final ' + f.nume + ' de pe laptop…')
+    try {
+      const file = await f.deschide()
+      const r = await citesteContractFinal(file, latest.current as Dosar, setStatus)
+      if (r.valid) patch({ ...r.patch, contractFinalIncarcat: true })
+      setStatus((r.valid ? '' : f.nume + ': ') + r.mesaj, !r.valid)
+    } catch (e) {
+      console.error(e)
+      setStatus(
+        manual
+          ? 'Nu am putut deschide ' + f.nume + ' de pe laptop — apasă butonul cu laptop din antet și dă din nou voie.'
+          : 'Nu am putut citi contractul ' + f.nume + ' de pe laptop.',
+        true,
+      )
+    } finally {
+      setSeIncarca(false)
+    }
+  }
+  const contractLocalNecitit =
+    open && draft && !draft.valoareContract && !draft.zileContractFinal
+      ? fisiereLocale(folder, draft).find((f) => f.deschide && f.chei.includes('contract') && !incercate.current.has(f.cale))
+      : undefined
+  useEffect(() => {
+    if (contractLocalNecitit && !seIncarca) void citesteContractLocal(contractLocalNecitit)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [contractLocalNecitit?.cale, seIncarca])
 
   if (!draft) return null
 
@@ -325,6 +362,18 @@ export function DocumenteModal({
                           <div key={'loc-' + f.nume} className="flex items-center gap-1.5 text-[11.5px] text-[#93c5fd]" title="Găsit în folderul dosarului de pe laptop">
                             <Laptop className="size-3.5 shrink-0" aria-hidden="true" />
                             <span className="min-w-0 flex-1 truncate">{f.nume}</span>
+                            {key === 'contract' && f.deschide && (
+                              <button
+                                type="button"
+                                onClick={() => void citesteContractLocal(f, true)}
+                                disabled={seIncarca}
+                                aria-label={'Citește din nou ' + f.nume}
+                                title="Citește din nou contractul (zile, valoare, tarif)"
+                                className="flex size-6 shrink-0 items-center justify-center rounded-md text-[#93c5fd] transition-colors hover:bg-white/10 hover:text-white disabled:opacity-40"
+                              >
+                                <RefreshCw className={cn('size-3.5', seIncarca && 'animate-spin')} aria-hidden="true" />
+                              </button>
+                            )}
                             <MutaCategoria curent={key} nume={f.nume} onAlege={(k) => mutaLocal(f.nume, k)} />
                           </div>
                         ))}

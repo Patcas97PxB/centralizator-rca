@@ -11,6 +11,7 @@ import { detectAllDocLabels } from './documente'
 interface IntrareFs {
   kind: 'file' | 'directory'
   name: string
+  getFile?: () => Promise<File>
 }
 interface DirFs extends IntrareFs {
   kind: 'directory'
@@ -26,6 +27,8 @@ export interface FisierLocal {
   cale: string
   /** Tipurile de document recunoscute din nume (fara „altele"). */
   chei: string[]
+  /** Deschide fisierul de pe laptop (doar citire, in browser) — ex. contractul final, pentru zile/valoare/tarif. */
+  deschide?: () => Promise<File>
 }
 
 interface FolderScanat {
@@ -121,7 +124,12 @@ async function citesteDir(dir: DirFs, cale: string, adancime: number, deasupra: 
       if (IGNORAT.test(e.name)) continue
       const caleE = cale ? cale + '/' + e.name : e.name
       if (e.kind === 'file') {
-        const f: FisierLocal = { nume: e.name, cale: caleE, chei: detectAllDocLabels(e.name).filter((k) => k !== 'altele') }
+        const f: FisierLocal = {
+          nume: e.name,
+          cale: caleE,
+          chei: detectAllDocLabels(e.name).filter((k) => k !== 'altele'),
+          deschide: e.getFile ? () => e.getFile!() : undefined,
+        }
         deasupra.forEach((d) => d.fisiere.push(f))
         if (!inDosar) c.libere.push({ ...f, ferestre: ferestreNume(e.name) })
       } else if (adancime > 0) {
