@@ -246,8 +246,8 @@ export function DocumenteModal({
               {folder.permis !== 'granted'
                 ? `Folderul „${folder.nume}” de pe laptop așteaptă permisiunea — apasă iconița cu laptop din antet.`
                 : peLaptop.length > 0
-                  ? `${peLaptop.length} ${peLaptop.length === 1 ? 'fișier găsit' : 'fișiere găsite'} în „${folder.nume}/${draft.nrAutoPagubit}” pe laptop.`
-                  : `Nu am găsit folderul „${draft.nrAutoPagubit || '?'}” în „${folder.nume}” pe laptop.`}
+                  ? `${peLaptop.length} ${peLaptop.length === 1 ? 'fișier găsit' : 'fișiere găsite'} pe laptop pentru ${draft.nrAutoPagubit}.`
+                  : `Nu am găsit pe laptop, în „${folder.nume}”, niciun folder sau fișier cu ${draft.nrAutoPagubit || 'nr. auto'} în nume.`}
             </p>
           )}
 

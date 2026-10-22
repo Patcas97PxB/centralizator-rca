@@ -68,11 +68,15 @@ export function docLabelText(key: string): string {
 // potrivesc numelui unui fisier (un singur PDF poate contine mai multe documente, ex.
 // "CC+CD+PV predare+contract.pdf" -> bifeaza automat toate, nu doar prima gasita).
 export function detectAllDocLabels(nume: string): string[] {
-  const nLower = (nume || '').toLowerCase()
-  const tokens = (nume || '').toUpperCase().split(/[^A-Z0-9ĂÂÎȘȚ]+/).filter(Boolean)
+  // fara diacritice: „Cerere despăgubire”, „Intrare-ieșire”, „PV poliție” se recunosc ca si fara ele
+  const simplu = (nume || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+  const nLower = simplu.toLowerCase()
+  const tokens = simplu.toUpperCase().split(/[^A-Z0-9]+/).filter(Boolean)
   const found = new Set<string>()
   const ABBR: Record<string, string> = { CC: 'cesiune', CD: 'cerere_despagubire', PV: 'pv_predare', NC: 'nc' }
-  tokens.forEach((t) => { if (ABBR[t]) found.add(ABBR[t]) })
+  // „PV poliție” e procesul-verbal al poliției (amiabila), nu PV-ul de predare
+  const pvPolitie = /pv.*politie/.test(nLower)
+  tokens.forEach((t) => { if (ABBR[t] && !(t === 'PV' && pvPolitie)) found.add(ABBR[t]) })
   if (/\bnc\d*\b|nota.*constat|constatare/.test(nLower)) found.add('nc')
   if (/deviz/.test(nLower)) found.add('deviz')
   if (/rca.*vinovat|vinovat.*rca/.test(nLower)) found.add('doc_vinovat')
@@ -80,7 +84,7 @@ export function detectAllDocLabels(nume: string): string[] {
   if (/amiabil|pv.*politie|politie/.test(nLower)) found.add('amiabila')
   if (/cesiune/.test(nLower)) found.add('cesiune')
   if (/cerere.*despagub/.test(nLower)) found.add('cerere_despagubire')
-  if (/pv.*predare|predare.*primire|proces.*verbal/.test(nLower)) found.add('pv_predare')
+  if (/pv.*predare|predare.*primire|predare.*preluare|(proces.*verbal)(?!.*politie)/.test(nLower)) found.add('pv_predare')
   if (/contract/.test(nLower)) found.add('contract')
   if (/\bdoc\b.*iesire|iesire.*intrare|intrare.*iesire/.test(nLower)) found.add('intrare_iesire')
   // Documente de identitate/talon — permis, buletin, pasaport, talon (fara sa fie deja RCA) — pe pagubit sau vinovat.

@@ -22,23 +22,36 @@ type FereastraFs = Window & { showDirectoryPicker?: (o?: { id?: string; mode?: '
 
 export interface FisierLocal {
   nume: string
+  /** Calea din folderul ales (ex. „Allianz/B768SBG/Deviz.pdf”) — unica. */
+  cale: string
   /** Tipurile de document recunoscute din nume (fara „altele"). */
   chei: string[]
+}
+
+interface FolderScanat {
+  /** Toate grupurile de 1–3 bucati consecutive din nume, lipite (ex. „BH 52 LCA - Allianz” → BH52LCA, ALLIANZ…). */
+  ferestre: Set<string>
+  /** Fisierele din el si din subfolderele lui. */
+  fisiere: FisierLocal[]
 }
 
 export interface StareFolder {
   suportat: boolean
   nume: string | null
   permis: PermissionState | null
-  /** nr. auto normalizat (fara spatii/cratime, litere mari) → fisierele din subfolder */
-  dosare: Map<string, FisierLocal[]>
+  /** Fiecare subfolder (pe orice nivel, pana la 4), cu fisierele lui. */
+  foldere: FolderScanat[]
+  /** Fisierele care nu stau intr-un folder de dosar — se potrivesc dupa nr. auto din numele lor. */
+  libere: (FisierLocal & { ferestre: Set<string> })[]
+  /** Cate foldere au un nr. auto in nume (ce arata butonul). */
+  nrDosare: number
   scanatLa: number | null
   seScaneaza: boolean
   eroare: string
 }
 
 const suportat = typeof window !== 'undefined' && typeof (window as FereastraFs).showDirectoryPicker === 'function'
-let stare: StareFolder = { suportat, nume: null, permis: null, dosare: new Map(), scanatLa: null, seScaneaza: false, eroare: '' }
+let stare: StareFolder = { suportat, nume: null, permis: null, foldere: [], libere: [], nrDosare: 0, scanatLa: null, seScaneaza: false, eroare: '' }
 let radacina: DirFs | null = null
 const ascultatori = new Set<() => void>()
 
@@ -47,7 +60,27 @@ function seteaza(p: Partial<StareFolder>) {
   ascultatori.forEach((f) => f())
 }
 
-export const normAuto = (s: string) => (s || '').toUpperCase().replace(/[^A-Z0-9]/g, '')
+const faraDiacritice = (s: string) => (s || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+export const normAuto = (s: string) => faraDiacritice(s).toUpperCase().replace(/[^A-Z0-9]/g, '')
+
+/** „Allianz - BH 52 LCA (poze)” → {ALLIANZ, BH, 52, LCA, BH52, 52LCA, BH52LCA, …}: nr. auto se gaseste
+ *  oriunde in nume, si cu spatii/cratime intre bucati. */
+export function ferestreNume(nume: string): Set<string> {
+  const fara = nume.replace(/\.[a-z0-9]{1,5}$/i, '')
+  const b = faraDiacritice(fara).toUpperCase().split(/[^A-Z0-9]+/).filter(Boolean)
+  const out = new Set<string>()
+  for (let i = 0; i < b.length; i++) {
+    let lipit = ''
+    for (let j = i; j < Math.min(b.length, i + 3); j++) {
+      lipit += b[j]
+      out.add(lipit)
+    }
+  }
+  return out
+}
+// nr. auto romanesc: B 123 ABC / BH 52 LCA
+const NR_AUTO = /^(B\d{2,3}|[A-Z]{2}\d{2})[A-Z]{3}$/
+const areNrAuto = (f: Set<string>) => [...f].some((x) => NR_AUTO.test(x))
 
 // ---------- IndexedDB (handle-ul folderului) ----------
 const DB = 'rca-folder-local'
@@ -71,14 +104,39 @@ async function idb<T>(fn: (s: IDBObjectStore) => IDBRequest, scriere = false): P
 
 // ---------- citirea folderului ----------
 const IGNORAT = /^(~\$|\.|desktop\.ini$|thumbs\.db$)|\.(tmp|lnk|crdownload)$/i
+const ADANCIME = 4
 
-async function fisiereDin(dir: DirFs, adancime: number, out: FisierLocal[]) {
-  for await (const e of dir.values()) {
-    if (e.kind === 'file') {
-      if (!IGNORAT.test(e.name)) out.push({ nume: e.name, chei: detectAllDocLabels(e.name).filter((k) => k !== 'altele') })
-    } else if (adancime > 0) {
-      await fisiereDin(e as DirFs, adancime - 1, out)
+interface Colectare {
+  foldere: FolderScanat[]
+  libere: StareFolder['libere']
+  nrDosare: number
+  esecuri: number
+}
+
+/** `deasupra`: folderele in care se afla `dir` (fisierele se adauga la toate). `inDosar`: un folder de
+ *  mai sus are nr. auto in nume, deci fisierele sunt ale lui (nu se mai potrivesc dupa nume). */
+async function citesteDir(dir: DirFs, cale: string, adancime: number, deasupra: FolderScanat[], inDosar: boolean, c: Colectare) {
+  try {
+    for await (const e of dir.values()) {
+      if (IGNORAT.test(e.name)) continue
+      const caleE = cale ? cale + '/' + e.name : e.name
+      if (e.kind === 'file') {
+        const f: FisierLocal = { nume: e.name, cale: caleE, chei: detectAllDocLabels(e.name).filter((k) => k !== 'altele') }
+        deasupra.forEach((d) => d.fisiere.push(f))
+        if (!inDosar) c.libere.push({ ...f, ferestre: ferestreNume(e.name) })
+      } else if (adancime > 0) {
+        const nod: FolderScanat = { ferestre: ferestreNume(e.name), fisiere: [] }
+        const eDosar = !inDosar && areNrAuto(nod.ferestre)
+        if (eDosar) c.nrDosare++
+        c.foldere.push(nod)
+        await citesteDir(e as DirFs, caleE, adancime - 1, [...deasupra, nod], inDosar || eDosar, c)
+      }
     }
+  } catch (e) {
+    // un subfolder care nu se poate citi nu opreste tot; doar radacina conteaza ca eroare
+    if (!cale) throw e
+    console.warn('Nu am putut citi', cale, e)
+    c.esecuri++
   }
 }
 
@@ -86,15 +144,16 @@ export async function rescaneaza() {
   if (!radacina || stare.seScaneaza) return
   seteaza({ seScaneaza: true, eroare: '' })
   try {
-    const dosare = new Map<string, FisierLocal[]>()
-    for await (const e of radacina.values()) {
-      if (e.kind !== 'directory') continue
-      const fisiere: FisierLocal[] = []
-      await fisiereDin(e as DirFs, 2, fisiere)
-      const cheie = normAuto(e.name)
-      if (cheie) dosare.set(cheie, [...(dosare.get(cheie) ?? []), ...fisiere])
-    }
-    seteaza({ dosare, scanatLa: Date.now(), seScaneaza: false })
+    const c: Colectare = { foldere: [], libere: [], nrDosare: 0, esecuri: 0 }
+    await citesteDir(radacina, '', ADANCIME, [], false, c)
+    seteaza({
+      foldere: c.foldere,
+      libere: c.libere,
+      nrDosare: c.nrDosare,
+      scanatLa: Date.now(),
+      seScaneaza: false,
+      eroare: c.esecuri ? `${c.esecuri} ${c.esecuri === 1 ? 'subfolder nu s-a putut citi' : 'subfoldere nu s-au putut citi'}.` : '',
+    })
   } catch (e) {
     console.error(e)
     seteaza({ seScaneaza: false, permis: 'prompt', eroare: 'Nu am putut citi folderul — dă din nou voie.' })
@@ -108,6 +167,7 @@ export async function alegeFolder() {
     const dir = await w.showDirectoryPicker({ id: 'rca-dosare', mode: 'read' })
     radacina = dir
     await idb((s) => s.put(dir, CHEIE), true)
+    seteaza({ seScaneaza: false })
     seteaza({ nume: dir.name, permis: 'granted' })
     await rescaneaza()
   } catch (e) {
@@ -126,7 +186,7 @@ export async function permiteCitirea() {
 export async function deconecteaza() {
   radacina = null
   await idb((s) => s.delete(CHEIE), true).catch(() => {})
-  seteaza({ nume: null, permis: null, dosare: new Map(), scanatLa: null, eroare: '' })
+  seteaza({ nume: null, permis: null, foldere: [], libere: [], nrDosare: 0, scanatLa: null, eroare: '' })
 }
 
 // La pornire: folderul ales data trecuta (daca permisiunea mai e valabila, se citeste direct).
@@ -163,16 +223,26 @@ export function useFolderLocal(): StareFolder {
 
 type DosarFolder = { nrAutoPagubit: string; categoriiFolder?: Record<string, string> }
 
+// potrivirile se calculeaza o data pe scanare (multe carduri × multe foldere)
+const cache = new WeakMap<StareFolder, Map<string, FisierLocal[]>>()
+
 function gasesteFisiere(s: StareFolder, nrAuto: string): FisierLocal[] {
   const n = normAuto(nrAuto)
-  if (n.length < 4 || s.dosare.size === 0) return []
-  const exact = s.dosare.get(n)
-  if (exact) return exact
-  for (const [cheie, f] of s.dosare) if (cheie.startsWith(n)) return f
-  return []
+  if (n.length < 4 || (s.foldere.length === 0 && s.libere.length === 0)) return []
+  let m = cache.get(s)
+  if (!m) cache.set(s, (m = new Map()))
+  const gasit = m.get(n)
+  if (gasit) return gasit
+  const dupaCale = new Map<string, FisierLocal>()
+  for (const d of s.foldere) if (d.ferestre.has(n)) d.fisiere.forEach((f) => dupaCale.set(f.cale, f))
+  for (const f of s.libere) if (f.ferestre.has(n)) dupaCale.set(f.cale, f)
+  const rez = [...dupaCale.values()]
+  m.set(n, rez)
+  return rez
 }
 
-/** Fisierele din subfolderul dosarului (dupa nr. auto pagubit; accepta si „B768SBG - Allianz"),
+/** Fisierele dosarului: din folderele cu nr. auto pagubit oriunde in nume („B768SBG”, „Allianz - B 768 SBG”,
+ *  si in subfoldere de grup, ex. „Allianz/B768SBG”) + fisierele din afara lor cu nr. auto in nume,
  *  cu categoriile alese de mana (`categoriiFolder`) in locul celor ghicite din nume. */
 export function fisiereLocale(s: StareFolder, d: DosarFolder): FisierLocal[] {
   const alese = d.categoriiFolder ?? {}
