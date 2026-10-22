@@ -199,6 +199,13 @@ export function detectContractGresit(ex: ContractFinalExtras, curent: DosarPentr
   const difera = (a: string, b: string) => (dinOcr ? !aproapeLaFel(a, b) : a !== b)
   // Nr. rezervare se scrie de mana in mai multe feluri ("RBH/29770", "RBH 29770", "29770") — comparam cifrele.
   const cifre = (x: string) => x.replace(/\D/g, '')
+  // Daca un identificator sigur se potriveste (nr. auto pagubit, nr. dosar sau nr. rezervare RBH),
+  // contractul e al acestui dosar — restul diferentelor (citiri gresite, campuri goale sau scrise altfel)
+  // nu-l mai blocheaza (cererea utilizatorului, 22.10.2026).
+  const acelasiAuto = !!(ex.nrAutoPagubit && curent.nrAutoPagubit && !difera(normPlate(ex.nrAutoPagubit), normPlate(curent.nrAutoPagubit)))
+  const acelasiNrDosar = !!(ex.nrDosar && curent.nrDosar && acelasiDosar(ex.nrDosar, curent.nrDosar, dinOcr))
+  const aceeasiRezervare = !!(ex.nrContract && cifre(curent.nrRezervare) && !difera(cifre(ex.nrContract), cifre(curent.nrRezervare)))
+  if (acelasiAuto || acelasiNrDosar || aceeasiRezervare) return null
   if (ex.nrContract && cifre(curent.nrRezervare) && difera(cifre(ex.nrContract), cifre(curent.nrRezervare))) {
     return `⛔ CONTRACT GREȘIT — ați încărcat contractul de la ${ex.nrContract} (acest dosar e ${curent.nrRezervare}).`
   }
