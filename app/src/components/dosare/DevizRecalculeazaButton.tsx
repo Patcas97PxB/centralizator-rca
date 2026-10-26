@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, type ReactNode } from 'react'
 import { AlertTriangle, Calculator, Check, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { useDevizScan } from '@/hooks/useDevizScan'
@@ -18,10 +18,13 @@ const TILE = {
 export function DevizRecalculeazaButton({
   onPatch,
   calcul,
+  children,
 }: {
   onPatch: (patch: Partial<Dosar>) => void
   /** Calculul pe asigurator (deviz + weekend + 1 zi), afisat sub zilele de reparatie. */
   calcul?: RezultatCalculRCA
+  /** Pus imediat langa buton (in formular: caseta cu zilele din deviz). */
+  children?: ReactNode
 }) {
   const { stage, result, errorMsg, fileName, progres, run } = useDevizScan()
   const inputRef = useRef<HTMLInputElement>(null)
@@ -44,6 +47,7 @@ export function DevizRecalculeazaButton({
           <Calculator className="size-3.5" aria-hidden="true" />
           {seCalculeaza ? 'Se calculează…' : 'Calculează zile din deviz'}
         </Button>
+        {children}
         <span className="text-xs text-muted-foreground">Suprascrie doar zilele — restul câmpurilor rămân neatinse.</span>
         <input
           ref={inputRef}

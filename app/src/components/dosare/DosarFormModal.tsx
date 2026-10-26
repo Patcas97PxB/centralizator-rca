@@ -312,16 +312,17 @@ export function DosarFormModal({
               patch(p)
             }}
             calcul={rcaPreview}
-          />
+          >
+            <div className="flex items-center gap-2">
+              <Label htmlFor="fZileDeviz" className="whitespace-nowrap">Zile din deviz</Label>
+              <Input id="fZileDeviz" type="number" min={0} value={draft.zileDeviz} onChange={(e) => set('zileDeviz', e.target.value)} className="h-8 w-20" />
+            </div>
+          </DevizRecalculeazaButton>
           <div className="space-y-1.5">
             <Label htmlFor="fStart">Data predare</Label>
             <Input id="fStart" type="date" value={draft.start} onChange={(e) => setDraft((d) => ({ ...d, start: e.target.value }))} />
           </div>
           <div className="space-y-1.5">
-            <Label htmlFor="fZileDeviz">Zile lucrătoare din deviz</Label>
-            <Input id="fZileDeviz" type="number" min={0} value={draft.zileDeviz} onChange={(e) => set('zileDeviz', e.target.value)} />
-          </div>
-          <div className="space-y-1.5 sm:col-span-2 sm:w-[calc(50%-.5rem)]">
             <Label htmlFor="fEnd">Data preluare</Label>
             <Input
               id="fEnd"
@@ -334,18 +335,10 @@ export function DosarFormModal({
               disabled={draft.dte}
             />
           </div>
-          <div className="space-y-1.5">
-            <Label htmlFor="fDataPolita">Data poliței</Label>
-            <Input id="fDataPolita" type="date" value={draft.dataPolita} onChange={(e) => set('dataPolita', e.target.value)} />
-          </div>
-          <div className="space-y-1.5">
-            <Label htmlFor="fDataNcAr">Data NC/AR</Label>
-            <Input id="fDataNcAr" type="date" value={draft.dataNcAr} onChange={(e) => set('dataNcAr', e.target.value)} />
-          </div>
           <div className="flex items-center gap-2 sm:col-span-2">
             <Checkbox id="fDte" checked={draft.dte} onCheckedChange={(v) => set('dte', v === true)} />
             <Label htmlFor="fDte" className="font-normal">
-              DTE — se calculează de la predare/NC până la oferta de despăgubire
+              DTE — se calculează de la predare până la oferta de despăgubire
             </Label>
           </div>
           {draft.dte && (

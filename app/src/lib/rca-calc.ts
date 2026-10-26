@@ -246,8 +246,6 @@ function calculRCAInterna(d: Dosar): RezultatCalculRCA {
       zileAcoperite = zileLaCutoff
       note += ' — LIMITAT la 30 zile de la NC/AR (HG1326/2023)'
     }
-  } else if (!norma) {
-    note += ' — completează data poliței pentru verificarea plafonului de 30 zile'
   }
 
   const reale = zileDecontabileReale(d.start, d.end)
