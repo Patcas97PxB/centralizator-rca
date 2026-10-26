@@ -56,6 +56,8 @@ export interface Dosar {
   dataOferta: string
   service: string
   telClient: string
+  /** Numele clientului (proprietarul mașinii păgubite) — completat în „Document intrare/ieșire”. */
+  numeClient?: string
   telService: string
   start: string
   end: string
