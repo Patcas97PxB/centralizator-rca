@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Download } from 'lucide-react'
+import { Download, FileText } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
@@ -38,10 +38,33 @@ export function DocIntrareIesireModal({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open])
 
-  function descarca() {
-    descarcaOdt(date)
+  const [seFace, setSeFace] = useState(false)
+  const [eroare, setEroare] = useState('')
+
+  function tineMinteClient() {
     const client = date.client.trim().toLocaleUpperCase('ro-RO')
     if (client !== (dosar.numeClient ?? '')) onPatch({ numeClient: client })
+  }
+
+  async function descarcaPdf() {
+    setSeFace(true)
+    setEroare('')
+    try {
+      const { descarcaPdf: fa } = await import('@/lib/doc-intrare-iesire-pdf')
+      await fa(date)
+      tineMinteClient()
+      onClose()
+    } catch (e) {
+      console.error(e)
+      setEroare('Nu am putut face PDF-ul: ' + (e instanceof Error ? e.message : 'eroare'))
+    } finally {
+      setSeFace(false)
+    }
+  }
+
+  function descarcaOdtEditabil() {
+    descarcaOdt(date)
+    tineMinteClient()
     onClose()
   }
 
@@ -50,13 +73,13 @@ export function DocIntrareIesireModal({
       <DialogContent className="sm:max-w-[460px]">
         <DialogHeader>
           <DialogTitle>Document intrare/ieșire service</DialogTitle>
-          <DialogDescription>Verifică datele luate din dosar, apoi descarcă documentul (.odt, se deschide cu LibreOffice sau Word).</DialogDescription>
+          <DialogDescription>Verifică datele luate din contract și din dosar, apoi descarcă documentul PDF.</DialogDescription>
         </DialogHeader>
         <form
           className="grid grid-cols-2 gap-x-3 gap-y-2.5"
           onSubmit={(e) => {
             e.preventDefault()
-            descarca()
+            void descarcaPdf()
           }}
         >
           {CAMPURI.map((c) => (
@@ -71,11 +94,21 @@ export function DocIntrareIesireModal({
               />
             </div>
           ))}
-          <DialogFooter className="col-span-2 mt-2">
+          {eroare && <p className="col-span-2 text-xs font-medium text-destructive">{eroare}</p>}
+          <DialogFooter className="col-span-2 mt-2 sm:items-center">
+            <button
+              type="button"
+              onClick={descarcaOdtEditabil}
+              className="mr-auto inline-flex items-center gap-1 text-xs text-muted-foreground underline-offset-2 hover:text-foreground hover:underline"
+              title="Varianta care se poate modifica în LibreOffice/Word"
+            >
+              <FileText className="size-3.5" aria-hidden="true" />
+              sau .odt (editabil)
+            </button>
             <Button type="button" variant="outline" onClick={onClose}>Anulează</Button>
-            <Button type="submit">
+            <Button type="submit" disabled={seFace}>
               <Download className="size-4" aria-hidden="true" />
-              Descarcă documentul
+              {seFace ? 'Se face PDF-ul…' : 'Descarcă PDF'}
             </Button>
           </DialogFooter>
         </form>
