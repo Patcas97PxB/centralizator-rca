@@ -41,6 +41,15 @@ import { DevizRecalculeazaButton } from './DevizRecalculeazaButton'
 import { ServiceCombobox } from './ServiceCombobox'
 import { ContractFinalSection } from './ContractFinalSection'
 
+function Sectiune({ children }: { children: string }) {
+  return (
+    <h3 className="mt-2 flex items-center gap-2 text-[10.5px] font-extrabold uppercase tracking-[.1em] text-[#7b8aa6] first:mt-0 sm:col-span-2">
+      {children}
+      <span className="h-px flex-1 bg-[#1e2a45]" aria-hidden="true" />
+    </h3>
+  )
+}
+
 export function DosarFormModal({
   open,
   dosar,
@@ -76,6 +85,7 @@ export function DosarFormModal({
       // dosar nou: etapa „REZERVAT" (vine din bife), predarea azi
       setDraft(majuscule(dosar ?? { ...dosarGol(), ...initialDraft, id: 'd' + Date.now(), start: todayStr() }))
       setEndAuto(!dosar?.end)
+      setClasaSugerata(false)
       setEroare('')
     }
   }, [open, dosar, initialDraft])
@@ -89,11 +99,13 @@ export function DosarFormModal({
     setDraft((d) => ({ ...d, ...majuscule(p) }))
   }
 
-  function onMarcaModelBlur() {
-    if (draft.marcaModel && !draft.clasaAuto) {
-      const guess = suggestClasaFromModel(draft.marcaModel)
-      if (guess) set('clasaAuto', guess)
-    }
+  // Clasa se sugereaza din marca/model chiar in timp ce scrii; o clasa aleasa de mana nu se mai schimba.
+  const [clasaSugerata, setClasaSugerata] = useState(false)
+  function onMarcaModelChange(v: string) {
+    if (!draft.clasaAuto || clasaSugerata) {
+      patch({ marcaModel: v, clasaAuto: suggestClasaFromModel(v) ?? '' })
+      setClasaSugerata(true)
+    } else set('marcaModel', v)
   }
 
   function onServiceChange(nume: string) {
@@ -175,16 +187,13 @@ export function DosarFormModal({
         <div className="flex flex-col gap-4 px-[22px] pb-[22px] pt-[18px]">
         <PreluareDateSection draft={draft} onPatch={patch} />
 
-        <div className="grid gap-4 sm:grid-cols-2">
+        {/* Câmpurile sunt grupate în ordinea pașilor: dosarul, mașina păgubită, mașina de înlocuire, client/service, termen. */}
+        <div className="grid gap-x-4 gap-y-3.5 sm:grid-cols-2">
+          <Sectiune>Dosar</Sectiune>
           <div className="space-y-1.5">
             <Label htmlFor="fNrDosar">Nr. dosar *</Label>
             <Input id="fNrDosar" value={draft.nrDosar} onChange={(e) => set('nrDosar', e.target.value)} />
           </div>
-          <div className="space-y-1.5">
-            <Label htmlFor="fNrRezervare">Nr. rezervare (RBH)</Label>
-            <Input id="fNrRezervare" value={draft.nrRezervare} onChange={(e) => set('nrRezervare', e.target.value)} />
-          </div>
-
           <div className="space-y-1.5">
             <Label htmlFor="fAsigurator">Asigurator *</Label>
             <Select value={draft.asigurator} onValueChange={(v) => set('asigurator', v)}>
@@ -201,6 +210,10 @@ export function DosarFormModal({
             </Select>
           </div>
           <div className="space-y-1.5">
+            <Label htmlFor="fNrRezervare">Nr. rezervare (RBH)</Label>
+            <Input id="fNrRezervare" value={draft.nrRezervare} onChange={(e) => set('nrRezervare', e.target.value)} />
+          </div>
+          <div className="space-y-1.5">
             <Label>Etapă</Label>
             <div
               className="flex h-9 items-center gap-2 rounded-md border border-input px-3 text-[12.5px] font-extrabold"
@@ -212,24 +225,54 @@ export function DosarFormModal({
               <span className="ml-auto truncate text-[11px] font-medium text-muted-foreground">din bifele de pe card</span>
             </div>
           </div>
-
+          <Sectiune>Mașina păgubită</Sectiune>
           <div className="space-y-1.5">
             <Label htmlFor="fNrAutoPagubit">Nr. auto păgubit</Label>
             <Input id="fNrAutoPagubit" value={draft.nrAutoPagubit} onChange={(e) => set('nrAutoPagubit', e.target.value)} />
           </div>
           <div className="space-y-1.5">
-            <Label htmlFor="fNrAutoInlocuire">Nr. mașină înlocuire</Label>
-            <Input id="fNrAutoInlocuire" value={draft.nrAutoInlocuire} onChange={(e) => set('nrAutoInlocuire', e.target.value)} />
-          </div>
-
-          <div className="space-y-1.5">
             <Label htmlFor="fMarcaModel">Marcă / model</Label>
             <Input
               id="fMarcaModel"
               value={draft.marcaModel}
-              onChange={(e) => set('marcaModel', e.target.value)}
-              onBlur={onMarcaModelBlur}
+              onChange={(e) => onMarcaModelChange(e.target.value)}
             />
+          </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="fClasaAuto">Clasă auto</Label>
+            <Select value={draft.clasaAuto || '__none__'} onValueChange={(v) => {
+                setClasaSugerata(false)
+                set('clasaAuto', v === '__none__' ? '' : v)
+              }}>
+              <SelectTrigger id="fClasaAuto" className="w-full">
+                <SelectValue placeholder="—" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="__none__">—</SelectItem>
+                {vehicleClasses().map((vc) => (
+                  <SelectItem key={vc.clasa} value={vc.clasa}>
+                    {vc.clasa}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="fVehicul">Vehicul</Label>
+            <Select value={draft.vehicul} onValueChange={(v) => set('vehicul', v as Vehicul)}>
+              <SelectTrigger id="fVehicul" className="w-full">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="deplasabil">Deplasabil</SelectItem>
+                <SelectItem value="nedeplasabil">Nedeplasabil</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <Sectiune>Mașina de înlocuire</Sectiune>
+          <div className="space-y-1.5">
+            <Label htmlFor="fNrAutoInlocuire">Nr. mașină înlocuire</Label>
+            <Input id="fNrAutoInlocuire" value={draft.nrAutoInlocuire} onChange={(e) => set('nrAutoInlocuire', e.target.value)} />
           </div>
           <div className="space-y-1.5">
             <Label htmlFor="fMarcaModelInlocuire">Marcă / model înlocuire</Label>
@@ -249,50 +292,20 @@ export function DosarFormModal({
               )}
             </div>
           </div>
-
-          <div className="space-y-1.5">
-            <Label htmlFor="fClasaAuto">Clasă auto</Label>
-            <Select value={draft.clasaAuto || '__none__'} onValueChange={(v) => set('clasaAuto', v === '__none__' ? '' : v)}>
-              <SelectTrigger id="fClasaAuto" className="w-full">
-                <SelectValue placeholder="—" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="__none__">—</SelectItem>
-                {vehicleClasses().map((vc) => (
-                  <SelectItem key={vc.clasa} value={vc.clasa}>
-                    {vc.clasa}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="space-y-1.5">
+          <Sectiune>Client și service</Sectiune>
+          <div className="space-y-1.5 sm:col-span-2 sm:w-[calc(50%-.5rem)]">
             <Label htmlFor="fTelClient">Telefon client</Label>
             <Input id="fTelClient" value={draft.telClient} onChange={(e) => set('telClient', e.target.value)} />
-          </div>
-
-          <div className="space-y-1.5">
-            <Label htmlFor="fVehicul">Vehicul</Label>
-            <Select value={draft.vehicul} onValueChange={(v) => set('vehicul', v as Vehicul)}>
-              <SelectTrigger id="fVehicul" className="w-full">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="deplasabil">Deplasabil</SelectItem>
-                <SelectItem value="nedeplasabil">Nedeplasabil</SelectItem>
-              </SelectContent>
-            </Select>
           </div>
           <div className="space-y-1.5">
             <Label htmlFor="fService">Service</Label>
             <ServiceCombobox id="fService" value={draft.service} servicii={servicii} onChange={onServiceChange} />
           </div>
-
           <div className="space-y-1.5">
             <Label htmlFor="fTelService">Telefon service</Label>
             <Input id="fTelService" value={draft.telService} onChange={(e) => set('telService', e.target.value)} />
           </div>
-          <span className="hidden sm:block" />
+          <Sectiune>Termen</Sectiune>
           <DevizRecalculeazaButton
             onPatch={(p) => {
               setEndAuto(true)
@@ -301,15 +314,14 @@ export function DosarFormModal({
             calcul={rcaPreview}
           />
           <div className="space-y-1.5">
-            <Label htmlFor="fZileDeviz">Zile lucrătoare din deviz</Label>
-            <Input id="fZileDeviz" type="number" min={0} value={draft.zileDeviz} onChange={(e) => set('zileDeviz', e.target.value)} />
-          </div>
-
-          <div className="space-y-1.5">
             <Label htmlFor="fStart">Data predare</Label>
             <Input id="fStart" type="date" value={draft.start} onChange={(e) => setDraft((d) => ({ ...d, start: e.target.value }))} />
           </div>
           <div className="space-y-1.5">
+            <Label htmlFor="fZileDeviz">Zile lucrătoare din deviz</Label>
+            <Input id="fZileDeviz" type="number" min={0} value={draft.zileDeviz} onChange={(e) => set('zileDeviz', e.target.value)} />
+          </div>
+          <div className="space-y-1.5 sm:col-span-2 sm:w-[calc(50%-.5rem)]">
             <Label htmlFor="fEnd">Data preluare</Label>
             <Input
               id="fEnd"
@@ -322,7 +334,6 @@ export function DosarFormModal({
               disabled={draft.dte}
             />
           </div>
-
           <div className="space-y-1.5">
             <Label htmlFor="fDataPolita">Data poliței</Label>
             <Input id="fDataPolita" type="date" value={draft.dataPolita} onChange={(e) => set('dataPolita', e.target.value)} />
@@ -331,7 +342,6 @@ export function DosarFormModal({
             <Label htmlFor="fDataNcAr">Data NC/AR</Label>
             <Input id="fDataNcAr" type="date" value={draft.dataNcAr} onChange={(e) => set('dataNcAr', e.target.value)} />
           </div>
-
           <div className="flex items-center gap-2 sm:col-span-2">
             <Checkbox id="fDte" checked={draft.dte} onCheckedChange={(v) => set('dte', v === true)} />
             <Label htmlFor="fDte" className="font-normal">
@@ -344,9 +354,9 @@ export function DosarFormModal({
               <Input id="fDataOferta" type="date" value={draft.dataOferta} onChange={(e) => set('dataOferta', e.target.value)} />
             </div>
           )}
-
+          <Sectiune>Note</Sectiune>
           <div className="space-y-1.5 sm:col-span-2">
-            <Label htmlFor="fNotes">Note</Label>
+            <Label htmlFor="fNotes" className="sr-only">Note</Label>
             <Textarea id="fNotes" rows={3} value={draft.notes} onChange={(e) => set('notes', e.target.value)} />
           </div>
         </div>
