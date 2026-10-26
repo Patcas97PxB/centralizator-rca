@@ -393,12 +393,17 @@ export function zileLaTermen(d: Dosar): number | null {
 // termen — la client, cel mult 2 zile pana la termen (inclusiv expirate);
 // netrimis — preluat de ZILE_AVIZ+ zile, dar nefinalizat (documente/drive/mail);
 // deviz — la client de ZILE_AVIZ+ zile fara zile din deviz (suna service-ul);
-// manual — marcat „Amintește-mi".
+// manual — „Amintește-mi" (de la ziua aleasa; primul, are prioritate).
 export function dosareDeSunat(dosare: Dosar[]): DeSunat[] {
   const out: DeSunat[] = []
   for (const dosar of dosare) {
     const etapa = etapaDosar(dosar)
     if (etapa === 'finalizat') continue
+    // reminderul tau, din ziua aleasa, are prioritate (pana atunci raman avizele automate)
+    if (dosar.amintesteMi && (!dosar.amintesteLa || dosar.amintesteLa <= todayStr())) {
+      out.push({ dosar, tip: 'manual', zile: null })
+      continue
+    }
     if (etapa === 'la_client') {
       const zile = zileLaTermen(dosar)
       if (zile !== null && zile <= 2) {
@@ -418,9 +423,8 @@ export function dosareDeSunat(dosare: Dosar[]): DeSunat[] {
         continue
       }
     }
-    if (dosar.amintesteMi) out.push({ dosar, tip: 'manual', zile: null })
   }
-  const ordine: Record<TipAviz, number> = { termen: 0, netrimis: 1, deviz: 2, manual: 3 }
+  const ordine: Record<TipAviz, number> = { manual: 0, termen: 1, netrimis: 2, deviz: 3 }
   return out.sort((a, b) =>
     ordine[a.tip] - ordine[b.tip] || (a.tip === 'termen' ? (a.zile ?? 99) - (b.zile ?? 99) : (b.zile ?? 0) - (a.zile ?? 0)),
   )

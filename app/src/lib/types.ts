@@ -42,6 +42,10 @@ export interface Dosar {
   categoriiFolder?: Record<string, string>
   /** Marcat de mana „Amintește-mi": dosarul apare in clopotel. */
   amintesteMi?: boolean
+  /** Ziua din care reminderul apare în clopoțel (YYYY-MM-DD); gol = imediat. */
+  amintesteLa?: string
+  /** Ce ai de făcut („Sună service-ul”, text liber). */
+  amintesteNota?: string
   clasaAuto: string
   valoareContract: string
   valoareContractCuTVA: string

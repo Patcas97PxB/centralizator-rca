@@ -1,4 +1,4 @@
-import { Download, Search, SlidersHorizontal } from 'lucide-react'
+import { Bell, Download, Search, SlidersHorizontal } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Button } from '@/components/ui/button'
@@ -24,11 +24,14 @@ export function FilterBar({
   onChange,
   servicii,
   onExport,
+  nrAleMele,
 }: {
   filtre: DosareFiltre
   onChange: (next: DosareFiltre) => void
   servicii: Serviciu[]
   onExport: () => void
+  /** Cate dosare au „Amintește-mi" (butonul „Ale mele"). */
+  nrAleMele: number
 }) {
   const activeFiltreAvansate = !!(
     filtre.service ||
@@ -169,6 +172,24 @@ export function FilterBar({
           </Button>
         </PopoverContent>
       </Popover>
+
+      <button
+        type="button"
+        aria-pressed={filtre.doarAmintite}
+        onClick={() => onChange({ ...filtre, doarAmintite: !filtre.doarAmintite })}
+        title="Arată doar dosarele marcate de tine cu „Amintește-mi”"
+        className={cn(
+          CONTROL,
+          'flex shrink-0 items-center gap-1.5 whitespace-nowrap border px-3 text-[#cbd5e1] hover:text-white',
+          filtre.doarAmintite && 'border-[#fb923c] bg-[#fb923c]/15 text-[#fb923c] hover:bg-[#fb923c]/25 hover:text-[#fb923c]',
+        )}
+      >
+        <Bell className="size-4" aria-hidden="true" />
+        Ale mele
+        <span className={cn('rounded-full px-1.5 text-[11px] font-extrabold tabular-nums', filtre.doarAmintite ? 'bg-[#fb923c]/25' : 'bg-[#253150]')}>
+          {nrAleMele}
+        </span>
+      </button>
 
       <LegendaButton />
     </div>
