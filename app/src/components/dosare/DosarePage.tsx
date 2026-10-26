@@ -130,12 +130,7 @@ export function DosarePage({ actiune }: { actiune?: ActiuneRapida | null }) {
   }
 
   return (
-    <div className="mx-auto max-w-[1400px] px-4 py-5 md:px-6 md:py-6">
-      <div className="mb-5 md:hidden">
-        <h2 className="text-xl font-bold text-foreground">Dosare RCA</h2>
-        <p className="text-sm text-muted-foreground">Monitorizează în timp real toate dosarele tale.</p>
-      </div>
-
+    <div className="mx-auto max-w-[1400px] px-4 py-3 md:px-6 md:py-6">
       {error && (
         <div className="animate-fade-up mb-4 rounded-xl border border-destructive/40 bg-destructive/10 p-3 text-sm text-destructive">
           {error}

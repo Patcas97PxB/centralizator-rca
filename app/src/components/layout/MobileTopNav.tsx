@@ -1,8 +1,11 @@
 import { cn } from '@/lib/utils'
 import { NAV_ITEMS, SIDEBAR_ACCENT, type SectionKey } from './nav-items'
 
-// Pe mobil (<md) sectiunile (Dosare, Dashboard, Service-uri, Rapoarte) stau sus, sub header —
+// Pe mobil (<md) sectiunile disponibile (Dosare, Service-uri, Rapoarte) stau sus, sub header —
 // bara de jos e rezervata actiunilor rapide (MobileBottomNav).
+// Sectiunile „in curand" nu ocupa loc pe telefon.
+const ITEMS_MOBIL = NAV_ITEMS.filter((i) => i.disponibil)
+
 export function MobileTopNav({
   active,
   onSelect,
@@ -13,8 +16,8 @@ export function MobileTopNav({
   badgeDosare?: number
 }) {
   return (
-    <nav className="grid grid-cols-4 gap-1.5 border-b border-[#1c273f] px-3 py-2 md:hidden" aria-label="Navigare principală">
-      {NAV_ITEMS.map((item) => {
+    <nav className="grid grid-cols-3 gap-1.5 border-b border-[#1c273f] px-3 py-2 md:hidden" aria-label="Navigare principală">
+      {ITEMS_MOBIL.map((item) => {
         const on = active === item.key
         return (
           <button

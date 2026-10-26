@@ -41,7 +41,7 @@ export function FilterBar({
 
   return (
     <div className="flex flex-wrap items-center gap-2.5">
-      <div className="relative min-w-[200px] flex-1">
+      <div className="relative w-full min-w-[200px] sm:w-auto sm:flex-1">
         <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-[#94a3b8]" aria-hidden="true" />
         <Input
           value={filtre.search}
@@ -52,7 +52,7 @@ export function FilterBar({
       </div>
 
       <Select value={filtre.status} onValueChange={(v) => onChange({ ...filtre, status: v as DosareFiltre['status'] })}>
-        <SelectTrigger className={cn(CONTROL, 'w-[calc(50%-5px)] shrink-0 gap-2 px-2.5 sm:w-[168px]')}>
+        <SelectTrigger className={cn(CONTROL, 'min-w-0 flex-1 gap-2 px-2.5 sm:w-[168px] sm:flex-none')}>
           <span
             className="size-2 shrink-0 rounded-full"
             style={{ background: statusColor, boxShadow: filtre.status === 'toate' ? 'none' : `0 0 8px 1px ${statusColor}` }}
@@ -77,12 +77,12 @@ export function FilterBar({
             type="button"
             className={cn(
               CONTROL,
-              'flex w-[calc(50%-5px)] shrink-0 items-center justify-center gap-2 whitespace-nowrap border px-3 text-[#cbd5e1] hover:text-white sm:w-[142px]',
+              'flex shrink-0 items-center justify-center gap-2 whitespace-nowrap border px-3 text-[#cbd5e1] hover:text-white sm:w-[142px]',
               activeFiltreAvansate && 'border-[#2563eb] bg-[#2563eb]/20 text-white',
             )}
           >
             <SlidersHorizontal className="size-4" aria-hidden="true" />
-            Filtre avansate
+            Filtre<span className="hidden sm:inline"> avansate</span>
           </button>
         </PopoverTrigger>
         <PopoverContent align="end" className="w-80 space-y-4">
