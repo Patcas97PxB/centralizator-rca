@@ -418,7 +418,8 @@ export function dosareDeSunat(dosare: Dosar[]): DeSunat[] {
         continue
       }
     }
-    if (dosar.amintesteMi) out.push({ dosar, tip: 'manual', zile: null })
+    // „Amintește-mi" cu zi aleasa apare abia din ziua aceea
+    if (dosar.amintesteMi && !(dosar.amintesteMiLa && dosar.amintesteMiLa > todayStr())) out.push({ dosar, tip: 'manual', zile: null })
   }
   const ordine: Record<TipAviz, number> = { termen: 0, netrimis: 1, deviz: 2, manual: 3 }
   return out.sort((a, b) =>

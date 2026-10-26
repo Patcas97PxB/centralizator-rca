@@ -12,7 +12,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
-import type { DeSunat, TipAviz } from '@/lib/rca-calc'
+import { fmtDate, type DeSunat, type TipAviz } from '@/lib/rca-calc'
 import type { Dosar } from '@/lib/types'
 import { BackupButtons } from './BackupButtons'
 import { FolderLocalButton } from './FolderLocalButton'
@@ -45,7 +45,12 @@ function descriereAviz(tip: TipAviz, zile: number | null, d: Dosar): { culoare: 
         detaliu: `Preluată de ${zileText(zile ?? 0)} · centralizează documentele și trimite mailul`,
       }
     default:
-      return { culoare: '#fb923c', eticheta: 'amintește-mi', detaliu: 'Marcat de tine' }
+      // nota spune de obicei de ce ai cerut amintirea („MAINE SA ADUCA FINAL")
+      return {
+        culoare: '#fb923c',
+        eticheta: 'amintește-mi',
+        detaliu: d.notes || (d.amintesteMiLa ? `Pentru ${fmtDate(d.amintesteMiLa)}` : 'Marcat de tine'),
+      }
   }
 }
 

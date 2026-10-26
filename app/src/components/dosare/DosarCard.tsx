@@ -1,10 +1,10 @@
 import { useEffect, useRef, useState } from 'react'
-import { AlertTriangle, ArrowDown, Bell, BellOff, Check, ChevronDown, FolderPlus, ImageIcon, Pencil } from 'lucide-react'
+import { AlertTriangle, ArrowDown, Bell, BellOff, CalendarDays, Check, ChevronDown, FolderPlus, ImageIcon, Pencil } from 'lucide-react'
 import { imagineMasina } from '@/lib/cars'
 import { cheiLocale, useFolderLocal } from '@/lib/folder-local'
 import { ALPHA, accentStyle, hex } from '@/lib/color'
 import { docStatus, docLabelText, lipsuriFinalizare } from '@/lib/documente'
-import { calculRCA, etapaDosar, fmtDate, prioritateDosar, todayStr, urgentaDosar, zileScurseDeLaPredare } from '@/lib/rca-calc'
+import { addDaysIso, calculRCA, etapaDosar, fmtDate, prioritateDosar, todayStr, urgentaDosar, zileScurseDeLaPredare } from '@/lib/rca-calc'
 import { ETAPA_META, type Dosar, type StatusDosar } from '@/lib/types'
 import { cn } from '@/lib/utils'
 import {
@@ -74,6 +74,15 @@ export function DosarCard({
       return () => clearTimeout(t)
     }
   }, [dosar.status])
+
+  // „Amintește-mi": azi, mâine sau o zi aleasă (avizul apare în clopoțel din ziua aceea)
+  const [meniu, setMeniu] = useState(false)
+  const azi = todayStr()
+  const amintireLa = dosar.amintesteMiLa
+  function amintesteMi(la: string) {
+    onPatch(dosar.id, { amintesteMi: true, amintesteMiLa: la })
+    setMeniu(false)
+  }
 
   const [blocat, setBlocat] = useState<string | null>(null)
   const [shaking, setShaking] = useState(false)
@@ -199,7 +208,7 @@ export function DosarCard({
       </div>
 
       <div className="relative col-span-2 flex min-w-0 flex-col gap-1.5 sm:col-span-1">
-        <DropdownMenu>
+        <DropdownMenu open={meniu} onOpenChange={setMeniu}>
           <DropdownMenuTrigger asChild>
             <button
               type="button"
@@ -209,7 +218,13 @@ export function DosarCard({
             >
               <span className="size-[7px] rounded-full" style={{ background: meta.color, boxShadow: `0 0 8px 1px ${hex(meta.color, 'cc')}` }} />
               <span className="min-w-0 flex-1 truncate text-left">{meta.label}</span>
-              {dosar.amintesteMi && <Bell className="size-[11px] shrink-0 text-[#fb923c]" strokeWidth={2.5} aria-label="Amintește-mi" />}
+              {dosar.amintesteMi && (
+                <Bell
+                  className={cn('size-[11px] shrink-0 text-[#fb923c]', amintireLa && amintireLa > azi && 'opacity-50')}
+                  strokeWidth={2.5}
+                  aria-label={amintireLa && amintireLa > azi ? `Amintește-mi pe ${fmtDate(amintireLa)}` : 'Amintește-mi'}
+                />
+              )}
               <ChevronDown className="size-[11px]" strokeWidth={2.5} aria-hidden="true" />
             </button>
           </DropdownMenuTrigger>
@@ -217,10 +232,40 @@ export function DosarCard({
             <p className="px-2 py-1.5 text-[11px] leading-snug text-muted-foreground">
               Etapa se schimbă singură din bifele Predat, Preluat și Finalizat.
             </p>
-            <DropdownMenuItem onClick={() => onPatch(dosar.id, { amintesteMi: !dosar.amintesteMi })}>
-              {dosar.amintesteMi ? <BellOff className="size-4" aria-hidden="true" /> : <Bell className="size-4" aria-hidden="true" />}
-              {dosar.amintesteMi ? 'Gata, scoate din clopoțel' : 'Amintește-mi (apare în clopoțel)'}
-            </DropdownMenuItem>
+            {dosar.amintesteMi ? (
+              <>
+                <p className="flex items-center gap-1.5 px-2 pb-1 text-[11.5px] font-bold text-[#fb923c]">
+                  <Bell className="size-3.5" aria-hidden="true" />
+                  {amintireLa && amintireLa > azi ? `Îți amintesc pe ${fmtDate(amintireLa)}` : 'Apare în clopoțel'}
+                </p>
+                <DropdownMenuItem onClick={() => onPatch(dosar.id, { amintesteMi: false, amintesteMiLa: '' })}>
+                  <BellOff className="size-4" aria-hidden="true" />
+                  Gata, scoate din clopoțel
+                </DropdownMenuItem>
+              </>
+            ) : (
+              <>
+                <DropdownMenuItem onClick={() => amintesteMi('')}>
+                  <Bell className="size-4" aria-hidden="true" />
+                  Amintește-mi azi
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => amintesteMi(addDaysIso(azi, 1))}>
+                  <Bell className="size-4" aria-hidden="true" />
+                  Amintește-mi mâine
+                </DropdownMenuItem>
+                <label className="flex items-center gap-2 rounded-sm px-2 py-1.5 text-sm">
+                  <CalendarDays className="size-4 text-muted-foreground" aria-hidden="true" />
+                  <span className="shrink-0">În ziua</span>
+                  <input
+                    type="date"
+                    min={azi}
+                    onChange={(e) => e.target.value && amintesteMi(e.target.value)}
+                    onKeyDown={(e) => e.stopPropagation()}
+                    className="min-w-0 flex-1 rounded-md border border-input bg-transparent px-1.5 py-0.5 text-[12px] [color-scheme:dark]"
+                  />
+                </label>
+              </>
+            )}
           </DropdownMenuContent>
         </DropdownMenu>
         <div className="flex min-w-0 flex-col gap-0.5 text-[11px]">
