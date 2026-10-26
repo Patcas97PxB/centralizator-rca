@@ -306,7 +306,8 @@ export function DocumenteModal({
                 <div
                   key={key}
                   className={cn(
-                    'flex items-center gap-[11px] rounded-[13px] border px-3 py-2.5 transition-colors',
+                    // pe telefon butoanele trec sub nume, ca numele sa se vada intreg
+                    'flex flex-wrap items-center gap-x-[11px] gap-y-2 rounded-[13px] border px-3 py-2.5 transition-colors sm:flex-nowrap',
                     are ? 'border-[#00f5a0]/35 bg-[#00f5a0]/[.06]' : optional ? 'border-[#253150] bg-white/[.02] opacity-70' : 'border-[#2c3a5c] bg-white/[.02]',
                   )}
                 >
@@ -321,7 +322,7 @@ export function DocumenteModal({
                     {are ? <Check className="size-[17px]" strokeWidth={2.6} aria-hidden="true" /> : <span className="size-2 rounded-full bg-current opacity-50" />}
                   </span>
                   <div className="min-w-0 flex-1">
-                    <div className="flex items-center gap-2 truncate text-[13.5px] font-bold text-[#f1f5f9]">
+                    <div className="flex flex-wrap items-center gap-x-2 text-[13.5px] font-bold text-[#f1f5f9] sm:flex-nowrap sm:truncate">
                       {docLabelText(key)}
                       {key === 'contract' && (
                         <span className="rounded-full border border-[#a855f7]/50 bg-[#a855f7]/15 px-1.5 py-px text-[9px] font-extrabold tracking-wide text-[#d8b4fe]">OBLIGATORIU</span>
@@ -361,7 +362,7 @@ export function DocumenteModal({
                     )}
                   </div>
                   {are ? null : (
-                    <>
+                    <div className="flex w-full items-center gap-1 pl-[45px] sm:w-auto sm:pl-0">
                       {!optional && (
                         <button
                           type="button"
@@ -381,7 +382,7 @@ export function DocumenteModal({
                         {optional ? 'obligatoriu' : 'nu se aplică'}
                       </button>
                       )}
-                    </>
+                    </div>
                   )}
                 </div>
               )
