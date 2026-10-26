@@ -13,7 +13,7 @@ import {
 } from '@/lib/documente'
 import { citesteContractFinal } from '@/lib/contract-final-import'
 import { ConflictSalvare } from '@/lib/dosare-storage'
-import { majuscule } from '@/lib/majuscule'
+import { formatCanonic, majuscule } from '@/lib/majuscule'
 import { stergeDocumentStocare } from '@/lib/documente-storage'
 import type { Dosar, DocumentDosar } from '@/lib/types'
 import { cn } from '@/lib/utils'
@@ -94,7 +94,7 @@ export function DocumenteModal({
   const procent = st.total > 0 ? Math.round((st.have / st.total) * 100) : 0
 
   function patch(p: Partial<Dosar>) {
-    const next = { ...(latest.current as Dosar), ...majuscule(p) }
+    const next = { ...(latest.current as Dosar), ...formatCanonic(majuscule(p)) }
     latest.current = next
     setDraft(next)
     onSave(next).catch((e) =>

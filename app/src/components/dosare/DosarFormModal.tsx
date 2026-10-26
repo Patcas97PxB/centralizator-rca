@@ -34,7 +34,7 @@ import { calculRCA, etapaDosar, todayStr } from '@/lib/rca-calc'
 import { ConflictSalvare } from '@/lib/dosare-storage'
 import { useDosareContext } from '@/contexts/DosareContext'
 import { ETAPA_META, dosarGol, type Dosar, type Vehicul } from '@/lib/types'
-import { majuscule } from '@/lib/majuscule'
+import { formatCanonic, majuscule } from '@/lib/majuscule'
 import { normDosar } from '@/lib/contract-final'
 import { PreluareDateSection } from './PreluareDateSection'
 import { DevizRecalculeazaButton } from './DevizRecalculeazaButton'
@@ -133,7 +133,7 @@ export function DosarFormModal({
         return
       }
     }
-    await salveaza(majuscule(draft))
+    await salveaza(formatCanonic(majuscule(draft)))
   }
 
   const etapa = ETAPA_META[etapaDosar(draft)]

@@ -1,3 +1,5 @@
+import { formatCanonic } from './majuscule'
+
 // Forma unui dosar, asa cum e stocata azi in Supabase (tabelul `dosare`, coloana `data`
 // jsonb — vezi supabase/migrations/20260921120000_dosare_servicii_per_row.sql). Portata
 // din campurile citite/scrise de saveDosar()/openModal() in index.html.
@@ -91,14 +93,14 @@ export const ETAPA_META: Record<Etapa, { label: string; color: string; detaliu: 
 // DocumenteSection) presupune ca sunt mereu array-uri; fara normalizare, un asemenea dosar
 // arunca o eroare la deschidere si utilizatorul vede "nu se intampla nimic". Se aplica o
 // singura data, la citirea din Supabase (dosare-storage.ts), ca tot codul din aval sa
-// primeasca mereu un obiect complet.
+// primeasca mereu un obiect complet. Nr. auto / RBH vechi se aduc la formatul comun (formatCanonic).
 // RCA vinovat / RCA pagubit au fost unite cu documentele partii respective.
 const ETICHETE_VECHI_DOC: Record<string, string> = { rca_vinovat: 'doc_vinovat', rca_pagubit: 'doc_pagubit' }
 
 export function normalizeazaDosar(raw: Partial<Dosar> & { id: string }): Dosar {
   return {
     ...dosarGol(),
-    ...raw,
+    ...formatCanonic(raw),
     // vechiul status „De sunat" devine avizul „Amintește-mi"
     amintesteMi: raw.amintesteMi ?? raw.status === 'de_sunat',
     documente: Array.isArray(raw.documente) ? raw.documente.map((x) => ({ ...x, eticheta: ETICHETE_VECHI_DOC[x.eticheta] ?? x.eticheta })) : [],
