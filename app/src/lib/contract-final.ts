@@ -74,6 +74,8 @@ export interface ContractFinalExtras {
   nrDosar: string
   dataPredareReala?: string
   dataPreluareReala?: string
+  /** Proprietarul mașinii păgubite (colț dreapta-sus, lângă Referință) — pentru Document intrare/ieșire. */
+  proprietar?: string
   valid: boolean
 }
 
@@ -169,6 +171,17 @@ export function parseContractFinalText(fullText: string, dinOcr = false): Contra
     // aceeasi regula ca la PRELUARE DATE (shared/extractie.js).
     const mHdr = out.nrDosar.match(/^HDR\s*(\d+)/i)
     if (mHdr) out.nrDosar = 'HDR ' + mHdr[1]
+  }
+
+  // Proprietar (colț dreapta-sus, lângă Referință): „Proprietar: RCI LEASING ROMANIA IFN SA".
+  // Valoarea se opreste la urmatoarea eticheta („Referinta", „Nr.", „Adresa"... sau „Cuvant:").
+  // Se ignora Autonom (proprietarul masinii de inlocuire, daca apare si el pe contract).
+  const RE_PROP = /Proprietar(?:\s*auto)?\s*[:;.]?\s*(.{2,90}?)(?=\s+(?:Referin|Detalii|Nr[.,]|CUI|CNP|C\.?U\.?I|Adres|Tel|Data|Client|Marca|Clasa|Total|Beneficiar|Asigurat|Telefon|Email|E-mail|Serie|Cod)|\s+[A-Za-zăâîșțĂÂÎȘȚ.]{2,20}\s*:|$)/gi
+  for (const m of norm.matchAll(RE_PROP)) {
+    const v = m[1].replace(/^[\s:;.,-]+|[\s:;.,-]+$/g, '').trim()
+    if (!/[A-Za-zĂÂÎȘȚăâîșț]{2}/.test(v) || /autonom/i.test(v)) continue
+    out.proprietar = v.toLocaleUpperCase('ro-RO')
+    break
   }
 
   const ALIASE: Record<string, RegExp> = {

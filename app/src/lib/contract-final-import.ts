@@ -73,6 +73,12 @@ export async function citesteContractFinal(
     if (ex.valoare) { patch.valoareContract = ex.valoare; gasite.push('valoare contract: ' + ex.valoare + ' ' + monedaDosar(dosar) + ' (fără TVA)') }
     if (ex.valoareCuTVA) { patch.valoareContractCuTVA = ex.valoareCuTVA; gasite.push('valoare cu TVA: ' + ex.valoareCuTVA + ' ' + monedaDosar(dosar)) }
 
+    // Pentru „Document intrare/ieșire service": proprietarul si datele reale din contract.
+    patch.proprietarCautat = true
+    if (ex.proprietar) { patch.numeClient = ex.proprietar; gasite.push('proprietar: ' + ex.proprietar) }
+    if (ex.dataPredareReala) patch.dataPlecareContract = ex.dataPredareReala
+    if (ex.dataPreluareReala) patch.dataPredareContract = ex.dataPreluareReala
+
     if (ex.asigurator) {
       if (!dosar.asigurator) { patch.asigurator = ex.asigurator; gasite.push('asigurator') }
       else if (dosar.asigurator !== ex.asigurator) gasite.push(`⚠️ asigurator detectat "${ex.asigurator}" diferă de cel selectat ("${dosar.asigurator}")`)

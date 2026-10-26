@@ -1,7 +1,9 @@
 import { useRef, useState } from 'react'
-import { FileCheck2 } from 'lucide-react'
+import { FileCheck2, FileOutput } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { citesteContractFinal } from '@/lib/contract-final-import'
+import { areContractFinal } from '@/lib/doc-intrare-iesire'
+import { DocIntrareIesireModal } from './DocIntrareIesireModal'
 import type { Dosar } from '@/lib/types'
 
 // Citeste contractul final (export winMentor) si completeaza/verifica campurile — daca datele nu se
@@ -16,6 +18,8 @@ export function ContractFinalSection({
   const [status, setStatus] = useState<{ text: string; eroare: boolean } | null>(null)
   const [seIncarca, setSeIncarca] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
+  const [docDeschis, setDocDeschis] = useState(false)
+  const areContract = areContractFinal(draft)
 
   async function handleFile(file: File) {
     setSeIncarca(true)
@@ -50,6 +54,21 @@ export function ContractFinalSection({
       </div>
       <p className="text-xs text-muted-foreground">Exportul final (winMentor), PDF sau scanat/poză — verifică și completează valoarea, zilele și durata contractului.</p>
       {status && <p className={'text-xs ' + (status.eroare ? 'text-destructive font-medium' : 'text-foreground')}>{status.text}</p>}
+      <div className="flex flex-wrap items-center gap-2 border-t border-border pt-2">
+        <Button
+          type="button"
+          size="sm"
+          variant="secondary"
+          disabled={!areContract || seIncarca}
+          title={areContract ? 'Proprietarul și datele se iau din contractul final' : 'Încarcă întâi contractul final'}
+          onClick={() => setDocDeschis(true)}
+        >
+          <FileOutput className="size-4" aria-hidden="true" />
+          Document intrare/ieșire
+        </Button>
+        {!areContract && <span className="text-xs text-muted-foreground">Se activează după încărcarea contractului final.</span>}
+      </div>
+      <DocIntrareIesireModal dosar={draft} open={docDeschis} onClose={() => setDocDeschis(false)} onPatch={onPatch} />
     </div>
   )
 }

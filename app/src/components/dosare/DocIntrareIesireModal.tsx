@@ -17,7 +17,7 @@ const CAMPURI: { k: keyof DateIntrareIesire; label: string; placeholder?: string
   { k: 'dataIesire', label: 'Data ieșire reparație', placeholder: 'zz.ll.aaaa' },
 ]
 
-// Fereastra butonului „Intrare/ieșire" de pe card: campurile vin din dosar, se pot corecta,
+// Fereastra butonului „Document intrare/ieșire" din Editează (sectiunea Contract final): campurile vin din dosar, se pot corecta,
 // apoi se descarca documentul .odt (sablonul service-ului). Numele clientului se tine in dosar.
 export function DocIntrareIesireModal({
   dosar,
@@ -28,7 +28,7 @@ export function DocIntrareIesireModal({
   dosar: Dosar
   open: boolean
   onClose: () => void
-  onPatch: (id: string, patch: Partial<Dosar>) => void
+  onPatch: (patch: Partial<Dosar>) => void
 }) {
   const [date, setDate] = useState<DateIntrareIesire>(() => dateDinDosar(dosar))
 
@@ -41,7 +41,7 @@ export function DocIntrareIesireModal({
   function descarca() {
     descarcaOdt(date)
     const client = date.client.trim().toLocaleUpperCase('ro-RO')
-    if (client !== (dosar.numeClient ?? '')) onPatch(dosar.id, { numeClient: client })
+    if (client !== (dosar.numeClient ?? '')) onPatch({ numeClient: client })
     onClose()
   }
 

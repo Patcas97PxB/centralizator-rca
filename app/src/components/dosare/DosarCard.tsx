@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { AlertTriangle, ArrowDown, Bell, BellOff, Check, ChevronDown, FileOutput, FolderPlus, ImageIcon, Pencil } from 'lucide-react'
-import { DocIntrareIesireModal } from './DocIntrareIesireModal'
+import { AlertTriangle, ArrowDown, Bell, BellOff, Check, ChevronDown, FolderPlus, ImageIcon, Pencil } from 'lucide-react'
 import { imagineMasina } from '@/lib/cars'
 import { cheiLocale, useFolderLocal } from '@/lib/folder-local'
 import { ALPHA, accentStyle, hex } from '@/lib/color'
@@ -76,7 +75,6 @@ export function DosarCard({
     }
   }, [dosar.status])
 
-  const [docIIDeschis, setDocIIDeschis] = useState(false)
   const [blocat, setBlocat] = useState<string | null>(null)
   const [shaking, setShaking] = useState(false)
   useEffect(() => {
@@ -372,27 +370,15 @@ export function DosarCard({
         >
           <Check className="size-[17px]" strokeWidth={3} aria-hidden="true" />
         </button>
-        <div className="flex w-full max-w-[170px] min-w-0 items-center gap-1.5 justify-self-end">
-          <button
-            type="button"
-            onClick={() => setDocIIDeschis(true)}
-            title="Document intrare/ieșire service"
-            aria-label="Document intrare/ieșire service"
-            className="flex size-7 shrink-0 items-center justify-center rounded-[9px] border border-[#2c3a5c] bg-[#1a2335] text-[#e2e8f5] transition-colors hover:border-[#3b4d78] hover:bg-[#222d46]"
-          >
-            <FileOutput className="size-[14px]" aria-hidden="true" />
-          </button>
-          <button
-            type="button"
-            onClick={() => onDocumente(dosar.id)}
-            className="flex h-7 min-w-0 flex-1 items-center justify-center gap-1.5 overflow-hidden whitespace-nowrap rounded-[9px] border border-[#2c3a5c] bg-[#1a2335] px-2.5 text-xs font-bold text-[#e2e8f5] transition-colors hover:border-[#3b4d78] hover:bg-[#222d46]"
-          >
-            <FolderPlus className="size-[13px] shrink-0" aria-hidden="true" />
-            <span className="truncate">Documente</span>
-          </button>
-        </div>
+        <button
+          type="button"
+          onClick={() => onDocumente(dosar.id)}
+          className="flex h-7 w-full max-w-[170px] min-w-0 items-center justify-center gap-1.5 justify-self-end overflow-hidden whitespace-nowrap rounded-[9px] border border-[#2c3a5c] bg-[#1a2335] px-2.5 text-xs font-bold text-[#e2e8f5] transition-colors hover:border-[#3b4d78] hover:bg-[#222d46]"
+        >
+          <FolderPlus className="size-[13px] shrink-0" aria-hidden="true" />
+          <span className="truncate">Documente</span>
+        </button>
       </div>
-      <DocIntrareIesireModal dosar={dosar} open={docIIDeschis} onClose={() => setDocIIDeschis(false)} onPatch={onPatch} />
     </div>
   )
 }

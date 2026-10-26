@@ -31,6 +31,9 @@ export function formatNrAuto(nr: string): string {
 const dataSauGol = (d?: string | null) => (d ? fmtDate(d) : '')
 
 /** Valorile propuse din dosar; utilizatorul le poate schimba in fereastra inainte de descarcare. */
+/** Butonul e activ doar dupa ce s-a incarcat contractul final. */
+export const areContractFinal = (d: Dosar) => !!(d.contractFinalIncarcat || d.zileContractFinal || d.valoareContract)
+
 export function dateDinDosar(d: Dosar): DateIntrareIesire {
   return {
     nrComanda: d.nrDosar ?? '',
@@ -38,8 +41,9 @@ export function dateDinDosar(d: Dosar): DateIntrareIesire {
     client: d.numeClient ?? '',
     tipAuto: (d.marcaModel ?? '').toLocaleUpperCase('ro-RO'),
     nrAuto: formatNrAuto(d.nrAutoPagubit ?? ''),
-    dataIntrare: dataSauGol(d.start),
-    dataIesire: dataSauGol(calculRCA(d).dataPreluare ?? d.end),
+    // datele reale din contractul final, altfel cele din dosar
+    dataIntrare: dataSauGol(d.dataPlecareContract || d.start),
+    dataIesire: dataSauGol(d.dataPredareContract || calculRCA(d).dataPreluare || d.end),
   }
 }
 
