@@ -61,6 +61,9 @@ function sumaOcr(tok: string): number | null {
 }
 const suma2 = (n: number) => n.toFixed(2)
 
+/** Creste cand se schimba regula de citire a clientului — contractele de pe laptop se recitesc o data. */
+export const VERSIUNE_CLIENT = 2
+
 export interface ContractFinalExtras {
   nrContract: string
   clasa: string
@@ -74,7 +77,7 @@ export interface ContractFinalExtras {
   nrDosar: string
   dataPredareReala?: string
   dataPreluareReala?: string
-  /** Proprietarul mașinii păgubite (colț dreapta-sus, lângă Referință) — pentru Document intrare/ieșire. */
+  /** Clientul (caseta FACTURARE/PAGUBIT sau „Reprezentant Client”) — pentru Document intrare/ieșire. */
   proprietar?: string
   valid: boolean
 }
@@ -173,12 +176,18 @@ export function parseContractFinalText(fullText: string, dinOcr = false): Contra
     if (mHdr) out.nrDosar = 'HDR ' + mHdr[1]
   }
 
-  // Proprietar (colț dreapta-sus, lângă Referință): „Proprietar: RCI LEASING ROMANIA IFN SA".
-  // Valoarea se opreste la urmatoarea eticheta („Referinta", „Nr.", „Adresa"... sau „Cuvant:").
-  // Se ignora Autonom (proprietarul masinii de inlocuire, daca apare si el pe contract).
-  const RE_PROP = /Proprietar(?:\s*auto)?\s*[:;.]?\s*(.{2,90}?)(?=\s+(?:Referin|Detalii|Nr[.,]|CUI|CNP|C\.?U\.?I|Adres|Tel|Data|Client|Marca|Clasa|Total|Beneficiar|Asigurat|Telefon|Email|E-mail|Serie|Cod)|\s+[A-Za-zăâîșțĂÂÎȘȚ.]{2,20}\s*:|$)/gi
-  for (const m of norm.matchAll(RE_PROP)) {
-    const v = m[1].replace(/^[\s:;.,-]+|[\s:;.,-]+$/g, '').trim()
+  // Clientul / proprietarul mașinii păgubite (pentru Document intrare/ieșire): caseta din dreapta-sus
+  // „INFORMATII FACTURARE/PAGUBIT — CLIENT: Alexei Ciprian Marian" (la firme numele trece pe 2 randuri:
+  // „CASA DE SCHIMB VALUTAR / TAVI SRL"), apoi jos „Reprezentant Client: …" (verificat pe 2 contracte
+  // reale, 26.10.2026). „Client" fara „:" de pe PV-ul de predare e asiguratorul — nu se ia.
+  const curata = (v: string) => v.replace(/^[\s:;.,-]+|[\s:;.,-]+$/g, '').replace(/\s+/g, ' ').trim()
+  const candidati = [
+    norm.match(/FACTURARE\s*\/?\s*P[AĂ]GUBIT\s*CLIENT\s*[:;]\s*(.{2,100}?)(?=\s+(?:[TȚ]ara|CUI|C\.U\.I|Tel|E-?ma|Referin|Adres|Detalii)\b|$)/i)?.[1],
+    norm.match(/Reprezentant\s*Client\s*[:;]\s*(.{2,100}?)(?=\s+(?:Data|Semn|Reprezentant|Va\s+multumim)\b|$)/i)?.[1],
+    norm.match(/Proprietar(?:\s*auto)?\s*[:;]\s*(.{2,100}?)(?=\s+(?:Referin|Detalii|Nr[.,]|CUI|Adres|Tel|Data)\b|$)/i)?.[1],
+  ]
+  for (const c of candidati) {
+    const v = c ? curata(c) : ''
     if (!/[A-Za-zĂÂÎȘȚăâîșț]{2}/.test(v) || /autonom/i.test(v)) continue
     out.proprietar = v.toLocaleUpperCase('ro-RO')
     break

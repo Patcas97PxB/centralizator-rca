@@ -1,4 +1,4 @@
-import { acelasiDosar, aproapeLaFel, detectContractGresit, normPlate, parseContractFinalText } from '@/lib/contract-final'
+import { acelasiDosar, aproapeLaFel, detectContractGresit, normPlate, parseContractFinalText, VERSIUNE_CLIENT } from '@/lib/contract-final'
 import { mesajEroareOCR, ocrImageToText, pdfLibDisponibil, pdfToImageBlobs, readPdfText } from '@/lib/pdf-ocr'
 import { monedaDosar } from '@/lib/financiar'
 import type { Dosar } from '@/lib/types'
@@ -74,8 +74,8 @@ export async function citesteContractFinal(
     if (ex.valoareCuTVA) { patch.valoareContractCuTVA = ex.valoareCuTVA; gasite.push('valoare cu TVA: ' + ex.valoareCuTVA + ' ' + monedaDosar(dosar)) }
 
     // Pentru „Document intrare/ieșire service": proprietarul si datele reale din contract.
-    patch.proprietarCautat = true
-    if (ex.proprietar) { patch.numeClient = ex.proprietar; gasite.push('proprietar: ' + ex.proprietar) }
+    patch.clientCititV = VERSIUNE_CLIENT
+    if (ex.proprietar) { patch.numeClient = ex.proprietar; gasite.push('client: ' + ex.proprietar) }
     if (ex.dataPredareReala) patch.dataPlecareContract = ex.dataPredareReala
     if (ex.dataPreluareReala) patch.dataPredareContract = ex.dataPreluareReala
 

@@ -1,5 +1,6 @@
 import { useEffect, useRef, useSyncExternalStore } from 'react'
 import { citesteContractFinal } from './contract-final-import'
+import { VERSIUNE_CLIENT } from './contract-final'
 import { fisiereLocale, useFolderLocal } from './folder-local'
 import type { Dosar } from './types'
 
@@ -29,7 +30,7 @@ export function useStariContracteLaptop(): Map<string, StareContractLaptop> {
 
 const incercate = new Set<string>()
 // fara valoare/zile, sau citit inainte sa se caute si proprietarul (Document intrare/iesire)
-export const necitit = (d: Dosar) => (!d.valoareContract && !d.zileContractFinal) || !d.proprietarCautat
+export const necitit = (d: Dosar) => (!d.valoareContract && !d.zileContractFinal) || (d.clientCititV ?? 0) < VERSIUNE_CLIENT
 
 /** Ruleaza in DosareProvider: citeste pe rand contractele de pe laptop ale dosarelor fara valoare. */
 export function useCitireContracteLaptop(dosare: Dosar[], salveaza: (d: Dosar) => Promise<unknown>) {

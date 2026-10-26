@@ -65,8 +65,8 @@ export interface Dosar {
   /** Din contractul final: data reală a plecării clientului cu mașina / a predării ei înapoi (YYYY-MM-DD). */
   dataPlecareContract?: string
   dataPredareContract?: string
-  /** Contractul a fost citit și pentru proprietar (altfel se recitește de pe laptop o dată). */
-  proprietarCautat?: boolean
+  /** Versiunea regulii cu care s-a căutat clientul în contract (sub `VERSIUNE_CLIENT` → se recitește de pe laptop o dată). */
+  clientCititV?: number
   telService: string
   start: string
   end: string
