@@ -7,6 +7,8 @@ import { docStatus, docLabelText, lipsuriFinalizare } from '@/lib/documente'
 import { calculRCA, etapaDosar, fmtDate, prioritateDosar, todayStr, urgentaDosar, zileScurseDeLaPredare } from '@/lib/rca-calc'
 import { ETAPA_META, type Dosar, type StatusDosar } from '@/lib/types'
 import { cn } from '@/lib/utils'
+import { faraReminder, fmtZi, textCand } from '@/lib/reminder'
+import { ReminderModal } from './ReminderModal'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -75,6 +77,7 @@ export function DosarCard({
     }
   }, [dosar.status])
 
+  const [reminderDeschis, setReminderDeschis] = useState(false)
   const [blocat, setBlocat] = useState<string | null>(null)
   const [shaking, setShaking] = useState(false)
   useEffect(() => {
@@ -203,13 +206,19 @@ export function DosarCard({
           <DropdownMenuTrigger asChild>
             <button
               type="button"
-              title={meta.label}
+              title={meta.label + (dosar.amintesteMi ? ` · Amintește-mi ${textCand(dosar.amintesteLa)}${dosar.amintesteNota ? ': ' + dosar.amintesteNota : ''}` : '')}
               className="flex w-full items-center gap-1.5 overflow-hidden whitespace-nowrap rounded-full border px-[9px] py-[5px] text-[10px] font-extrabold tracking-[.02em] transition-[filter] hover:brightness-125"
               style={{ borderColor: hex(meta.color, '8c'), background: accent.badgeBg, color: meta.color }}
             >
               <span className="size-[7px] rounded-full" style={{ background: meta.color, boxShadow: `0 0 8px 1px ${hex(meta.color, 'cc')}` }} />
               <span className="min-w-0 flex-1 truncate text-left">{meta.label}</span>
-              {dosar.amintesteMi && <Bell className="size-[11px] shrink-0 text-[#fb923c]" strokeWidth={2.5} aria-label="Amintește-mi" />}
+              {dosar.amintesteMi && (
+                <Bell
+                  className="size-[11px] shrink-0 text-[#fb923c]"
+                  strokeWidth={2.5}
+                  aria-label={'Amintește-mi ' + textCand(dosar.amintesteLa)}
+                />
+              )}
               <ChevronDown className="size-[11px]" strokeWidth={2.5} aria-hidden="true" />
             </button>
           </DropdownMenuTrigger>
@@ -217,10 +226,18 @@ export function DosarCard({
             <p className="px-2 py-1.5 text-[11px] leading-snug text-muted-foreground">
               Etapa se schimbă singură din bifele Predat, Preluat și Finalizat.
             </p>
-            <DropdownMenuItem onClick={() => onPatch(dosar.id, { amintesteMi: !dosar.amintesteMi })}>
-              {dosar.amintesteMi ? <BellOff className="size-4" aria-hidden="true" /> : <Bell className="size-4" aria-hidden="true" />}
-              {dosar.amintesteMi ? 'Gata, scoate din clopoțel' : 'Amintește-mi (apare în clopoțel)'}
+            <DropdownMenuItem onClick={() => setReminderDeschis(true)}>
+              <Bell className="size-4" aria-hidden="true" />
+              {dosar.amintesteMi
+                ? `Amintește-mi ${textCand(dosar.amintesteLa)}${dosar.amintesteLa ? ' (' + fmtZi(dosar.amintesteLa) + ')' : ''} — schimbă`
+                : 'Amintește-mi…'}
             </DropdownMenuItem>
+            {dosar.amintesteMi && (
+              <DropdownMenuItem onClick={() => onPatch(dosar.id, faraReminder)}>
+                <BellOff className="size-4" aria-hidden="true" />
+                Gata, scoate reminderul
+              </DropdownMenuItem>
+            )}
           </DropdownMenuContent>
         </DropdownMenu>
         <div className="flex min-w-0 flex-col gap-0.5 text-[11px]">
@@ -379,6 +396,7 @@ export function DosarCard({
           <span className="truncate">Documente</span>
         </button>
       </div>
+      <ReminderModal dosar={dosar} open={reminderDeschis} onClose={() => setReminderDeschis(false)} onPatch={(p) => onPatch(dosar.id, p)} />
     </div>
   )
 }

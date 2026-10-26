@@ -44,6 +44,10 @@ export interface Dosar {
   categoriiFolder?: Record<string, string>
   /** Marcat de mana „Amintește-mi": dosarul apare in clopotel. */
   amintesteMi?: boolean
+  /** Ziua din care reminderul apare în clopoțel (YYYY-MM-DD); gol = imediat. */
+  amintesteLa?: string
+  /** Ce ai de făcut („Sună service-ul”, text liber). */
+  amintesteNota?: string
   clasaAuto: string
   valoareContract: string
   valoareContractCuTVA: string
@@ -58,6 +62,13 @@ export interface Dosar {
   dataOferta: string
   service: string
   telClient: string
+  /** Numele clientului (proprietarul mașinii păgubite) — completat în „Document intrare/ieșire”. */
+  numeClient?: string
+  /** Din contractul final: data reală a plecării clientului cu mașina / a predării ei înapoi (YYYY-MM-DD). */
+  dataPlecareContract?: string
+  dataPredareContract?: string
+  /** Versiunea regulii cu care s-a căutat clientul în contract (sub `VERSIUNE_CLIENT` → se recitește de pe laptop o dată). */
+  clientCititV?: number
   telService: string
   start: string
   end: string

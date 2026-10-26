@@ -61,6 +61,9 @@ function sumaOcr(tok: string): number | null {
 }
 const suma2 = (n: number) => n.toFixed(2)
 
+/** Creste cand se schimba regula de citire a clientului — contractele de pe laptop se recitesc o data. */
+export const VERSIUNE_CLIENT = 2
+
 export interface ContractFinalExtras {
   nrContract: string
   clasa: string
@@ -74,6 +77,8 @@ export interface ContractFinalExtras {
   nrDosar: string
   dataPredareReala?: string
   dataPreluareReala?: string
+  /** Clientul (caseta FACTURARE/PAGUBIT sau „Reprezentant Client”) — pentru Document intrare/ieșire. */
+  proprietar?: string
   valid: boolean
 }
 
@@ -162,11 +167,30 @@ export function parseContractFinalText(fullText: string, dinOcr = false): Contra
     // La scan, un nr. auto care nu arata a nr. romanesc e aproape sigur citit gresit — il ignoram.
     const plate = mRef[1].toUpperCase()
     if (!dinOcr || RE_NR_RO.test(plate)) out.nrAutoPagubit = formatPlate(plate)
-    out.nrDosar = mRef[2].trim()
+    // un nr. de dosar are mereu cifre; un cuvant ("Detalii" de pe randul urmator, cand campul e gol)
+    // nu e nr. de dosar — altfel contractul bun era respins ca "al dosarului Detalii"
+    out.nrDosar = /\d/.test(mRef[2]) ? mRef[2].trim() : ''
     // Hellas Direct: formatul canonic e "HDR 121926" — fara sufixul de dupa liniuta ("HDR121926-4698"),
     // aceeasi regula ca la PRELUARE DATE (shared/extractie.js).
     const mHdr = out.nrDosar.match(/^HDR\s*(\d+)/i)
     if (mHdr) out.nrDosar = 'HDR ' + mHdr[1]
+  }
+
+  // Clientul / proprietarul mașinii păgubite (pentru Document intrare/ieșire): caseta din dreapta-sus
+  // „INFORMATII FACTURARE/PAGUBIT — CLIENT: Alexei Ciprian Marian" (la firme numele trece pe 2 randuri:
+  // „CASA DE SCHIMB VALUTAR / TAVI SRL"), apoi jos „Reprezentant Client: …" (verificat pe 2 contracte
+  // reale, 26.10.2026). „Client" fara „:" de pe PV-ul de predare e asiguratorul — nu se ia.
+  const curata = (v: string) => v.replace(/^[\s:;.,-]+|[\s:;.,-]+$/g, '').replace(/\s+/g, ' ').trim()
+  const candidati = [
+    norm.match(/FACTURARE\s*\/?\s*P[AĂ]GUBIT\s*CLIENT\s*[:;]\s*(.{2,100}?)(?=\s+(?:[TȚ]ara|CUI|C\.U\.I|Tel|E-?ma|Referin|Adres|Detalii)\b|$)/i)?.[1],
+    norm.match(/Reprezentant\s*Client\s*[:;]\s*(.{2,100}?)(?=\s+(?:Data|Semn|Reprezentant|Va\s+multumim)\b|$)/i)?.[1],
+    norm.match(/Proprietar(?:\s*auto)?\s*[:;]\s*(.{2,100}?)(?=\s+(?:Referin|Detalii|Nr[.,]|CUI|Adres|Tel|Data)\b|$)/i)?.[1],
+  ]
+  for (const c of candidati) {
+    const v = c ? curata(c) : ''
+    if (!/[A-Za-zĂÂÎȘȚăâîșț]{2}/.test(v) || /autonom/i.test(v)) continue
+    out.proprietar = v.toLocaleUpperCase('ro-RO')
+    break
   }
 
   const ALIASE: Record<string, RegExp> = {
@@ -197,6 +221,13 @@ export function detectContractGresit(ex: ContractFinalExtras, curent: DosarPentr
   const difera = (a: string, b: string) => (dinOcr ? !aproapeLaFel(a, b) : a !== b)
   // Nr. rezervare se scrie de mana in mai multe feluri ("RBH/29770", "RBH 29770", "29770") — comparam cifrele.
   const cifre = (x: string) => x.replace(/\D/g, '')
+  // Daca un identificator sigur se potriveste (nr. auto pagubit, nr. dosar sau nr. rezervare RBH),
+  // contractul e al acestui dosar — restul diferentelor (citiri gresite, campuri goale sau scrise altfel)
+  // nu-l mai blocheaza (cererea utilizatorului, 22.10.2026).
+  const acelasiAuto = !!(ex.nrAutoPagubit && curent.nrAutoPagubit && !difera(normPlate(ex.nrAutoPagubit), normPlate(curent.nrAutoPagubit)))
+  const acelasiNrDosar = !!(ex.nrDosar && curent.nrDosar && acelasiDosar(ex.nrDosar, curent.nrDosar, dinOcr))
+  const aceeasiRezervare = !!(ex.nrContract && cifre(curent.nrRezervare) && !difera(cifre(ex.nrContract), cifre(curent.nrRezervare)))
+  if (acelasiAuto || acelasiNrDosar || aceeasiRezervare) return null
   if (ex.nrContract && cifre(curent.nrRezervare) && difera(cifre(ex.nrContract), cifre(curent.nrRezervare))) {
     return `⛔ CONTRACT GREȘIT — ați încărcat contractul de la ${ex.nrContract} (acest dosar e ${curent.nrRezervare}).`
   }

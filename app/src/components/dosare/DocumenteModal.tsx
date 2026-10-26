@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, type DragEvent } from 'react'
-import { AlertTriangle, ArrowLeftRight, Check, FolderPlus, Laptop, Trash2, Upload, X } from 'lucide-react'
+import { AlertTriangle, ArrowLeftRight, Check, FolderPlus, Laptop, RefreshCw, Trash2, Upload, X } from 'lucide-react'
 import { cheiLocale, fisiereLocale, useFolderLocal, type FisierLocal } from '@/lib/folder-local'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
@@ -12,6 +12,7 @@ import {
   lipsuriFinalizare,
 } from '@/lib/documente'
 import { citesteContractFinal } from '@/lib/contract-final-import'
+import { useStariContracteLaptop } from '@/lib/contracte-laptop'
 import { ConflictSalvare } from '@/lib/dosare-storage'
 import { formatCanonic, majuscule } from '@/lib/majuscule'
 import { stergeDocumentStocare } from '@/lib/documente-storage'
@@ -88,6 +89,32 @@ export function DocumenteModal({
   }, [open, dosar?.id])
 
   const folder = useFolderLocal()
+
+  // Contractul final din folderul de pe laptop se citeste singur in fundal (lib/contracte-laptop.ts);
+  // butonul ⟳ de langa fisier il recitește de mana (doar in browser, nu se urca).
+  async function citesteContractLocal(f: FisierLocal, manual = false) {
+    if (!f.deschide || seIncarca) return
+    setSeIncarca(true)
+    setStatus('Se citește contractul final ' + f.nume + ' de pe laptop…')
+    try {
+      const file = await f.deschide()
+      const r = await citesteContractFinal(file, latest.current as Dosar, setStatus)
+      if (r.valid) patch({ ...r.patch, contractFinalIncarcat: true })
+      setStatus((r.valid ? '' : f.nume + ': ') + r.mesaj, !r.valid)
+    } catch (e) {
+      console.error(e)
+      setStatus(
+        manual
+          ? 'Nu am putut deschide ' + f.nume + ' de pe laptop — apasă butonul cu laptop din antet și dă din nou voie.'
+          : 'Nu am putut citi contractul ' + f.nume + ' de pe laptop.',
+        true,
+      )
+    } finally {
+      setSeIncarca(false)
+    }
+  }
+  const stariLaptop = useStariContracteLaptop()
+  const stareLaptop = draft ? stariLaptop.get(draft.id) : undefined
 
   if (!draft) return null
 
@@ -256,8 +283,8 @@ export function DocumenteModal({
               {folder.permis !== 'granted'
                 ? `Folderul „${folder.nume}” de pe laptop așteaptă permisiunea — apasă iconița cu laptop din antet.`
                 : peLaptop.length > 0
-                  ? `${peLaptop.length} ${peLaptop.length === 1 ? 'fișier găsit' : 'fișiere găsite'} în „${folder.nume}/${draft.nrAutoPagubit}” pe laptop.`
-                  : `Nu am găsit folderul „${draft.nrAutoPagubit || '?'}” în „${folder.nume}” pe laptop.`}
+                  ? `${peLaptop.length} ${peLaptop.length === 1 ? 'fișier găsit' : 'fișiere găsite'} pe laptop pentru ${draft.nrAutoPagubit}.`
+                  : `Nu am găsit pe laptop, în „${folder.nume}”, niciun folder sau fișier cu ${draft.nrAutoPagubit || 'nr. auto'} în nume.`}
             </p>
           )}
 
@@ -293,7 +320,13 @@ export function DocumenteModal({
             }}
           />
 
-          {status && <p className={cn('text-xs leading-snug', statusEroare ? 'font-semibold text-[#ff8a9f]' : 'text-[#aab8d0]')}>{status}</p>}
+          {status ? (
+            <p className={cn('text-xs leading-snug', statusEroare ? 'font-semibold text-[#ff8a9f]' : 'text-[#aab8d0]')}>{status}</p>
+          ) : stareLaptop?.stare === 'citeste' ? (
+            <p className="text-xs leading-snug text-[#aab8d0]">Se citește contractul final de pe laptop…</p>
+          ) : stareLaptop?.stare === 'eroare' && !draft.valoareContract ? (
+            <p className="text-xs font-semibold leading-snug text-[#ff8a9f]">{stareLaptop.mesaj}</p>
+          ) : null}
 
           <div className="flex flex-col gap-2">
             {chei.map((key) => {
@@ -336,6 +369,18 @@ export function DocumenteModal({
                           <div key={'loc-' + f.nume} className="flex items-center gap-1.5 text-[11.5px] text-[#93c5fd]" title="Găsit în folderul dosarului de pe laptop">
                             <Laptop className="size-3.5 shrink-0" aria-hidden="true" />
                             <span className="min-w-0 flex-1 truncate">{f.nume}</span>
+                            {key === 'contract' && f.deschide && (
+                              <button
+                                type="button"
+                                onClick={() => void citesteContractLocal(f, true)}
+                                disabled={seIncarca}
+                                aria-label={'Citește din nou ' + f.nume}
+                                title="Citește din nou contractul (zile, valoare, tarif)"
+                                className="flex size-6 shrink-0 items-center justify-center rounded-md text-[#93c5fd] transition-colors hover:bg-white/10 hover:text-white disabled:opacity-40"
+                              >
+                                <RefreshCw className={cn('size-3.5', seIncarca && 'animate-spin')} aria-hidden="true" />
+                              </button>
+                            )}
                             <MutaCategoria curent={key} nume={f.nume} onAlege={(k) => mutaLocal(f.nume, k)} />
                           </div>
                         ))}

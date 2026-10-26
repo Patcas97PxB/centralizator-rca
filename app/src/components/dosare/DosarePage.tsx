@@ -2,6 +2,7 @@ import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { Plus, X } from 'lucide-react'
 import { useDosareContext } from '@/contexts/DosareContext'
 import { filtreImplicite } from '@/lib/dosare-filter'
+import { remindere } from '@/lib/reminder'
 import { mergiLaCardDosar } from '@/lib/mergi-la-dosar'
 import { exportDosareXlsx } from '@/lib/xlsx-export'
 import type { Dosar } from '@/lib/types'
@@ -141,8 +142,18 @@ export function DosarePage({ actiune }: { actiune?: ActiuneRapida | null }) {
         <div className="min-w-0 space-y-4">
 
           <div className="rounded-[20px] border border-[#253150] bg-[#10172a] p-3">
-            <FilterBar filtre={filtre} onChange={setFiltre} servicii={servicii} onExport={() => exportDosareXlsx(filtrate)} />
+            <FilterBar filtre={filtre} onChange={setFiltre} servicii={servicii} onExport={() => exportDosareXlsx(filtrate)} nrAleMele={remindere(dosare).length} />
           </div>
+
+          {filtre.doarAmintite && (
+            <div className="flex items-center justify-between rounded-xl border border-[#fb923c]/40 bg-[#fb923c]/10 px-3 py-2 text-sm text-[#fb923c]">
+              <span>Arăt doar dosarele marcate „Amintește-mi”.</span>
+              <Button variant="ghost" size="sm" className="h-7 gap-1 text-[#fb923c] hover:text-[#fb923c]" onClick={() => setFiltre({ ...filtre, doarAmintite: false })}>
+                <X className="size-3.5" aria-hidden="true" />
+                Arată toate
+              </Button>
+            </div>
+          )}
 
           {filtre.doarDepasite && (
             <div className="flex items-center justify-between rounded-xl border border-warning/40 bg-warning/10 px-3 py-2 text-sm text-warning">

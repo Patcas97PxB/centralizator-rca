@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { Bell, ChevronDown, Clock3, LogOut, Sparkles } from 'lucide-react'
+import { Bell, Check, ChevronDown, Clock3, LogOut, Sparkles } from 'lucide-react'
 import { setMotionPref, useMotionPref } from '@/lib/motion-pref'
 import { useAuth } from '@/hooks/useAuth'
 import { useClock } from '@/hooks/useClock'
@@ -18,6 +18,19 @@ import { BackupButtons } from './BackupButtons'
 import { FolderLocalButton } from './FolderLocalButton'
 import { ESTE_DEMO } from '@/lib/demo'
 import { initiale, numeDinEmail } from '@/lib/autentificare'
+import { useDosareContext } from '@/contexts/DosareContext'
+import { faraReminder, fmtZi, peste, remindere, reminderScadent, textCand } from '@/lib/reminder'
+import { cn } from '@/lib/utils'
+
+type Tab = 'toate' | 'ale_mele'
+const CHEIE_TAB = 'rca-clopotel-tab'
+function tabSalvat(): Tab {
+  try {
+    return localStorage.getItem(CHEIE_TAB) === 'ale_mele' ? 'ale_mele' : 'toate'
+  } catch {
+    return 'toate'
+  }
+}
 
 const zileText = (n: number) => (n === 1 ? '1 zi' : `${n} zile`)
 
@@ -45,7 +58,13 @@ function descriereAviz(tip: TipAviz, zile: number | null, d: Dosar): { culoare: 
         detaliu: `Preluată de ${zileText(zile ?? 0)} · centralizează documentele și trimite mailul`,
       }
     default:
-      return { culoare: '#fb923c', eticheta: 'amintește-mi', detaliu: 'Marcat de tine' }
+      return {
+        culoare: '#fb923c',
+        eticheta: textCand(d.amintesteLa),
+        detaliu: d.amintesteNota
+          ? d.amintesteNota + (/client/i.test(d.amintesteNota) && d.telClient ? `: ${d.telClient}` : /service/i.test(d.amintesteNota) && d.telService ? `: ${d.telService}` : '')
+          : 'Amintește-mi (marcat de tine)',
+      }
   }
 }
 
@@ -65,6 +84,17 @@ export function Header({
   onAlegeDosar: (id: string) => void
 }) {
   const [deschis, setDeschis] = useState(false)
+  const [tab, setTabState] = useState<Tab>(tabSalvat)
+  const setTab = (t: Tab) => {
+    setTabState(t)
+    try {
+      localStorage.setItem(CHEIE_TAB, t)
+    } catch {
+      /* fara stocare: ramane doar pe sesiune */
+    }
+  }
+  const { dosare, salveazaRapid } = useDosareContext()
+  const aleMele = remindere(dosare)
   const { time, date } = useClock()
   const { logout, email } = useAuth()
   const NUME_UTILIZATOR = ESTE_DEMO ? 'DEMO' : numeDinEmail(email)
@@ -129,44 +159,129 @@ export function Header({
               )}
             </button>
           </PopoverTrigger>
-          <PopoverContent align="end" className="w-[330px] max-w-[calc(100vw-1.5rem)] gap-0 rounded-2xl border-[#253150] bg-[#0d1524] p-0">
-            <div className="flex items-center justify-between border-b border-[#1e2a45] px-4 py-3">
+          <PopoverContent align="end" className="w-[360px] max-w-[calc(100vw-1.5rem)] gap-0 rounded-2xl border-[#253150] bg-[#0d1524] p-0">
+            <div className="flex items-center justify-between border-b border-[#1e2a45] px-4 pb-2 pt-3">
               <span className="flex items-center gap-2 text-[13.5px] font-bold text-[#f1f5f9]">
                 <Bell className="size-4 text-[#fb923c]" aria-hidden="true" />
                 De făcut
               </span>
-              <span className="text-[11px] font-semibold text-[#8b9ab5]">{deSunat.length}</span>
+              <div className="flex rounded-full border border-[#253150] bg-[#10172a] p-0.5 text-[11px] font-bold" role="tablist">
+                {([['toate', 'Toate', deSunat.length], ['ale_mele', 'Ale mele', aleMele.length]] as const).map(([k, label, n]) => (
+                  <button
+                    key={k}
+                    type="button"
+                    role="tab"
+                    aria-selected={tab === k}
+                    onClick={() => setTab(k)}
+                    className={cn(
+                      'rounded-full px-2.5 py-1 transition-colors',
+                      tab === k ? (k === 'ale_mele' ? 'bg-[#fb923c]/20 text-[#fb923c]' : 'bg-[#253150] text-white') : 'text-[#8b9ab5] hover:text-[#cbd5e1]',
+                    )}
+                  >
+                    {label} {n}
+                  </button>
+                ))}
+              </div>
             </div>
-            {deSunat.length === 0 ? (
-              <p className="px-4 py-6 text-center text-[12.5px] text-[#8b9ab5]">Nimic de făcut acum.</p>
+            {tab === 'toate' ? (
+              deSunat.length === 0 ? (
+                <p className="px-4 py-6 text-center text-[12.5px] text-[#8b9ab5]">Nimic de făcut acum.</p>
+              ) : (
+                <ul className="max-h-[340px] overflow-y-auto p-1.5">
+                  {deSunat.map(({ dosar, zile, tip }) => {
+                    const { culoare, eticheta, detaliu } = descriereAviz(tip, zile, dosar)
+                    return (
+                      <li key={dosar.id}>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setDeschis(false)
+                            onAlegeDosar(dosar.id)
+                          }}
+                          className="flex w-full items-center gap-3 rounded-xl px-2.5 py-2 text-left transition-colors hover:bg-white/5"
+                        >
+                          <span className="size-2 shrink-0 rounded-full" style={{ background: culoare, boxShadow: `0 0 8px 1px ${culoare}aa` }} />
+                          <span className="min-w-0 flex-1">
+                            <span className="block truncate text-[13px] font-bold text-[#e2e8f5]">
+                              {dosar.nrAutoPagubit || dosar.nrDosar || '—'}
+                              {dosar.marcaModel && <span className="font-medium text-[#8b9ab5]"> · {dosar.marcaModel}</span>}
+                            </span>
+                            <span className="block truncate text-[11px] text-[#8b9ab5]">{detaliu}</span>
+                          </span>
+                          <span
+                            className="shrink-0 rounded-full border px-2 py-0.5 text-[10px] font-extrabold uppercase"
+                            style={{ color: culoare, borderColor: `${culoare}66`, background: `${culoare}1f` }}
+                          >
+                            {eticheta}
+                          </span>
+                        </button>
+                      </li>
+                    )
+                  })}
+                </ul>
+              )
+            ) : aleMele.length === 0 ? (
+              <p className="px-4 py-6 text-center text-[12.5px] leading-relaxed text-[#8b9ab5]">
+                Nu ai remindere.
+                <br />
+                Pe card, apasă pe etapă → „Amintește-mi…”.
+              </p>
             ) : (
               <ul className="max-h-[340px] overflow-y-auto p-1.5">
-                {deSunat.map(({ dosar, zile, tip }) => {
-                  const { culoare, eticheta, detaliu } = descriereAviz(tip, zile, dosar)
+                {aleMele.map((dosar) => {
+                  const scadent = reminderScadent(dosar)
+                  const culoare = scadent ? '#fb923c' : '#64748b'
                   return (
-                    <li key={dosar.id}>
+                    <li key={dosar.id} className="flex items-center gap-1 rounded-xl pr-1 transition-colors hover:bg-white/5">
                       <button
                         type="button"
                         onClick={() => {
                           setDeschis(false)
                           onAlegeDosar(dosar.id)
                         }}
-                        className="flex w-full items-center gap-3 rounded-xl px-2.5 py-2 text-left transition-colors hover:bg-white/5"
+                        className="flex min-w-0 flex-1 items-center gap-3 px-2.5 py-2 text-left"
                       >
-                        <span className="size-2 shrink-0 rounded-full" style={{ background: culoare, boxShadow: `0 0 8px 1px ${culoare}aa` }} />
+                        <span className="size-2 shrink-0 rounded-full" style={{ background: culoare, boxShadow: scadent ? `0 0 8px 1px ${culoare}aa` : 'none' }} />
                         <span className="min-w-0 flex-1">
                           <span className="block truncate text-[13px] font-bold text-[#e2e8f5]">
                             {dosar.nrAutoPagubit || dosar.nrDosar || '—'}
                             {dosar.marcaModel && <span className="font-medium text-[#8b9ab5]"> · {dosar.marcaModel}</span>}
                           </span>
-                          <span className="block truncate text-[11px] text-[#8b9ab5]">{detaliu}</span>
+                          <span className="block truncate text-[11px] text-[#8b9ab5]">
+                            {dosar.amintesteNota || 'Amintește-mi'}
+                            {dosar.amintesteLa && !scadent ? ` · ${fmtZi(dosar.amintesteLa)}` : ''}
+                          </span>
                         </span>
                         <span
                           className="shrink-0 rounded-full border px-2 py-0.5 text-[10px] font-extrabold uppercase"
                           style={{ color: culoare, borderColor: `${culoare}66`, background: `${culoare}1f` }}
                         >
-                          {eticheta}
+                          {textCand(dosar.amintesteLa)}
                         </span>
+                      </button>
+                      <button
+                        type="button"
+                        title="Amână o zi"
+                        aria-label="Amână o zi"
+                        onClick={() => {
+                          const baza = dosar.amintesteLa && dosar.amintesteLa > peste(0) ? dosar.amintesteLa : peste(0)
+                          const d = new Date(baza + 'T00:00:00')
+                          d.setDate(d.getDate() + 1)
+                          const p = (x: number) => String(x).padStart(2, '0')
+                          void salveazaRapid({ ...dosar, amintesteLa: `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}` })
+                        }}
+                        className="shrink-0 rounded-lg px-1.5 py-1 text-[10.5px] font-extrabold text-[#8b9ab5] transition-colors hover:bg-white/10 hover:text-white"
+                      >
+                        +1 zi
+                      </button>
+                      <button
+                        type="button"
+                        title="Gata — scoate reminderul"
+                        aria-label="Gata — scoate reminderul"
+                        onClick={() => void salveazaRapid({ ...dosar, ...faraReminder })}
+                        className="flex size-7 shrink-0 items-center justify-center rounded-lg text-[#3ddc97] transition-colors hover:bg-[#3ddc97]/15"
+                      >
+                        <Check className="size-4" strokeWidth={3} aria-hidden="true" />
                       </button>
                     </li>
                   )

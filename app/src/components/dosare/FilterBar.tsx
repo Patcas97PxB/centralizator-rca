@@ -1,4 +1,4 @@
-import { Download, Search, SlidersHorizontal } from 'lucide-react'
+import { Bell, Download, Search, SlidersHorizontal } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Button } from '@/components/ui/button'
@@ -24,11 +24,14 @@ export function FilterBar({
   onChange,
   servicii,
   onExport,
+  nrAleMele,
 }: {
   filtre: DosareFiltre
   onChange: (next: DosareFiltre) => void
   servicii: Serviciu[]
   onExport: () => void
+  /** Cate dosare au „Amintește-mi" (butonul „Ale mele"). */
+  nrAleMele: number
 }) {
   const activeFiltreAvansate = !!(
     filtre.service ||
@@ -41,7 +44,7 @@ export function FilterBar({
 
   return (
     <div className="flex flex-wrap items-center gap-2.5">
-      <div className="relative w-full min-w-[200px] sm:w-auto sm:flex-1">
+      <div className="relative w-full sm:w-auto sm:min-w-[140px] sm:flex-1">
         <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-[#94a3b8]" aria-hidden="true" />
         <Input
           value={filtre.search}
@@ -75,14 +78,16 @@ export function FilterBar({
         <PopoverTrigger asChild>
           <button
             type="button"
+            aria-label="Filtre avansate"
             className={cn(
               CONTROL,
-              'flex shrink-0 items-center justify-center gap-2 whitespace-nowrap border px-3 text-[#cbd5e1] hover:text-white sm:w-[142px]',
+              // pe telefon doar iconitele (Filtre, Ale mele), ca filtrul de etape sa ramana lizibil
+              'flex shrink-0 items-center justify-center gap-2 whitespace-nowrap border px-2.5 text-[#cbd5e1] hover:text-white sm:w-[142px] sm:px-3',
               activeFiltreAvansate && 'border-[#2563eb] bg-[#2563eb]/20 text-white',
             )}
           >
             <SlidersHorizontal className="size-4" aria-hidden="true" />
-            Filtre<span className="hidden sm:inline"> avansate</span>
+            <span className="hidden sm:inline">Filtre avansate</span>
           </button>
         </PopoverTrigger>
         <PopoverContent align="end" className="w-80 space-y-4">
@@ -169,6 +174,25 @@ export function FilterBar({
           </Button>
         </PopoverContent>
       </Popover>
+
+      <button
+        type="button"
+        aria-pressed={filtre.doarAmintite}
+        onClick={() => onChange({ ...filtre, doarAmintite: !filtre.doarAmintite })}
+        title="Arată doar dosarele marcate de tine cu „Amintește-mi”"
+        aria-label="Ale mele"
+        className={cn(
+          CONTROL,
+          'flex shrink-0 items-center gap-1.5 whitespace-nowrap border px-2.5 text-[#cbd5e1] hover:text-white sm:px-3',
+          filtre.doarAmintite && 'border-[#fb923c] bg-[#fb923c]/15 text-[#fb923c] hover:bg-[#fb923c]/25 hover:text-[#fb923c]',
+        )}
+      >
+        <Bell className="size-4" aria-hidden="true" />
+        <span className="hidden sm:inline">Ale mele</span>
+        <span className={cn('rounded-full px-1.5 text-[11px] font-extrabold tabular-nums', filtre.doarAmintite ? 'bg-[#fb923c]/25' : 'bg-[#253150]')}>
+          {nrAleMele}
+        </span>
+      </button>
 
       <LegendaButton />
     </div>

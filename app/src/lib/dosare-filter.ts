@@ -12,6 +12,8 @@ export interface DosareFiltre {
   startTo: string
   /** Setat doar de clopoțelul de notificări din Header — nu are control propriu în FilterBar. */
   doarDepasite: boolean
+  /** Doar dosarele marcate „Amintește-mi" (butonul „Ale mele" din bara de filtre). */
+  doarAmintite: boolean
 }
 
 export const filtreImplicite: DosareFiltre = {
@@ -23,6 +25,7 @@ export const filtreImplicite: DosareFiltre = {
   startFrom: '',
   startTo: '',
   doarDepasite: false,
+  doarAmintite: false,
 }
 
 const fara = (s: string) => s.replace(/[\s\-./]/g, '')
@@ -55,6 +58,7 @@ export function filtreazaSiSorteazaDosare(dosare: Dosar[], f: DosareFiltre): Dos
     if (f.startFrom && (!d.start || d.start < f.startFrom)) return false
     if (f.startTo && (!d.start || d.start > f.startTo)) return false
     if (f.doarDepasite && !urgentaDosar(d).depasit) return false
+    if (f.doarAmintite && !(d.amintesteMi && d.status !== 'finalizat')) return false
     return true
   })
 

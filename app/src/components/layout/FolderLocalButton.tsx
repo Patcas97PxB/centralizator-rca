@@ -52,7 +52,7 @@ export function FolderLocalButton() {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <button type="button" className={BTN} title={`Folder legat: „${f.nume}” · ${f.dosare.size} dosare`} aria-label="Folderul de pe laptop">
+        <button type="button" className={BTN} title={`Folder legat: „${f.nume}” · ${f.nrDosare} dosare`} aria-label="Folderul de pe laptop">
           <Laptop className="size-4" aria-hidden="true" />
           <Punct culoare="#00f5a0" />
         </button>
@@ -61,7 +61,7 @@ export function FolderLocalButton() {
         <div className="px-2 py-1.5">
           <p className="truncate text-[12.5px] font-bold text-foreground">„{f.nume}” pe laptop</p>
           <p className="text-[11px] text-muted-foreground">
-            {f.seScaneaza ? 'Se citește…' : `${f.dosare.size} foldere de dosar · citit la ${ora}`}
+            {f.seScaneaza ? 'Se citește…' : `${f.nrDosare} foldere de dosar · citit la ${ora}`}
           </p>
           <p className="mt-1 text-[11px] leading-snug text-muted-foreground">Doar citire: aplicația vede numele fișierelor, nu încarcă și nu modifică nimic.</p>
           {f.eroare && <p className="mt-1 text-[11px] text-destructive">{f.eroare}</p>}
