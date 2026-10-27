@@ -36,7 +36,7 @@ export function AppShell({
 }) {
   return (
     <SidebarProvider style={{ '--sidebar-width': '245px' } as CSSProperties}>
-      <AppSidebar active={active} onSelect={onSelect} badgeDosare={deSunat.length} />
+      <AppSidebar active={active} onSelect={onSelect} badgeDosare={deSunat.length} onDeviz={onDeviz} onPdf={onPdf} />
       <SidebarInset>
         {ESTE_DEMO && <DemoBanner />}
         <Header
@@ -44,6 +44,7 @@ export function AppShell({
           subtitle={headerSubtitle}
           deSunat={deSunat}
           onAlegeDosar={onAlegeDosar}
+          onNou={onNou}
         />
         <MobileTopNav active={active} onSelect={onSelect} badgeDosare={deSunat.length} />
         <StareSistem />

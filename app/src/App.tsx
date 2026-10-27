@@ -9,6 +9,7 @@ import { ComingSoonPage } from '@/components/ComingSoonPage'
 import { DosarePage } from '@/components/dosare/DosarePage'
 import { RapoartePage } from '@/components/rapoarte/RapoartePage'
 import { ServiciiPage } from '@/components/servicii/ServiciiPage'
+import { SetariPage } from '@/components/setari/SetariPage'
 import { DosareProvider, useDosareContext } from '@/contexts/DosareContext'
 import { TooltipProvider } from '@/components/ui/tooltip'
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog'
@@ -23,7 +24,7 @@ const TITLURI: Record<SectionKey, { title: string; subtitle: string }> = {
   dashboard: { title: 'Dashboard', subtitle: 'În curând.' },
   servicii: { title: 'Service-uri', subtitle: 'Lista folosită la completarea dosarelor.' },
   rapoarte: { title: 'Rapoarte', subtitle: 'Comision, verificare tarif din grilă și export financiar.' },
-  setari: { title: 'Setări', subtitle: 'În curând.' },
+  setari: { title: 'Setări', subtitle: 'Folderul de pe laptop, backup, recuperare.' },
 }
 
 function AppContent() {
@@ -66,9 +67,10 @@ function AppContent() {
       }}
     >
       {active === 'dosare' && <DosarePage actiune={actiune} />}
-      {active === 'rapoarte' && <RapoartePage />}
+      {active === 'rapoarte' && <RapoartePage onAlegeDosar={alegeDosar} />}
+      {active === 'setari' && <SetariPage />}
       {active === 'servicii' && <ServiciiPage />}
-      {(active === 'dashboard' || active === 'setari') && (
+      {active === 'dashboard' && (
         <ComingSoonPage label={TITLURI[active].title} icon={NAV_ITEMS.find((i) => i.key === active)!.icon} />
       )}
 

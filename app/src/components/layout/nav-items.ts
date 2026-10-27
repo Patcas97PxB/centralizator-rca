@@ -1,4 +1,4 @@
-import { FileBarChart, FolderKanban, LayoutDashboard, Wrench } from 'lucide-react'
+import { FileBarChart, FolderKanban, LayoutDashboard, Settings, Wrench } from 'lucide-react'
 
 // Bara elementului activ din meniu (= --primary din index.css).
 export const SIDEBAR_ACCENT = 'var(--primary)'
@@ -26,4 +26,5 @@ export const NAV_ITEMS: NavItem[] = [
   { key: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, group: 'operational', disponibil: false },
   { key: 'servicii', label: 'Service-uri', icon: Wrench, group: 'administrare', disponibil: true },
   { key: 'rapoarte', label: 'Rapoarte', icon: FileBarChart, group: 'administrare', disponibil: true },
+  { key: 'setari', label: 'Setări', icon: Settings, group: 'administrare', disponibil: true },
 ]

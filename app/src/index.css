@@ -170,9 +170,6 @@
 @keyframes finalWash { 0% { opacity: 0; } 20% { opacity: 1; } 100% { opacity: 0; } }
 @keyframes finalCheck { 0% { opacity: 0; transform: scale(.3); } 18% { opacity: 1; transform: scale(1.12); } 30% { transform: scale(1); } 75% { opacity: 1; transform: scale(1); } 100% { opacity: 0; transform: scale(.9); } }
 @keyframes finalDraw { to { stroke-dashoffset: 0; } }
-@keyframes orbDrift { 0%, 100% { transform: translate(0, 0); } 50% { transform: translate(24px, 30px); } }
-@keyframes dashFlow { 100% { stroke-dashoffset: -48; } }
-@keyframes twinkle { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: .25; transform: scale(.55); } }
 
 .animate-fade-up { animation: fadeUp .35s ease-out both; }
 .card-speech { border-radius: 26px 26px 26px 8px; }
@@ -208,50 +205,3 @@
   color: #dbeafe !important;
   box-shadow: 0 0 0 1px rgba(96, 165, 250, .55);
 }
-
-/* Login: o raza de lumina in culorile logo-ului (verde, albastru, mov) care se plimba lent pe marginea
-   cardului. Cu animatiile oprite ramane pe loc (tot vizibila). */
-@property --raza {
-  syntax: '<angle>';
-  initial-value: 200deg;
-  inherits: false;
-}
-.login-raza {
-  position: relative;
-}
-/* raza e desenata doar pe margine (masca decupeaza interiorul), deci nu se vede prin sticla cardului */
-.login-raza::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  padding: 1.5px;
-  border-radius: inherit;
-  pointer-events: none;
-  background: conic-gradient(
-    from var(--raza),
-    rgba(255, 255, 255, .1) 0deg,
-    rgba(255, 255, 255, .1) 210deg,
-    rgba(0, 168, 72, .95) 260deg,
-    rgba(0, 96, 240, 1) 300deg,
-    rgba(96, 0, 192, .95) 335deg,
-    rgba(255, 255, 255, .1) 360deg
-  );
-  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
-  -webkit-mask-composite: xor;
-  mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0);
-  animation: loginRaza 9s linear infinite;
-}
-@keyframes loginRaza { to { --raza: 560deg; } }
-
-/* Login: cardul intra lin, scantei de lumina care urca, lumina care trece peste logo */
-@keyframes loginIntra { from { opacity: 0; transform: translateY(16px) scale(.985); } to { opacity: 1; transform: none; } }
-.login-intrare { animation: loginIntra .8s cubic-bezier(.2, .8, .2, 1) both; }
-@keyframes loginUrca {
-  0% { transform: translateY(0) translateX(0); opacity: 0; }
-  12% { opacity: .9; }
-  70% { opacity: .55; }
-  100% { transform: translateY(-105vh) translateX(var(--deriva, 30px)); opacity: 0; }
-}
-.login-scanteie { animation: loginUrca var(--durata, 16s) linear var(--intarziere, 0s) infinite; }
-@keyframes loginLogoLuciu { 0%, 70% { transform: translateX(-120%); } 100% { transform: translateX(220%); } }
-.login-logo-luciu { animation: loginLogoLuciu 6.5s ease-in-out 1.2s infinite; }

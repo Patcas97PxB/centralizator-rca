@@ -5,7 +5,7 @@ import { imagineMasina } from '@/lib/cars'
 import { cheiLocale, useFolderLocal } from '@/lib/folder-local'
 import { DOCUMENT_LABELS_NUMARATE, docLabelText, docStatus, lipsuriFinalizare } from '@/lib/documente'
 import { calculRCA, etapaDosar, fmtDate, prioritateDosar } from '@/lib/rca-calc'
-import { anulareUltimulPas, pasUrmator, textTermen } from '@/lib/pas-urmator'
+import { anulareUltimulPas, dateDosar, pasUrmator, textTermen } from '@/lib/pas-urmator'
 import { faraReminder, fmtZi, textCand } from '@/lib/reminder'
 import { ETAPA_META, type Dosar, type Etapa, type StatusDosar } from '@/lib/types'
 import { STARE } from '@/lib/culori'
@@ -62,6 +62,7 @@ export function DosarPanou({
   const docLocale = cheiLocale(folder, dosar)
   const dst = docStatus(dosar, docLocale)
   const termen = textTermen(dosar)
+  const date = dateDosar(dosar)
   const culoare = RANK_COLOR[prioritateDosar(dosar)]
   const pas = pasUrmator(dosar)
   const anulare = anulareUltimulPas(dosar)
@@ -124,14 +125,21 @@ export function DosarPanou({
 
         <div className="min-h-0 flex-1 overflow-y-auto px-5">
           <Sectiune titlu="Termen">
-            <div className="flex items-baseline justify-between gap-2">
-              <span className="text-[20px] font-extrabold leading-tight" style={{ color: culoare }}>{termen.mare}</span>
-              {termen.data && <span className="shrink-0 text-[12.5px] font-semibold text-tx-2">{termen.data}</span>}
-            </div>
+            <span className="block text-[20px] font-extrabold leading-tight" style={{ color: culoare }}>{termen.mare}</span>
             <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-surface-2">
               <span className="block h-full rounded-full" style={{ width: `${termen.procent}%`, background: culoare }} />
             </div>
-            {termen.sub && <p className="mt-1.5 text-[12px] text-tx-3">{termen.sub}</p>}
+            <div className="mt-2 flex items-end justify-between gap-2">
+              <span className="flex flex-col">
+                <span className="text-[11.5px] text-tx-3">{date.predare.eticheta}</span>
+                <span className="text-[14px] font-bold tabular-nums text-foreground">{date.predare.data}</span>
+              </span>
+              {termen.sub && <span className="min-w-0 truncate pb-px text-[12px] text-tx-3">{termen.sub}</span>}
+              <span className="flex flex-col items-end">
+                <span className="text-[11.5px] text-tx-3">{date.preluare.eticheta}</span>
+                <span className="text-[14px] font-bold tabular-nums text-foreground">{date.preluare.data}</span>
+              </span>
+            </div>
             {rca.formula && rca.zile !== null && <p className="mt-0.5 text-[12px] text-tx-3">{rca.formula}</p>}
             <ol className="mt-3.5 grid grid-cols-4 gap-1.5">
               {ETAPE.map((e, k) => (

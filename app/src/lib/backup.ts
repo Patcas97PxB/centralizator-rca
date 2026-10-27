@@ -24,12 +24,17 @@ export function exportaBackup(dosare: Dosar[], servicii: Serviciu[]) {
   URL.revokeObjectURL(url)
   try {
     localStorage.setItem(CHEIE_ULTIM_BACKUP, String(Date.now()))
+    window.dispatchEvent(new Event(EVENIMENT_BACKUP))
   } catch {
     /* fara localStorage — memento-ul va aparea mereu */
   }
 }
 
 const CHEIE_ULTIM_BACKUP = 'rca-ultim-backup'
+/** Trimis după fiecare export, ca semnalul din meniu (Setări) să se stingă imediat. */
+export const EVENIMENT_BACKUP = 'rca-backup-facut'
+/** După câte zile fără backup cere atenție (punct pe Setări). */
+export const ZILE_BACKUP = 3
 
 /** Zile de la ultimul backup exportat din acest browser; null = niciodata. */
 export function zileDeLaBackup(): number | null {

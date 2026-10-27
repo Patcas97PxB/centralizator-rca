@@ -1,6 +1,8 @@
 import { Fragment, useMemo, useState } from 'react'
 import { Download, FileSpreadsheet, Search } from 'lucide-react'
 import { useDosareContext } from '@/contexts/DosareContext'
+import { ActivitateRecenta } from '@/components/panel/ActivitateRecenta'
+import { StatisticiRapide } from '@/components/panel/StatisticiRapide'
 import { cheiLocale, useFolderLocal } from '@/lib/folder-local'
 import { useStariContracteLaptop } from '@/lib/contracte-laptop'
 import { dosareFinanciarFiltrate, filtruFinanciarImplicit, formatSuma, formatSumePeMoneda, grupeazaPeService, sumeGoale, type FiltruFinanciar } from '@/lib/financiar'
@@ -35,7 +37,7 @@ const HEADERS: [string, boolean][] = [
   ['Contract final', false],
 ]
 
-export function RapoartePage() {
+export function RapoartePage({ onAlegeDosar }: { onAlegeDosar?: (id: string) => void }) {
   const folder = useFolderLocal()
   const stariLaptop = useStariContracteLaptop()
   const { dosare, servicii, salveazaRapid } = useDosareContext()
@@ -66,6 +68,12 @@ export function RapoartePage() {
       <div className="md:hidden">
         <h2 className="text-xl font-bold text-foreground">Rapoarte</h2>
         <p className="text-sm text-muted-foreground">Comision, verificare tarif din grilă și export financiar.</p>
+      </div>
+
+      {/* Mutate din coloana din dreapta a paginii Dosare (redesign F4) */}
+      <div className="grid gap-4 md:grid-cols-2">
+        <StatisticiRapide dosare={dosare} />
+        <ActivitateRecenta dosare={dosare} onAlege={onAlegeDosar} />
       </div>
 
       <div className="flex flex-wrap items-end gap-3 rounded-[20px] border border-border bg-card p-3.5">

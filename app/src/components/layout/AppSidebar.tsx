@@ -1,4 +1,6 @@
+import { FileCheck2, FileSearch } from 'lucide-react'
 import { Sidebar, SidebarContent, SidebarHeader, useSidebar } from '@/components/ui/sidebar'
+import { useAtentieSetari } from '@/lib/atentie-setari'
 import { assetUrl } from '@/lib/asset-url'
 import { cn } from '@/lib/utils'
 import { NAV_GROUP_LABELS, NAV_ITEMS, SIDEBAR_ACCENT, type NavGroup, type SectionKey } from './nav-items'
@@ -11,12 +13,18 @@ export function AppSidebar({
   active,
   onSelect,
   badgeDosare = 0,
+  onDeviz,
+  onPdf,
 }: {
   active: SectionKey
   onSelect: (key: SectionKey) => void
   badgeDosare?: number
+  onDeviz: () => void
+  onPdf: () => void
 }) {
   const { setOpenMobile } = useSidebar()
+  const atentie = useAtentieSetari()
+  const setariAtentie = atentie.folder || atentie.backup
   return (
     <Sidebar collapsible="offcanvas" className="border-border [&_[data-sidebar=sidebar]]:bg-[var(--sidebar)]">
       <SidebarHeader className="relative z-10 flex-row items-center px-[18px] pb-[18px] pt-5">
@@ -73,6 +81,9 @@ export function AppSidebar({
                         {badgeDosare}
                       </span>
                     )}
+                    {item.key === 'setari' && setariAtentie && (
+                      <span className="size-2 rounded-full bg-st-amber" title={atentie.folder ? 'Folderul de pe laptop așteaptă permisiunea' : 'E timpul pentru un backup'} />
+                    )}
                     {!item.disponibil && (
                       <span className="rounded-full border border-border bg-surface-2 px-[7px] py-0.5 text-[9px] font-extrabold tracking-[.04em] text-tx-3">
                         SOON
@@ -84,6 +95,27 @@ export function AppSidebar({
             </div>
           ))}
         </nav>
+        {/* Unelte (redesign F4): mutate din coloana din dreapta a paginii Dosare */}
+        <div className="mt-auto flex flex-col gap-0.5 pb-4 pt-6">
+          <div className={SECTION_LABEL}>UNELTE</div>
+          {[
+            { label: 'Zile din deviz', icon: FileSearch, onClick: onDeviz },
+            { label: 'Modificare PDF', icon: FileCheck2, onClick: onPdf },
+          ].map((u) => (
+            <button
+              key={u.label}
+              type="button"
+              onClick={() => {
+                u.onClick()
+                setOpenMobile(false)
+              }}
+              className="flex h-10 w-full items-center gap-3 rounded-[12px] px-2.5 text-left text-[13.5px] font-semibold text-tx-3 transition-colors hover:bg-white/5 hover:text-foreground"
+            >
+              <u.icon className="size-[18px]" aria-hidden="true" />
+              {u.label}
+            </button>
+          ))}
+        </div>
       </SidebarContent>
     </Sidebar>
   )

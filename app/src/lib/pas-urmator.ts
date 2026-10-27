@@ -29,8 +29,6 @@ export function anulareUltimulPas(d: Dosar): { eticheta: string; patch: Partial<
 export interface TextTermen {
   /** Rândul mare, colorat după termen. */
   mare: string
-  /** În dreapta rândului mare (data relevantă). */
-  data: string
   /** Sub bară (ziua X din Y, motivul). */
   sub: string
   /** Cât din bară e plină (0–100). */
@@ -51,29 +49,44 @@ export function textTermen(d: Dosar): TextTermen {
   if (u.inaintePredare) {
     return {
       mare: u.bigNum === 'AZI' ? 'Predare azi' : `${cuZile(Number(u.bigNum))} până la predare`,
-      data: d.start ? `predare ${fmtDate(d.start)}` : '',
       sub: 'nepredată',
       procent: 0,
     }
   }
   if (finalizat) {
-    return { mare: 'Finalizat', data: '', sub: total ? `${cuZile(total)} decontabile` : 'închis', procent: 100 }
+    return { mare: 'Finalizat', sub: total ? `${cuZile(total)} decontabile` : 'închis', procent: 100 }
   }
   if (d.preluatBifat) {
     return {
       mare: 'Preluată · închide contractul',
-      data: d.preluatLa ? `preluată ${fmtDate(d.preluatLa)}` : '',
       sub: total ? `${cuZile(total)} decontabile` : '',
       procent: 100,
     }
   }
   if (rca.zile === null) {
-    if (u.bigNum === '?') return { mare: d.dte ? 'Ofertă de despăgubire neprimită' : 'Fără termen', data: '', sub: d.dte ? '' : rca.formula, procent: 0 }
-    return { mare: `${cuZile(Number(u.bigNum))} de la predare`, data: d.start ? `predat ${fmtDate(d.start)}` : '', sub: 'fără zile din deviz', procent: 0 }
+    if (u.bigNum === '?') return { mare: d.dte ? 'Ofertă de despăgubire neprimită' : 'Fără termen', sub: d.dte ? '' : rca.formula, procent: 0 }
+    return { mare: `${cuZile(Number(u.bigNum))} de la predare`, sub: 'fără zile din deviz', procent: 0 }
   }
-  const data = rca.dataPreluare ? `termen ${fmtDate(rca.dataPreluare)}` : ''
-  if (u.depasit) return { mare: `${cuZile(Number(u.bigNum.replace('+', '')))} peste termen`, data, sub: ziuaDin, procent }
-  if (u.bigLabel === 'se preia AZI') return { mare: 'Se preia azi', data, sub: ziuaDin, procent }
-  if (u.bigLabel.startsWith('zile decontabile')) return { mare: `${cuZile(total ?? 0)} decontabile`, data, sub: ziuaDin, procent }
-  return { mare: `${cuZile(Number(u.bigNum))} rămase`, data, sub: ziuaDin, procent }
+  if (u.depasit) return { mare: `${cuZile(Number(u.bigNum.replace('+', '')))} peste termen`, sub: ziuaDin, procent }
+  if (u.bigLabel === 'se preia AZI') return { mare: 'Se preia azi', sub: ziuaDin, procent }
+  if (u.bigLabel.startsWith('zile decontabile')) return { mare: `${cuZile(total ?? 0)} decontabile`, sub: ziuaDin, procent }
+  return { mare: `${cuZile(Number(u.bigNum))} rămase`, sub: ziuaDin, procent }
+}
+
+export interface DateDosar {
+  predare: { eticheta: string; data: string }
+  preluare: { eticheta: string; data: string }
+}
+
+// Cele două date de pe card și din panou: când s-a predat (sau se predă) mașina și când se preia
+// (data reală a preluării, dacă e bifată; altfel termenul calculat).
+export function dateDosar(d: Dosar): DateDosar {
+  const rca = calculRCA(d)
+  const nepredata = etapaDosar(d) === 'rezervat'
+  return {
+    predare: { eticheta: nepredata ? 'Predare' : 'Predat', data: fmtDate(d.start) || '—' },
+    preluare: d.preluatLa
+      ? { eticheta: 'Preluat', data: fmtDate(d.preluatLa) }
+      : { eticheta: 'Preluare', data: fmtDate(rca.dataPreluare) || '—' },
+  }
 }

@@ -1,17 +1,15 @@
 import { type FormEvent, type ReactNode, useState } from 'react'
 import { Loader2 } from 'lucide-react'
 import { useAuth } from '@/hooks/useAuth'
-import { usePrefersReducedMotion } from '@/hooks/usePrefersReducedMotion'
 import { assetUrl } from '@/lib/asset-url'
 import { Input } from '@/components/ui/input'
 import { ESTE_DEMO } from '@/lib/demo'
 import { SiteFooter } from '@/components/layout/SiteFooter'
 import { DOMENIU_PERMIS } from '@/lib/autentificare'
-import { FundalLogin } from '@/components/login/FundalLogin'
 
-// Pagina de login: fundalul din meniul lateral pe tot ecranul (FundalLogin) si un card din sticla mata, in
-// centru, cu o raza de lumina in culorile logo-ului care se plimba lent pe margine (.login-raza). Campurile
-// email / parola nu au animatii. (Parcarea animata de dinainte e acum un proiect separat: autonom-oradea-game.)
+// Pagina de login (redesign F4): un card simplu în centru, pe fundalul aplicației — fără raza de lumină,
+// halou, stele sau scântei (cererea utilizatorului: „fără efecte”). (Parcarea animată de dinainte e acum un
+// proiect separat: autonom-oradea-game.)
 
 const CHEIE_EMAIL = 'rca-ultim-email'
 function emailSalvat(): string {
@@ -24,7 +22,6 @@ function emailSalvat(): string {
 
 export function AuthGate({ children }: { children: ReactNode }) {
   const { isLoading, isAuthenticated, login } = useAuth()
-  const fara = usePrefersReducedMotion()
   const [email, setEmail] = useState(emailSalvat)
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
@@ -75,54 +72,27 @@ export function AuthGate({ children }: { children: ReactNode }) {
   }
 
   const campCls =
-    'h-11 rounded-xl border-white/12 bg-[#060c1c]/70 text-[15px] text-white placeholder:text-[#64748b] transition-[border-color,box-shadow] duration-300 focus-visible:border-[#60a5fa] focus-visible:ring-[3px] focus-visible:ring-[#3d8bff]/20 focus-visible:shadow-[0_0_26px_-6px_rgba(61,139,255,.75)]'
+    'h-11 rounded-xl border-border-strong bg-background text-[15px] text-foreground placeholder:text-tx-3 focus-visible:border-primary focus-visible:ring-[3px] focus-visible:ring-primary/25'
 
   return (
-    <div className="relative flex min-h-svh flex-col overflow-hidden bg-[#070b14]">
-      <FundalLogin reduced={fara} />
-
-      <main className="relative z-10 flex flex-1 items-center justify-center px-4 py-10">
-        <div className="login-intrare relative w-full max-w-[400px]">
-          {/* halou moale in culorile logo-ului, in spatele cardului */}
-          <span
-            aria-hidden="true"
-            className="pointer-events-none absolute -inset-10 -z-10 rounded-[48px] opacity-70 blur-3xl"
-            style={{ background: 'radial-gradient(60% 55% at 30% 30%, rgba(0,96,240,.35), transparent 70%), radial-gradient(55% 50% at 75% 75%, rgba(96,0,192,.35), transparent 70%)' }}
-          />
-          {/* marginea cu raza de lumina */}
-          <div className="login-raza rounded-[24px] p-[1.5px] shadow-[0_40px_90px_-30px_rgba(0,0,0,.9)]">
+    <div className="relative flex min-h-svh flex-col bg-background">
+      <main className="relative flex flex-1 items-center justify-center px-4 py-10">
+        <div className="animate-fade-up w-full max-w-[400px]">
         <form
           onSubmit={handleSubmit}
           noValidate
-          className="relative overflow-hidden rounded-[22.5px] p-7 backdrop-blur-xl sm:p-9"
-          style={{ background: 'radial-gradient(70% 28% at 50% 0%, rgba(61,139,255,.16), transparent 100%), rgba(10,18,38,.86)' }}
+          className="rounded-[20px] border border-border bg-card p-7 shadow-[var(--shadow-ambient)] sm:p-9"
         >
           <div className="relative mb-7 flex flex-col items-center gap-3 text-center">
-            {/* logo cu o lumina care trece peste el din cand in cand */}
-            <span className="relative inline-block">
-              <img src={assetUrl('/icons/logo.png')} alt="Centralizator RCA" className="h-14 w-auto drop-shadow-[0_8px_24px_rgba(0,96,240,.45)]" />
-              <span
-                aria-hidden="true"
-                className="pointer-events-none absolute inset-0 overflow-hidden"
-                style={{
-                  maskImage: `url(${assetUrl('/icons/logo.png')})`,
-                  WebkitMaskImage: `url(${assetUrl('/icons/logo.png')})`,
-                  maskSize: '100% 100%',
-                  WebkitMaskSize: '100% 100%',
-                }}
-              >
-                <span className="login-logo-luciu absolute inset-y-0 left-0 w-1/3 -skew-x-12 bg-gradient-to-r from-transparent via-white/70 to-transparent" />
-              </span>
-            </span>
-            <span aria-hidden="true" className="h-px w-24 bg-gradient-to-r from-transparent via-[#3d8bff]/70 to-transparent" />
+            <img src={assetUrl('/icons/logo.png')} alt="Centralizator RCA" className="h-14 w-auto" />
             <div>
-              <h1 className="text-xl font-extrabold tracking-[-.01em] text-white">Bine ai revenit</h1>
-              <p className="mt-1 text-[13px] text-[#9fb3d9]">
+              <h1 className="text-xl font-extrabold tracking-[-.01em] text-foreground">Bine ai revenit</h1>
+              <p className="mt-1 text-[13px] text-tx-3">
                 {ESTE_DEMO ? 'Intră cu parola variantei de test.' : 'Intră cu contul tău Autonom.'}
               </p>
             </div>
             {ESTE_DEMO && (
-              <span className="rounded-full border border-[#f59e0b]/45 bg-[#f59e0b]/15 px-2.5 py-0.5 text-[11px] font-extrabold text-[#fde68a]">
+              <span className="rounded-full border border-st-amber/45 bg-st-amber/15 px-2.5 py-0.5 text-[11px] font-extrabold text-st-amber-tx">
                 VARIANTĂ DE TEST
               </span>
             )}
@@ -130,7 +100,7 @@ export function AuthGate({ children }: { children: ReactNode }) {
 
           {!ESTE_DEMO && (
             <div className="mb-4">
-              <label htmlFor="authEmail" className="mb-1.5 block text-[13px] font-semibold text-[#cbd5e1]">
+              <label htmlFor="authEmail" className="mb-1.5 block text-[13px] font-semibold text-tx-2">
                 Email
               </label>
               <Input
@@ -146,7 +116,7 @@ export function AuthGate({ children }: { children: ReactNode }) {
               />
             </div>
           )}
-          <label htmlFor="authPassword" className="mb-1.5 block text-[13px] font-semibold text-[#cbd5e1]">
+          <label htmlFor="authPassword" className="mb-1.5 block text-[13px] font-semibold text-tx-2">
             Parolă
           </label>
           <Input
@@ -159,7 +129,7 @@ export function AuthGate({ children }: { children: ReactNode }) {
             onChange={(e) => setPassword(e.target.value)}
             className={campCls}
           />
-          <p role="alert" className="min-h-5 pt-2 text-[13px] font-medium text-[#fca5a5]">
+          <p role="alert" className="min-h-5 pt-2 text-[13px] font-medium text-st-red-tx">
             {error}
           </p>
           <button
@@ -171,10 +141,9 @@ export function AuthGate({ children }: { children: ReactNode }) {
             {submitting ? 'Se verifică…' : 'Intră'}
           </button>
         </form>
-          </div>
         </div>
       </main>
-      <SiteFooter className="relative z-10 pb-4" />
+      <SiteFooter className="pb-4" />
     </div>
   )
 }

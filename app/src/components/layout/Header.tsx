@@ -1,8 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
-import { Bell, Check, ChevronDown, Clock3, LogOut, Sparkles } from 'lucide-react'
-import { setMotionPref, useMotionPref } from '@/lib/motion-pref'
+import { Bell, Check, ChevronDown, Laptop, LogOut, Plus } from 'lucide-react'
 import { useAuth } from '@/hooks/useAuth'
-import { useClock } from '@/hooks/useClock'
 import { assetUrl } from '@/lib/asset-url'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import {
@@ -14,8 +12,7 @@ import {
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import type { DeSunat, TipAviz } from '@/lib/rca-calc'
 import type { Dosar } from '@/lib/types'
-import { BackupButtons } from './BackupButtons'
-import { FolderLocalButton } from './FolderLocalButton'
+import { permiteCitirea, useFolderLocal } from '@/lib/folder-local'
 import { ESTE_DEMO } from '@/lib/demo'
 import { initiale, numeDinEmail } from '@/lib/autentificare'
 import { useDosareContext } from '@/contexts/DosareContext'
@@ -78,11 +75,13 @@ export function Header({
   subtitle,
   deSunat,
   onAlegeDosar,
+  onNou,
 }: {
   title: string
   subtitle?: string
   deSunat: DeSunat[]
   onAlegeDosar: (id: string) => void
+  onNou: () => void
 }) {
   const [deschis, setDeschis] = useState(false)
   const [tab, setTabState] = useState<Tab>(tabSalvat)
@@ -96,11 +95,13 @@ export function Header({
   }
   const { dosare, salveazaRapid } = useDosareContext()
   const aleMele = remindere(dosare)
-  const { time, date } = useClock()
   const { logout, email } = useAuth()
   const NUME_UTILIZATOR = ESTE_DEMO ? 'DEMO' : numeDinEmail(email)
   const INITIALE_UTILIZATOR = ESTE_DEMO ? 'D' : initiale(NUME_UTILIZATOR)
-  const motionPref = useMotionPref()
+  const folder = useFolderLocal()
+  // Chrome cere din nou voie la folderul de pe laptop la fiecare pornire: atunci (doar atunci) apare aici un
+  // buton, ca permisiunea să fie la un click; restul setărilor folderului sunt în Setări.
+  const folderAsteapta = folder.suportat && !!folder.nume && folder.permis !== 'granted'
   const headerRef = useRef<HTMLElement>(null)
 
   useEffect(() => {
@@ -129,18 +130,25 @@ export function Header({
       </div>
 
       <div className="ml-auto flex flex-wrap items-center justify-end gap-2.5">
-        {/* folderul de pe laptop: la orice latime (apare doar unde browserul il permite) */}
-        <FolderLocalButton />
-        <div className="hidden items-center gap-1.5 lg:flex">
-          <BackupButtons />
-        </div>
-        <div className="hidden items-center gap-[9px] rounded-xl border border-border bg-card px-3 py-1.5 lg:flex">
-          <Clock3 className="size-4 text-tx-3" aria-hidden="true" />
-          <div className="text-right leading-[1.15]">
-            <div className="text-[13px] font-bold tabular-nums">{time}</div>
-            <div className="text-[11px] text-tx-3">{date}</div>
-          </div>
-        </div>
+        {folderAsteapta && (
+          <button
+            type="button"
+            onClick={() => void permiteCitirea()}
+            title={`Dă voie aplicației să citească folderul „${folder.nume}” de pe laptop`}
+            className="flex h-[34px] items-center gap-1.5 rounded-[10px] border border-st-amber/50 bg-st-amber/10 px-2.5 text-[12.5px] font-bold text-st-amber-tx transition-colors hover:bg-st-amber/20"
+          >
+            <Laptop className="size-4" aria-hidden="true" />
+            <span className="hidden sm:inline">Permite folderul</span>
+          </button>
+        )}
+        <button
+          type="button"
+          onClick={onNou}
+          className="hidden h-[34px] items-center gap-1.5 rounded-[10px] bg-primary px-3.5 text-[13px] font-bold text-primary-foreground transition-colors hover:bg-primary/90 md:inline-flex"
+        >
+          <Plus className="size-4" aria-hidden="true" />
+          Dosar nou
+        </button>
 
         <Popover open={deschis} onOpenChange={setDeschis}>
           <PopoverTrigger asChild>
@@ -308,10 +316,6 @@ export function Header({
             </button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
-            <DropdownMenuItem onClick={() => setMotionPref(motionPref === 'on' ? 'auto' : 'on')}>
-              <Sparkles />
-              {motionPref === 'on' ? 'Animații: pornite (forțat)' : 'Animații: automat (după sistem)'}
-            </DropdownMenuItem>
             <DropdownMenuItem variant="destructive" onClick={() => logout()}>
               <LogOut />
               Ieși din cont

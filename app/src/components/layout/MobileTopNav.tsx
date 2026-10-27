@@ -1,4 +1,5 @@
 import { cn } from '@/lib/utils'
+import { useAtentieSetari } from '@/lib/atentie-setari'
 import { NAV_ITEMS, type SectionKey } from './nav-items'
 
 // Pe mobil (<md) sectiunile disponibile (Dosare, Service-uri, Rapoarte) stau sus, sub header —
@@ -15,8 +16,9 @@ export function MobileTopNav({
   onSelect: (key: SectionKey) => void
   badgeDosare?: number
 }) {
+  const atentie = useAtentieSetari()
   return (
-    <nav className="grid grid-cols-3 gap-1.5 border-b border-border px-3 py-2 md:hidden" aria-label="Navigare principală">
+    <nav style={{ gridTemplateColumns: `repeat(${ITEMS_MOBIL.length}, minmax(0, 1fr))` }} className="grid gap-1.5 border-b border-border px-3 py-2 md:hidden" aria-label="Navigare principală">
       {ITEMS_MOBIL.map((item) => {
         const on = active === item.key
         return (
@@ -33,6 +35,9 @@ export function MobileTopNav({
           >
             <span className="relative">
               <item.icon className="size-[17px]" style={{ color: on ? 'var(--accent-tx)' : 'var(--tx-3)' }} aria-hidden="true" />
+              {item.key === 'setari' && (atentie.folder || atentie.backup) && (
+                <span className="absolute -right-1.5 -top-1 size-2 rounded-full bg-st-amber" aria-label="Cere atenție" />
+              )}
               {item.key === 'dosare' && badgeDosare > 0 && (
                 <span className="absolute -right-3 -top-2 flex h-[16px] min-w-[16px] items-center justify-center rounded-full border border-st-red/45 bg-card px-1 text-[9.5px] font-extrabold text-st-red-tx">
                   {badgeDosare}

@@ -4,7 +4,7 @@ import { imagineMasina } from '@/lib/cars'
 import { cheiLocale, useFolderLocal } from '@/lib/folder-local'
 import { docStatus, lipsuriFinalizare, numeScurtDoc } from '@/lib/documente'
 import { etapaDosar, prioritateDosar } from '@/lib/rca-calc'
-import { pasUrmator, textTermen } from '@/lib/pas-urmator'
+import { dateDosar, pasUrmator, textTermen } from '@/lib/pas-urmator'
 import { ETAPA_META, type Dosar, type Etapa, type StatusDosar } from '@/lib/types'
 import { cn } from '@/lib/utils'
 import { faraReminder, fmtZi, textCand } from '@/lib/reminder'
@@ -47,6 +47,7 @@ export function DosarCard({
   const cardColor = RANK_COLOR[prioritateDosar(dosar)]
   const poza = imagineMasina(dosar.marcaModelInlocuire ?? '')
   const termen = textTermen(dosar)
+  const date = dateDosar(dosar)
   const pas = pasUrmator(dosar)
   const pasIndex = ETAPE.indexOf(etapa)
 
@@ -135,7 +136,7 @@ export function DosarCard({
         </>
       )}
 
-      {/* 1 · Cine: poza mașinii de înlocuire, păgubit → înlocuire, etapa */}
+      {/* 1 · Cine: poza mașinii de înlocuire, păgubit → înlocuire, modelele */}
       <div className="flex min-w-0 items-start gap-3">
         <div className="flex h-10 w-16 shrink-0 items-center justify-center">
           {poza ? (
@@ -158,6 +159,13 @@ export function DosarCard({
             {[dosar.marcaModel, dosar.marcaModelInlocuire].filter(Boolean).join(' → ') || '—'}
           </div>
         </div>
+      </div>
+
+      {/* 2 · Dosar: asigurator · nr. dosar · RBH, și etapa (meniul „Amintește-mi…”) */}
+      <div className="flex min-w-0 items-center gap-2">
+        <div className="min-w-0 flex-1 truncate text-[12.5px] text-tx-2" title={dosar.updatedAt ? 'Actualizat ' + new Date(dosar.updatedAt).toLocaleString('ro-RO') : undefined}>
+          {[dosar.asigurator, dosar.nrDosar, dosar.nrRezervare].filter(Boolean).join(' · ') || '—'}
+        </div>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <button
@@ -167,7 +175,7 @@ export function DosarCard({
               className="flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full bg-surface-2 px-2 py-1 text-[11.5px] sm:px-2.5 font-bold text-tx-2 transition-colors hover:bg-surface-hover hover:text-foreground"
             >
               <span className="size-[7px] rounded-full" style={{ background: meta.color }} />
-              <span className="hidden sm:inline">{meta.label.charAt(0) + meta.label.slice(1).toLowerCase()}</span>
+              {meta.label.charAt(0) + meta.label.slice(1).toLowerCase()}
               {dosar.amintesteMi && <Bell className="size-3 text-st-orange" strokeWidth={2.5} aria-label={'Amintește-mi ' + textCand(dosar.amintesteLa)} />}
               <ChevronDown className="size-3 text-tx-3" strokeWidth={2.5} aria-hidden="true" />
             </button>
@@ -192,26 +200,28 @@ export function DosarCard({
         </DropdownMenu>
       </div>
 
-      {/* 2 · Dosar: asigurator · nr. dosar · RBH */}
-      <div className="truncate text-[12.5px] text-tx-2" title={dosar.updatedAt ? 'Actualizat ' + new Date(dosar.updatedAt).toLocaleString('ro-RO') : undefined}>
-        {[dosar.asigurator, dosar.nrDosar, dosar.nrRezervare].filter(Boolean).join(' · ') || '—'}
-      </div>
-
-      {/* 3 · Termen: textul mare colorat, data, bara */}
+      {/* 3 · Termen: textul mare colorat, bara, data predării și data preluării */}
       <div className="flex flex-col gap-1.5 border-t border-border pt-2.5">
-        <div className="flex items-baseline justify-between gap-2">
-          <span className="min-w-0 truncate text-[19px] font-extrabold leading-tight tracking-[-.01em]" style={{ color: cardColor }}>
-            {termen.mare}
-          </span>
-          {termen.data && <span className="shrink-0 whitespace-nowrap text-[12.5px] font-semibold text-tx-2">{termen.data}</span>}
-        </div>
+        <span className="min-w-0 truncate text-[19px] font-extrabold leading-tight tracking-[-.01em]" style={{ color: cardColor }}>
+          {termen.mare}
+        </span>
         <div className="h-1.5 overflow-hidden rounded-full bg-surface-2">
           <span
             className="block h-full origin-left rounded-full animate-[barGrow_.6s_cubic-bezier(.2,.8,.2,1)_both]"
             style={{ width: `${termen.procent}%`, background: cardColor }}
           />
         </div>
-        {termen.sub && <span className="truncate text-[11.5px] text-tx-3">{termen.sub}</span>}
+        <div className="flex items-end justify-between gap-2">
+          <span className="flex flex-col">
+            <span className="text-[11px] text-tx-3">{date.predare.eticheta}</span>
+            <span className="text-[13px] font-bold tabular-nums text-foreground">{date.predare.data}</span>
+          </span>
+          {termen.sub && <span className="min-w-0 truncate pb-px text-[11.5px] text-tx-3">{termen.sub}</span>}
+          <span className="flex flex-col items-end">
+            <span className="text-[11px] text-tx-3">{date.preluare.eticheta}</span>
+            <span className="text-[13px] font-bold tabular-nums text-foreground">{date.preluare.data}</span>
+          </span>
+        </div>
       </div>
 
       {/* 4 · Lipsuri (sau de ce nu se poate finaliza) */}
@@ -242,9 +252,6 @@ export function DosarCard({
             />
           ))}
         </div>
-        <span className="shrink-0 whitespace-nowrap text-[12px] font-semibold text-tx-3 md:hidden">
-          {meta.label.charAt(0) + meta.label.slice(1).toLowerCase()}
-        </span>
         {pas && (
           <button
             type="button"
