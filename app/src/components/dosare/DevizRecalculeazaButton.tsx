@@ -7,9 +7,9 @@ import type { Dosar } from '@/lib/types'
 import { cn } from '@/lib/utils'
 
 const TILE = {
-  scanning: { border: 'rgba(125,211,252,.7)', color: '#7dd3fc' },
-  done: { border: 'rgba(0,245,160,.55)', color: '#00f5a0' },
-  error: { border: 'rgba(255,77,109,.7)', color: '#ff4d6d' },
+  scanning: { border: 'color-mix(in srgb, var(--accent-tx) 70%, transparent)', color: 'var(--accent-tx)' },
+  done: { border: 'color-mix(in srgb, var(--st-green) 55%, transparent)', color: 'var(--st-green)' },
+  error: { border: 'color-mix(in srgb, var(--st-red) 70%, transparent)', color: 'var(--st-red)' },
 } as const
 
 // Calculeaza DOAR zilele de reparatie dintr-un deviz, suprascriind explicit valoarea existenta
@@ -71,14 +71,14 @@ export function DevizRecalculeazaButton({
             stage === 'error' && 'animate-[devizShake_.45s_ease-in-out_both]',
           )}
           style={{
-            borderColor: stage === 'scanning' ? 'rgba(96,165,250,.5)' : stage === 'done' ? 'rgba(0,245,160,.35)' : 'rgba(255,77,109,.45)',
+            borderColor: stage === 'scanning' ? 'color-mix(in srgb, var(--accent-tx) 50%, transparent)' : stage === 'done' ? 'color-mix(in srgb, var(--st-green) 35%, transparent)' : 'color-mix(in srgb, var(--st-red) 45%, transparent)',
             background:
-              stage === 'done' ? 'rgba(0,245,160,.06)' : stage === 'error' ? 'rgba(255,77,109,.06)' : 'rgba(37,99,235,.08)',
+              stage === 'done' ? 'color-mix(in srgb, var(--st-green) 6%, transparent)' : stage === 'error' ? 'color-mix(in srgb, var(--st-red) 6%, transparent)' : 'color-mix(in srgb, var(--primary) 8%, transparent)',
           }}
         >
           <span
             className="relative flex h-12 w-10 shrink-0 items-center justify-center overflow-hidden rounded-lg border"
-            style={{ borderColor: tile.border, color: tile.color, background: 'linear-gradient(#0b1633, #0a1230)' }}
+            style={{ borderColor: tile.border, color: tile.color, background: 'var(--background)' }}
           >
             {stage === 'done' ? (
               <Check className="size-5 animate-[devizPopIn_.4s_cubic-bezier(.2,.9,.2,1)_both]" aria-hidden="true" />
@@ -91,7 +91,7 @@ export function DevizRecalculeazaButton({
               <span
                 aria-hidden
                 className="absolute inset-x-0 h-[14px] animate-[devizBeam_1s_ease-in-out_infinite_alternate]"
-                style={{ background: 'linear-gradient(180deg, transparent, rgba(125,211,252,.85), transparent)' }}
+                style={{ background: 'linear-gradient(180deg, transparent, color-mix(in srgb, var(--accent-tx) 85%, transparent), transparent)' }}
               />
             )}
           </span>
@@ -99,12 +99,12 @@ export function DevizRecalculeazaButton({
           <div className="min-w-0 flex-1">
             {stage === 'scanning' && (
               <>
-                <div className="truncate text-sm font-bold" style={{ color: '#7dd3fc' }}>Calculez zilele din deviz…</div>
+                <div className="truncate text-sm font-bold" style={{ color: 'var(--accent-tx)' }}>Calculez zilele din deviz…</div>
                 <div className="truncate text-xs text-muted-foreground">{progres || fileName}</div>
                 <div className="mt-2 h-1 overflow-hidden rounded-full bg-white/10">
                   <div
                     className="h-full origin-left rounded-full animate-[devizProgress_2.6s_cubic-bezier(.4,0,.2,1)_both]"
-                    style={{ background: 'linear-gradient(90deg,#2563eb,#0ea5e9)' }}
+                    style={{ background: 'var(--primary)' }}
                   />
                 </div>
               </>
@@ -112,10 +112,10 @@ export function DevizRecalculeazaButton({
             {stage === 'done' && result && (
               <div className="animate-[devizPopIn_.4s_cubic-bezier(.2,.9,.2,1)_both]">
                 <div className="flex items-baseline gap-1.5">
-                  <span className="text-2xl font-extrabold leading-none" style={{ color: '#00f5a0' }}>
+                  <span className="text-2xl font-extrabold leading-none" style={{ color: 'var(--st-green)' }}>
                     {result.total}
                   </span>
-                  <span className="text-xs font-bold" style={{ color: '#00f5a0' }}>ZILE DE REPARAȚIE</span>
+                  <span className="text-xs font-bold" style={{ color: 'var(--st-green)' }}>ZILE DE REPARAȚIE</span>
                 </div>
                 <p className="mt-1 text-xs text-muted-foreground">{result.formulaCalcul}</p>
                 {calcul && (
@@ -124,7 +124,7 @@ export function DevizRecalculeazaButton({
                     {calcul.dataPreluare && ` — preluare ${calcul.dataPreluare.split('-').reverse().join('.')}`}
                   </p>
                 )}
-                <p className="mt-0.5 text-[11px] text-[#3ddc97]">
+                <p className="mt-0.5 text-[11px] text-st-green">
                   Zilele{calcul?.dataPreluare ? ' și data preluării au' : ' au'} fost completate. Restul câmpurilor nu au fost modificate.
                 </p>
               </div>

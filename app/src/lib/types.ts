@@ -1,4 +1,5 @@
 import { formatCanonic } from './majuscule'
+import { STARE } from './culori'
 
 // Forma unui dosar, asa cum e stocata azi in Supabase (tabelul `dosare`, coloana `data`
 // jsonb — vezi supabase/migrations/20260921120000_dosare_servicii_per_row.sql). Portata
@@ -92,10 +93,10 @@ export interface Serviciu {
 }
 
 export const ETAPA_META: Record<Etapa, { label: string; color: string; detaliu: string }> = {
-  rezervat: { label: 'REZERVAT', color: '#3d8bff', detaliu: 'mașina nu e încă predată' },
-  la_client: { label: 'LA CLIENT', color: '#00f5a0', detaliu: 'bifa Predat · curge termenul' },
-  de_trimis: { label: 'DE TRIMIS', color: '#e879f9', detaliu: 'bifa Preluat · documente, drive, mail' },
-  finalizat: { label: 'FINALIZAT', color: '#94a3b8', detaliu: 'dosar închis' },
+  rezervat: { label: 'REZERVAT', color: STARE.albastru, detaliu: 'mașina nu e încă predată' },
+  la_client: { label: 'LA CLIENT', color: STARE.verde, detaliu: 'bifa Predat · curge termenul' },
+  de_trimis: { label: 'DE TRIMIS', color: STARE.mov, detaliu: 'bifa Preluat · documente, drive, mail' },
+  finalizat: { label: 'FINALIZAT', color: STARE.gri, detaliu: 'dosar închis' },
 }
 
 // Dosarele mai vechi (migrate din blob-ul app_storage sau salvate inainte sa existe un

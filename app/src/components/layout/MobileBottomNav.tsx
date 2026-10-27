@@ -1,5 +1,6 @@
 import { FileEdit, FileSearch, Plus } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { STARE } from '@/lib/culori'
 
 // Bara de jos de pe mobil (<md): actiunile rapide. In centru „Dosar nou” (butonul mare, ca cel de pe
 // site), in stanga „Zile din deviz”, in dreapta „Modificare PDF”. Navigarea intre sectiuni e sus
@@ -19,7 +20,7 @@ function Actiune({
     <button
       type="button"
       onClick={onClick}
-      className="group flex min-h-[62px] flex-1 flex-col items-center justify-center gap-1 rounded-[13px] py-1.5 text-[11px] font-bold text-[#9aa8c1] transition-colors active:bg-white/5"
+      className="group flex min-h-[62px] flex-1 flex-col items-center justify-center gap-1 rounded-[13px] py-1.5 text-[11px] font-bold text-tx-3 transition-colors active:bg-white/5"
     >
       <span
         className="flex size-8 items-center justify-center rounded-[10px] border transition-transform duration-150 group-active:scale-90 motion-reduce:transition-none"
@@ -43,11 +44,11 @@ export function MobileBottomNav({
 }) {
   return (
     <nav
-      className="fixed inset-x-0 bottom-0 z-40 flex items-end gap-1 border-t border-[#1c273f] px-3 pb-[env(safe-area-inset-bottom)] backdrop-blur-[14px] md:hidden"
+      className="fixed inset-x-0 bottom-0 z-40 flex items-end gap-1 border-t border-border px-3 pb-[env(safe-area-inset-bottom)] backdrop-blur-[14px] md:hidden"
       style={{ background: 'linear-gradient(#0a1224f2, #070b14f2)' }}
       aria-label="Acțiuni rapide"
     >
-      <Actiune label="Zile din deviz" icon={FileSearch} onClick={onDeviz} accent="#7dd3fc" />
+      <Actiune label="Zile din deviz" icon={FileSearch} onClick={onDeviz} accent={STARE.albastru} />
 
       <div className="flex w-[92px] shrink-0 justify-center">
         <button
@@ -55,16 +56,16 @@ export function MobileBottomNav({
           onClick={onNou}
           aria-label="Dosar nou"
           className={cn(
-            'btn-brand-gradient relative -mt-7 mb-2 flex size-[62px] items-center justify-center rounded-full border border-[#bfdbfe]/45',
+            'btn-brand-gradient relative -mt-7 mb-2 flex size-[62px] items-center justify-center rounded-full border border-accent-tx/45',
             'transition-transform duration-150 active:scale-90 motion-reduce:transition-none',
           )}
-          style={{ boxShadow: '0 0 0 5px #070b14' }}
+          style={{ boxShadow: '0 0 0 5px var(--sidebar)' }}
         >
           <Plus className="size-7 text-white [filter:drop-shadow(0_1px_4px_rgba(0,0,0,.35))]" strokeWidth={2.6} aria-hidden="true" />
         </button>
       </div>
 
-      <Actiune label="Modificare PDF" icon={FileEdit} onClick={onPdf} accent="#00f5a0" />
+      <Actiune label="Modificare PDF" icon={FileEdit} onClick={onPdf} accent={STARE.verde} />
     </nav>
   )
 }

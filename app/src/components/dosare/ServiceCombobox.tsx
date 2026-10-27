@@ -87,7 +87,7 @@ export function ServiceCombobox({
         tabIndex={-1}
         aria-label={deschis ? 'Închide lista de service-uri' : 'Alege service'}
         onClick={() => setDeschis((d) => !d)}
-        className="absolute right-1.5 top-1/2 flex size-7 -translate-y-1/2 items-center justify-center rounded-lg text-[#94a3b8] transition-colors hover:bg-white/5 hover:text-white"
+        className="absolute right-1.5 top-1/2 flex size-7 -translate-y-1/2 items-center justify-center rounded-lg text-tx-3 transition-colors hover:bg-white/5 hover:text-white"
       >
         <ChevronDown className={cn('size-4 transition-transform', deschis && 'rotate-180')} aria-hidden="true" />
       </button>
@@ -96,10 +96,10 @@ export function ServiceCombobox({
         <div
           id={id ? id + '-lista' : undefined}
           role="listbox"
-          className="absolute inset-x-0 top-full z-50 mt-1.5 max-h-60 overflow-y-auto rounded-xl border border-[#2c3a5c] bg-[#0d1524] p-1.5 shadow-[0_20px_40px_-16px_rgba(0,0,0,.9)] animate-[fadeUp_.15s_ease-out_both]"
+          className="absolute inset-x-0 top-full z-50 mt-1.5 max-h-60 overflow-y-auto rounded-xl border border-border-strong bg-card p-1.5 shadow-[0_20px_40px_-16px_rgba(0,0,0,.9)] animate-[fadeUp_.15s_ease-out_both]"
         >
           {filtrate.length === 0 ? (
-            <div className="px-3 py-2.5 text-xs text-[#8b9ab5]">
+            <div className="px-3 py-2.5 text-xs text-tx-3">
               Niciun service în listă — se va folosi „{value.trim()}” ca service nou.
             </div>
           ) : (
@@ -119,14 +119,14 @@ export function ServiceCombobox({
                     i === activ ? 'bg-white/[.06]' : 'hover:bg-white/5',
                   )}
                 >
-                  <span className="flex size-8 shrink-0 items-center justify-center rounded-[10px] border border-[#253150] bg-[#253150]/30 text-[#94a3b8]">
+                  <span className="flex size-8 shrink-0 items-center justify-center rounded-[10px] border border-border bg-border/30 text-tx-3">
                     <Wrench className="size-4" aria-hidden="true" />
                   </span>
                   <span className="min-w-0 flex-1">
-                    <span className="block truncate text-[13px] font-bold text-[#f1f5f9]">{s.nume}</span>
-                    <span className="block truncate text-[11px] tabular-nums text-[#8b9ab5]">{s.telefon || 'fără telefon'}</span>
+                    <span className="block truncate text-[13px] font-bold text-foreground">{s.nume}</span>
+                    <span className="block truncate text-[11px] tabular-nums text-tx-3">{s.telefon || 'fără telefon'}</span>
                   </span>
-                  {selectat && <Check className="size-4 shrink-0 text-[#00f5a0]" strokeWidth={2.6} aria-hidden="true" />}
+                  {selectat && <Check className="size-4 shrink-0 text-st-green" strokeWidth={2.6} aria-hidden="true" />}
                 </button>
               )
             })

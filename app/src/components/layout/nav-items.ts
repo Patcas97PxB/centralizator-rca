@@ -1,7 +1,7 @@
 import { FileBarChart, FolderKanban, LayoutDashboard, Wrench } from 'lucide-react'
 
-// Trebuie sa ramana sincron cu --primary din index.css (hex literal, ca sa poata primi sufix alpha).
-export const SIDEBAR_ACCENT = '#2563eb'
+// Bara elementului activ din meniu (= --primary din index.css).
+export const SIDEBAR_ACCENT = 'var(--primary)'
 
 export type SectionKey = 'dosare' | 'dashboard' | 'servicii' | 'rapoarte' | 'setari'
 

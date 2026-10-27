@@ -5,10 +5,10 @@ import type { AnalizaDeviz } from '@/lib/deviz-analiza'
 import { cn } from '@/lib/utils'
 
 const TILE_BY_STAGE = {
-  idle: { border: 'rgba(96,165,250,.28)', color: '#93c5fd' },
-  scanning: { border: 'rgba(125,211,252,.7)', color: '#7dd3fc' },
-  done: { border: 'rgba(0,245,160,.55)', color: '#00f5a0' },
-  error: { border: 'rgba(255,77,109,.7)', color: '#ff4d6d' },
+  idle: { border: 'color-mix(in srgb, var(--accent-tx) 28%, transparent)', color: 'var(--accent-tx)' },
+  scanning: { border: 'color-mix(in srgb, var(--accent-tx) 70%, transparent)', color: 'var(--accent-tx)' },
+  done: { border: 'color-mix(in srgb, var(--st-green) 55%, transparent)', color: 'var(--st-green)' },
+  error: { border: 'color-mix(in srgb, var(--st-red) 70%, transparent)', color: 'var(--st-red)' },
 } as const
 
 export function ScanDevizCard({ onApply }: { onApply: (an: AnalizaDeviz) => void }) {
@@ -45,7 +45,7 @@ export function ScanDevizCard({ onApply }: { onApply: (an: AnalizaDeviz) => void
       style={{
         border: '1px solid var(--border)',
         background: 'var(--card)',
-        outline: dragOver ? '2px dashed rgba(125,211,252,.8)' : undefined,
+        outline: dragOver ? '2px dashed color-mix(in srgb, var(--accent-tx) 80%, transparent)' : undefined,
         outlineOffset: -6,
       }}
       onDragOver={(e) => {
@@ -57,9 +57,9 @@ export function ScanDevizCard({ onApply }: { onApply: (an: AnalizaDeviz) => void
     >
 
       <div className="relative flex items-center justify-between gap-2">
-        <span className="whitespace-nowrap text-[13px] font-extrabold text-[#f1f5f9]">Zile din deviz</span>
+        <span className="whitespace-nowrap text-[13px] font-extrabold text-foreground">Zile din deviz</span>
         <span
-          className="shrink-0 rounded-full bg-[#2563eb] px-[7px] py-0.5 text-[9.5px] font-extrabold text-white"
+          className="shrink-0 rounded-full bg-primary px-[7px] py-0.5 text-[9.5px] font-extrabold text-white"
         >
           NOU
         </span>
@@ -72,7 +72,7 @@ export function ScanDevizCard({ onApply }: { onApply: (an: AnalizaDeviz) => void
           disabled={stage === 'scanning'}
           aria-label="Alege un deviz de scanat"
           className="relative flex h-16 w-[54px] shrink-0 items-center justify-center overflow-hidden rounded-xl border transition-[border-color,box-shadow] duration-300"
-          style={{ borderColor: tile.border, color: tile.color, background: 'linear-gradient(#0b1633, #0a1230)' }}
+          style={{ borderColor: tile.border, color: tile.color, background: 'var(--background)' }}
         >
           {stage === 'done' ? (
             <Check className="size-6 animate-[devizPopIn_.4s_cubic-bezier(.2,.9,.2,1)_both]" aria-hidden="true" />
@@ -85,7 +85,7 @@ export function ScanDevizCard({ onApply }: { onApply: (an: AnalizaDeviz) => void
             <span
               aria-hidden
               className="absolute inset-x-0 h-[18px] animate-[devizBeam_1s_ease-in-out_infinite_alternate]"
-              style={{ background: 'linear-gradient(180deg, transparent, rgba(125,211,252,.85), transparent)' }}
+              style={{ background: 'linear-gradient(180deg, transparent, color-mix(in srgb, var(--accent-tx) 85%, transparent), transparent)' }}
             />
           )}
         </button>
@@ -93,18 +93,18 @@ export function ScanDevizCard({ onApply }: { onApply: (an: AnalizaDeviz) => void
         <div className="min-w-0 flex-1">
           {stage === 'idle' && (
             <>
-              <div className="text-[12.5px] font-extrabold text-[#e2e8f5]">Încarcă devizul</div>
-              <div className="text-[10.5px] text-[#8ba3cf]">PDF sau poze (toate paginile)</div>
+              <div className="text-[12.5px] font-extrabold text-foreground">Încarcă devizul</div>
+              <div className="text-[10.5px] text-tx-3">PDF sau poze (toate paginile)</div>
             </>
           )}
           {stage === 'scanning' && (
             <>
-              <div className="truncate text-sm font-bold" style={{ color: '#7dd3fc' }}>Scanez devizul…</div>
+              <div className="truncate text-sm font-bold" style={{ color: 'var(--accent-tx)' }}>Scanez devizul…</div>
               <div className="truncate text-xs text-muted-foreground">{progres || fileName}</div>
               <div className="mt-2 h-1 overflow-hidden rounded-full bg-white/10">
                 <div
                   className="h-full origin-left rounded-full animate-[devizProgress_2.6s_cubic-bezier(.4,0,.2,1)_both]"
-                  style={{ background: 'linear-gradient(90deg,#2563eb,#0ea5e9)' }}
+                  style={{ background: 'var(--primary)' }}
                 />
               </div>
             </>
@@ -112,10 +112,10 @@ export function ScanDevizCard({ onApply }: { onApply: (an: AnalizaDeviz) => void
           {stage === 'done' && result && (
             <div className="animate-[devizPopIn_.4s_cubic-bezier(.2,.9,.2,1)_both]">
               <div className="flex items-baseline gap-1.5">
-                <span className="text-2xl font-extrabold" style={{ color: '#00f5a0' }}>
+                <span className="text-2xl font-extrabold" style={{ color: 'var(--st-green)' }}>
                   {result.total}
                 </span>
-                <span className="text-xs font-bold" style={{ color: '#00f5a0' }}>ZILE</span>
+                <span className="text-xs font-bold" style={{ color: 'var(--st-green)' }}>ZILE</span>
               </div>
               {result.incomplet ? (
                 <div className="text-[11px] font-bold leading-snug" style={{ color: 'var(--warning)' }}>

@@ -17,8 +17,8 @@ const ZILE = [
 ]
 
 const CHIP =
-  'rounded-full border px-3 py-1 text-xs font-bold transition-colors border-[#2c3a5c] bg-[#1a2335] text-[#cbd5e1] hover:border-[#3b4d78] hover:text-white'
-const CHIP_ACTIV = 'border-[#fb923c] bg-[#fb923c]/15 text-[#fb923c] hover:border-[#fb923c] hover:text-[#fb923c]'
+  'rounded-full border px-3 py-1 text-xs font-bold transition-colors border-border-strong bg-surface-2 text-tx-2 hover:border-border-strong hover:text-white'
+const CHIP_ACTIV = 'border-st-orange bg-st-orange/15 text-st-orange hover:border-st-orange hover:text-st-orange'
 
 // „Amintește-mi…" din meniul pastilei de pe card: ziua din care dosarul apare in clopotel + ce ai de facut.
 export function ReminderModal({
@@ -52,7 +52,7 @@ export function ReminderModal({
       <DialogContent className="sm:max-w-[420px]">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <Bell className="size-4 text-[#fb923c]" aria-hidden="true" />
+            <Bell className="size-4 text-st-orange" aria-hidden="true" />
             Amintește-mi
           </DialogTitle>
           <DialogDescription>

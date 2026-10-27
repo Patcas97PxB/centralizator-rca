@@ -255,15 +255,15 @@ export function ModificarPdfModal({ open, onClose }: { open: boolean; onClose: (
     <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
       <DialogContent
         showCloseButton={false}
-        className="max-h-[92vh] grid-cols-[minmax(0,1fr)] gap-0 overflow-x-hidden overflow-y-auto rounded-[22px] border border-[#2c3a5c] bg-[#0d1524] bg-none p-0 shadow-[0_40px_90px_-30px_#000] sm:max-w-[1060px]"
+        className="max-h-[92vh] grid-cols-[minmax(0,1fr)] gap-0 overflow-x-hidden overflow-y-auto rounded-[22px] border border-border-strong bg-card bg-none p-0 shadow-[0_40px_90px_-30px_#000] sm:max-w-[1060px]"
       >
-        <DialogHeader className="sticky top-0 z-[5] flex-row items-center gap-3 rounded-t-[22px] border-b border-[#1e2a45] bg-[#0d1524] px-[22px] py-[18px]">
-          <span className="flex size-9 shrink-0 items-center justify-center rounded-[11px] border border-[#2563eb]/45 bg-[#2563eb]/[.16] text-[#60a5fa]">
+        <DialogHeader className="sticky top-0 z-[5] flex-row items-center gap-3 rounded-t-[22px] border-b border-border bg-card px-[22px] py-[18px]">
+          <span className="flex size-9 shrink-0 items-center justify-center rounded-[11px] border border-primary/45 bg-primary/[.16] text-accent-tx">
             <FileEdit className="size-[18px]" aria-hidden="true" />
           </span>
           <div className="min-w-0 flex-1">
-            <DialogTitle className="text-[17px] font-extrabold leading-tight text-[#f8fafc]">Modificare PDF</DialogTitle>
-            <p className="mt-0.5 truncate text-[12.5px] text-[#94a3b8]">
+            <DialogTitle className="text-[17px] font-extrabold leading-tight text-foreground">Modificare PDF</DialogTitle>
+            <p className="mt-0.5 truncate text-[12.5px] text-tx-3">
               {numeFisier || 'Alege un PDF: schimbă text sau separă paginile într-un PDF nou'}
             </p>
           </div>
@@ -271,7 +271,7 @@ export function ModificarPdfModal({ open, onClose }: { open: boolean; onClose: (
             type="button"
             aria-label="Închide"
             onClick={onClose}
-            className="flex size-[34px] shrink-0 items-center justify-center rounded-[10px] border border-[#253150] bg-[#253150]/[.28] text-[#cbd5e1] transition-colors hover:bg-[#253150]/60 hover:text-white"
+            className="flex size-[34px] shrink-0 items-center justify-center rounded-[10px] border border-border bg-border/[.28] text-tx-2 transition-colors hover:bg-border/60 hover:text-white"
           >
             <X className="size-4" strokeWidth={2.5} aria-hidden="true" />
           </button>
@@ -301,17 +301,17 @@ export function ModificarPdfModal({ open, onClose }: { open: boolean; onClose: (
               onDragLeave={() => setDragOver(false)}
               onDrop={onDrop}
               className={cn(
-                'flex w-full flex-col items-center justify-center gap-2 rounded-2xl border-[1.5px] border-dashed p-12 text-[#93c5fd] transition-colors hover:bg-[#2563eb]/10',
-                dragOver ? 'border-[#7dd3fc] bg-[#2563eb]/15' : 'border-[#60a5fa]/45 bg-[#2563eb]/[.06]',
+                'flex w-full flex-col items-center justify-center gap-2 rounded-2xl border-[1.5px] border-dashed p-12 text-accent-tx transition-colors hover:bg-primary/10',
+                dragOver ? 'border-accent-tx bg-primary/15' : 'border-accent-tx/45 bg-primary/[.06]',
               )}
             >
               <Upload className="size-8" strokeWidth={1.8} aria-hidden="true" />
-              <span className="text-[15px] font-extrabold text-[#e2e8f5]">Trage PDF-ul aici sau click pentru a alege</span>
-              <span className="max-w-md text-center text-xs text-[#8b9ab5]">
+              <span className="text-[15px] font-extrabold text-foreground">Trage PDF-ul aici sau click pentru a alege</span>
+              <span className="max-w-md text-center text-xs text-tx-3">
                 Merge pe PDF-uri cu text (generate de calculator), nu pe documente scanate. Fișierul original rămâne neschimbat — lucrezi pe o copie.
               </span>
             </button>
-            {eroare && <p className="mt-3 text-sm font-semibold text-[#ff8a9f]">{eroare}</p>}
+            {eroare && <p className="mt-3 text-sm font-semibold text-st-red-tx">{eroare}</p>}
           </div>
         ) : (
           <div className="grid gap-4 p-[18px] lg:grid-cols-[minmax(0,1fr)_330px]">
@@ -326,11 +326,11 @@ export function ModificarPdfModal({ open, onClose }: { open: boolean; onClose: (
                       setAlese([])
                     }}
                     aria-label="Pagina anterioară"
-                    className="flex size-8 items-center justify-center rounded-[9px] border border-[#253150] bg-[#253150]/[.28] text-[#cbd5e1] transition-colors hover:bg-[#253150]/60 disabled:opacity-40"
+                    className="flex size-8 items-center justify-center rounded-[9px] border border-border bg-border/[.28] text-tx-2 transition-colors hover:bg-border/60 disabled:opacity-40"
                   >
                     <ChevronLeft className="size-4" aria-hidden="true" />
                   </button>
-                  <span className="min-w-[88px] text-center text-[12.5px] font-bold text-[#cbd5e1]">
+                  <span className="min-w-[88px] text-center text-[12.5px] font-bold text-tx-2">
                     Pagina {pagina + 1} / {randare?.nrPagini ?? '…'}
                   </span>
                   <button
@@ -341,25 +341,25 @@ export function ModificarPdfModal({ open, onClose }: { open: boolean; onClose: (
                       setAlese([])
                     }}
                     aria-label="Pagina următoare"
-                    className="flex size-8 items-center justify-center rounded-[9px] border border-[#253150] bg-[#253150]/[.28] text-[#cbd5e1] transition-colors hover:bg-[#253150]/60 disabled:opacity-40"
+                    className="flex size-8 items-center justify-center rounded-[9px] border border-border bg-border/[.28] text-tx-2 transition-colors hover:bg-border/60 disabled:opacity-40"
                   >
                     <ChevronRight className="size-4" aria-hidden="true" />
                   </button>
                 </div>
-                <div className="flex items-center gap-2 text-[11.5px] text-[#7b8aa6]">
+                <div className="flex items-center gap-2 text-[11.5px] text-tx-3">
                   {ocupat && (
-                    <span className="flex items-center gap-1.5 text-[#7dd3fc]">
+                    <span className="flex items-center gap-1.5 text-accent-tx">
                       <Loader2 className="size-3.5 animate-spin" aria-hidden="true" />
                       {seLucreaza}
                     </span>
                   )}
-                  <button type="button" onClick={() => inputRef.current?.click()} className="font-semibold text-[#93c5fd] hover:underline">
+                  <button type="button" onClick={() => inputRef.current?.click()} className="font-semibold text-accent-tx hover:underline">
                     Alt fișier
                   </button>
                 </div>
               </div>
 
-              <div className="max-h-[68vh] overflow-auto rounded-xl border border-[#253150] bg-[#080d17] p-2">
+              <div className="max-h-[68vh] overflow-auto rounded-xl border border-border bg-sidebar p-2">
                 {randare && imagineUrl ? (
                   <div className="relative mx-auto w-full max-w-[760px] select-none bg-white shadow-[0_10px_40px_-14px_rgba(0,0,0,.9)]">
                     <img src={imagineUrl} alt={'Pagina ' + (pagina + 1)} className="block h-auto w-full" draggable={false} />
@@ -374,7 +374,7 @@ export function ModificarPdfModal({ open, onClose }: { open: boolean; onClose: (
                           onClick={(e) => alegeCuvant(c, e.shiftKey)}
                           className={cn(
                             'absolute rounded-[2px] transition-colors',
-                            ales ? 'bg-[#f59e0b]/40 outline outline-2 outline-[#f59e0b]' : 'hover:bg-[#2563eb]/25 hover:outline hover:outline-1 hover:outline-[#2563eb]/70',
+                            ales ? 'bg-st-amber/40 outline outline-2 outline-st-amber' : 'hover:bg-primary/25 hover:outline hover:outline-1 hover:outline-primary/70',
                           )}
                           style={{
                             left: `${(c.rect[0] / randare.latime) * 100}%`,
@@ -387,11 +387,11 @@ export function ModificarPdfModal({ open, onClose }: { open: boolean; onClose: (
                     })}
                   </div>
                 ) : (
-                  <div className="flex h-64 items-center justify-center text-sm text-[#7b8aa6]">{eroare || 'Se încarcă pagina…'}</div>
+                  <div className="flex h-64 items-center justify-center text-sm text-tx-3">{eroare || 'Se încarcă pagina…'}</div>
                 )}
               </div>
               {randare && randare.cuvinte.length === 0 && (
-                <p className="mt-2 flex items-center gap-1.5 text-xs text-[#fbbf24]">
+                <p className="mt-2 flex items-center gap-1.5 text-xs text-st-amber">
                   <AlertTriangle className="size-3.5" aria-hidden="true" />
                   Nu am găsit text pe această pagină — poate e scanată sau e o imagine, deci nu se poate edita.
                 </p>
@@ -399,41 +399,41 @@ export function ModificarPdfModal({ open, onClose }: { open: boolean; onClose: (
             </div>
 
             <div className="flex min-w-0 flex-col gap-3.5">
-              <section className="rounded-2xl border border-[#2563eb]/35 bg-[#2563eb]/[.07] p-3.5">
-                <div className="mb-2 text-[10px] font-extrabold tracking-[.1em] text-[#8ea0c4]">MODIFICARE</div>
+              <section className="rounded-2xl border border-primary/35 bg-primary/[.07] p-3.5">
+                <div className="mb-2 text-[10px] font-extrabold tracking-[.1em] text-tx-3">MODIFICARE</div>
                 {cuvinteAlese.length === 0 ? (
-                  <p className="text-xs leading-relaxed text-[#94a3b8]">
+                  <p className="text-xs leading-relaxed text-tx-3">
                     Apasă pe textul din pagină pe care vrei să-l schimbi (sau alege din lista de mai jos). Pentru mai multe cuvinte de pe același rând, ține apăsat Shift și apasă pe ultimul.
                   </p>
                 ) : (
                   <div className="flex flex-col gap-2">
                     <div>
-                      <div className="text-[11px] font-semibold text-[#8b9ab5]">Din</div>
-                      <div className="rounded-lg border border-[#f59e0b]/40 bg-[#f59e0b]/10 px-2.5 py-1.5 text-[13px] font-bold text-[#fde68a]">{textAles}</div>
+                      <div className="text-[11px] font-semibold text-tx-3">Din</div>
+                      <div className="rounded-lg border border-st-amber/40 bg-st-amber/10 px-2.5 py-1.5 text-[13px] font-bold text-st-amber-tx">{textAles}</div>
                     </div>
                     <label className="block">
-                      <span className="text-[11px] font-semibold text-[#8b9ab5]">În (lasă gol ca să ștergi)</span>
+                      <span className="text-[11px] font-semibold text-tx-3">În (lasă gol ca să ștergi)</span>
                       <input
                         value={textNou}
                         onChange={(e) => setTextNou(e.target.value)}
                         onKeyDown={(e) => e.key === 'Enter' && !ocupat && aplica()}
                         autoFocus
-                        className="mt-0.5 h-[38px] w-full rounded-[11px] border border-[#253150] bg-[#253150]/[.24] px-3 text-[13.5px] text-[#f1f5f9] outline-none focus:border-[#3b82f6]"
+                        className="mt-0.5 h-[38px] w-full rounded-[11px] border border-border bg-border/[.24] px-3 text-[13.5px] text-foreground outline-none focus:border-primary"
                       />
                     </label>
                     <button
                       type="button"
                       disabled={ocupat || (textNou.trim() === textAles && textNou.trim() !== '')}
                       onClick={aplica}
-                      className="h-9 rounded-[10px] border border-[#3b82f6] bg-[#2563eb] px-4 text-[12.5px] font-extrabold text-white transition-colors hover:bg-[#2563eb]/90 disabled:opacity-50"
+                      className="h-9 rounded-[10px] border border-primary bg-primary px-4 text-[12.5px] font-extrabold text-white transition-colors hover:bg-primary/90 disabled:opacity-50"
                     >
                       {textNou.trim() === '' ? 'Șterge textul ales' : 'Aplică modificarea'}
                     </button>
                   </div>
                 )}
-                {eroare && bytes && <p className="mt-2 text-xs font-semibold leading-snug text-[#ff8a9f]">{eroare}</p>}
+                {eroare && bytes && <p className="mt-2 text-xs font-semibold leading-snug text-st-red-tx">{eroare}</p>}
                 {avertizari.map((a) => (
-                  <p key={a} className="mt-2 flex gap-1.5 text-xs leading-snug text-[#fbbf24]">
+                  <p key={a} className="mt-2 flex gap-1.5 text-xs leading-snug text-st-amber">
                     <AlertTriangle className="mt-px size-3.5 shrink-0" aria-hidden="true" />
                     {a}
                   </p>
@@ -442,7 +442,7 @@ export function ModificarPdfModal({ open, onClose }: { open: boolean; onClose: (
 
               {chips.length > 0 && (
                 <section>
-                  <div className="mb-1.5 text-[10px] font-extrabold tracking-[.1em] text-[#5d6b86]">GĂSITE AUTOMAT PE PAGINĂ</div>
+                  <div className="mb-1.5 text-[10px] font-extrabold tracking-[.1em] text-tx-3">GĂSITE AUTOMAT PE PAGINĂ</div>
                   <div className="flex max-h-[190px] flex-col gap-1 overflow-y-auto pr-1">
                     {chips.map((ch) => (
                       <button
@@ -459,12 +459,12 @@ export function ModificarPdfModal({ open, onClose }: { open: boolean; onClose: (
                         className={cn(
                           'flex items-center justify-between gap-2 rounded-lg border px-2.5 py-1.5 text-left transition-colors',
                           alese.join() === ch.cuvinte.map((c) => c.id).join()
-                            ? 'border-[#f59e0b]/60 bg-[#f59e0b]/10'
-                            : 'border-[#253150] bg-white/[.02] hover:bg-white/[.06]',
+                            ? 'border-st-amber/60 bg-st-amber/10'
+                            : 'border-border bg-white/[.02] hover:bg-white/[.06]',
                         )}
                       >
-                        <span className="truncate text-[11px] text-[#8b9ab5]">{ch.eticheta}</span>
-                        <span className="shrink-0 text-[12.5px] font-bold tabular-nums text-[#e2e8f5]">{ch.valoare}</span>
+                        <span className="truncate text-[11px] text-tx-3">{ch.eticheta}</span>
+                        <span className="shrink-0 text-[12.5px] font-bold tabular-nums text-foreground">{ch.valoare}</span>
                       </button>
                     ))}
                   </div>
@@ -472,12 +472,12 @@ export function ModificarPdfModal({ open, onClose }: { open: boolean; onClose: (
               )}
 
               {randare && randare.nrPagini > 1 && (
-                <section className="rounded-2xl border border-[#00f5a0]/25 bg-[#00f5a0]/[.04] p-3.5">
-                  <div className="mb-1.5 flex items-center gap-1.5 text-[10px] font-extrabold tracking-[.1em] text-[#8ea0c4]">
+                <section className="rounded-2xl border border-st-green/25 bg-st-green/[.04] p-3.5">
+                  <div className="mb-1.5 flex items-center gap-1.5 text-[10px] font-extrabold tracking-[.1em] text-tx-3">
                     <Files className="size-3" aria-hidden="true" />
                     SEPARĂ PAGINI
                   </div>
-                  <p className="mb-2 text-xs leading-relaxed text-[#94a3b8]">Apasă pe paginile pe care le vrei într-un PDF nou (le vezi în stânga).</p>
+                  <p className="mb-2 text-xs leading-relaxed text-tx-3">Apasă pe paginile pe care le vrei într-un PDF nou (le vezi în stânga).</p>
                   <div className="flex flex-wrap gap-1.5">
                     {Array.from({ length: randare.nrPagini }, (_, i) => {
                       const bifata = paginiAlese.includes(i)
@@ -497,9 +497,9 @@ export function ModificarPdfModal({ open, onClose }: { open: boolean; onClose: (
                           className={cn(
                             'h-8 min-w-8 rounded-[9px] border px-2 text-[12.5px] font-bold tabular-nums transition-colors disabled:opacity-50',
                             bifata
-                              ? 'border-[#00f5a0]/70 bg-[#00f5a0]/20 text-[#00f5a0]'
-                              : 'border-[#253150] bg-white/[.02] text-[#cbd5e1] hover:bg-white/[.06]',
-                            i === pagina && !bifata && 'border-[#60a5fa]/70',
+                              ? 'border-st-green/70 bg-st-green/20 text-st-green'
+                              : 'border-border bg-white/[.02] text-tx-2 hover:bg-white/[.06]',
+                            i === pagina && !bifata && 'border-accent-tx/70',
                           )}
                         >
                           {i + 1}
@@ -511,7 +511,7 @@ export function ModificarPdfModal({ open, onClose }: { open: boolean; onClose: (
                     type="button"
                     disabled={ocupat || paginiAlese.length === 0}
                     onClick={salveazaPagini}
-                    className="mt-2.5 flex h-9 w-full items-center justify-center gap-2 rounded-[10px] border border-[#00f5a0]/50 bg-[#00f5a0]/15 px-4 text-[12.5px] font-extrabold text-[#00f5a0] transition-colors hover:bg-[#00f5a0]/25 disabled:opacity-40"
+                    className="mt-2.5 flex h-9 w-full items-center justify-center gap-2 rounded-[10px] border border-st-green/50 bg-st-green/15 px-4 text-[12.5px] font-extrabold text-st-green transition-colors hover:bg-st-green/25 disabled:opacity-40"
                   >
                     <Download className="size-4" aria-hidden="true" />
                     {paginiAlese.length === 0
@@ -525,7 +525,7 @@ export function ModificarPdfModal({ open, onClose }: { open: boolean; onClose: (
 
               <section>
                 <div className="mb-1.5 flex items-center justify-between">
-                  <span className="flex items-center gap-1.5 text-[10px] font-extrabold tracking-[.1em] text-[#5d6b86]">
+                  <span className="flex items-center gap-1.5 text-[10px] font-extrabold tracking-[.1em] text-tx-3">
                     <ScrollText className="size-3" aria-hidden="true" />
                     JURNAL MODIFICĂRI
                   </span>
@@ -534,7 +534,7 @@ export function ModificarPdfModal({ open, onClose }: { open: boolean; onClose: (
                       type="button"
                       disabled={ocupat}
                       onClick={anuleazaUltima}
-                      className="flex items-center gap-1 text-[11px] font-semibold text-[#93c5fd] hover:underline disabled:opacity-50"
+                      className="flex items-center gap-1 text-[11px] font-semibold text-accent-tx hover:underline disabled:opacity-50"
                     >
                       <Undo2 className="size-3" aria-hidden="true" />
                       Anulează ultima
@@ -542,13 +542,13 @@ export function ModificarPdfModal({ open, onClose }: { open: boolean; onClose: (
                   )}
                 </div>
                 {jurnal.length === 0 ? (
-                  <p className="text-xs text-[#64748b]">Nicio modificare încă. Originalul rămâne neschimbat.</p>
+                  <p className="text-xs text-tx-3">Nicio modificare încă. Originalul rămâne neschimbat.</p>
                 ) : (
                   <ol className="flex max-h-[130px] flex-col gap-1 overflow-y-auto text-xs">
                     {jurnal.map((j, i) => (
-                      <li key={i} className="rounded-lg border border-[#253150] bg-white/[.02] px-2.5 py-1.5 text-[#cbd5e1]">
-                        <span className="text-[#7b8aa6]">p.{j.pagina} · </span>
-                        <span className="text-[#fde68a]">{j.din}</span> → <span className="font-bold text-[#3ddc97]">{j.in}</span>
+                      <li key={i} className="rounded-lg border border-border bg-white/[.02] px-2.5 py-1.5 text-tx-2">
+                        <span className="text-tx-3">p.{j.pagina} · </span>
+                        <span className="text-st-amber-tx">{j.din}</span> → <span className="font-bold text-st-green">{j.in}</span>
                       </li>
                     ))}
                   </ol>
@@ -560,7 +560,7 @@ export function ModificarPdfModal({ open, onClose }: { open: boolean; onClose: (
                   type="button"
                   disabled={ocupat || jurnal.length === 0}
                   onClick={descarcaPdf}
-                  className="flex h-10 items-center justify-center gap-2 rounded-[10px] border border-[#00f5a0]/50 bg-[#00f5a0]/15 px-4 text-[13px] font-extrabold text-[#00f5a0] transition-colors hover:bg-[#00f5a0]/25 disabled:opacity-40"
+                  className="flex h-10 items-center justify-center gap-2 rounded-[10px] border border-st-green/50 bg-st-green/15 px-4 text-[13px] font-extrabold text-st-green transition-colors hover:bg-st-green/25 disabled:opacity-40"
                 >
                   <Download className="size-4" aria-hidden="true" />
                   Descarcă PDF-ul modificat
@@ -569,7 +569,7 @@ export function ModificarPdfModal({ open, onClose }: { open: boolean; onClose: (
                   type="button"
                   disabled={jurnal.length === 0}
                   onClick={descarcaJurnal}
-                  className="flex h-9 items-center justify-center gap-2 rounded-[10px] border border-[#2c3a5c] bg-[#1a2335] px-4 text-xs font-bold text-[#e2e8f5] transition-colors hover:bg-[#222d46] disabled:opacity-40"
+                  className="flex h-9 items-center justify-center gap-2 rounded-[10px] border border-border-strong bg-surface-2 px-4 text-xs font-bold text-foreground transition-colors hover:bg-surface-hover disabled:opacity-40"
                 >
                   <FileText className="size-3.5" aria-hidden="true" />
                   Descarcă jurnalul (.txt)

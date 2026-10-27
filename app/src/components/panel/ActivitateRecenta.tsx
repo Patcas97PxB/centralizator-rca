@@ -30,9 +30,9 @@ export function ActivitateRecenta({
     .slice(0, limit)
 
   return (
-    <div className="w-full rounded-[20px] border border-[#253150] bg-[#10172a] p-4">
-      <div className="mb-[13px] flex items-center gap-2 text-[13.5px] font-bold text-[#f1f5f9]">
-        <Activity className="size-4 text-[#94a3b8]" aria-hidden="true" />
+    <div className="w-full rounded-[20px] border border-border bg-card p-4">
+      <div className="mb-[13px] flex items-center gap-2 text-[13.5px] font-bold text-foreground">
+        <Activity className="size-4 text-tx-3" aria-hidden="true" />
         Activitate recentă
       </div>
       {recente.length === 0 ? (
@@ -47,7 +47,7 @@ export function ActivitateRecenta({
                   type="button"
                   onClick={() => onAlege?.(d.id)}
                   title="Mergi la dosar"
-                  className="-mx-2 flex w-[calc(100%+1rem)] items-start gap-2.5 rounded-[10px] px-2 py-1 text-left text-[11.5px] transition-colors hover:bg-white/[.05] focus-visible:bg-white/[.05] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#3b82f6]"
+                  className="-mx-2 flex w-[calc(100%+1rem)] items-start gap-2.5 rounded-[10px] px-2 py-1 text-left text-[11.5px] transition-colors hover:bg-white/[.05] focus-visible:bg-white/[.05] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary"
                 >
                   <span
                     className="mt-[5px] size-2 shrink-0 rounded-full"
@@ -55,8 +55,8 @@ export function ActivitateRecenta({
                     aria-hidden="true"
                   />
                   <div className="min-w-0">
-                    <div className="truncate font-bold text-[#e2e8f5]">Dosar {d.nrAutoPagubit || d.nrDosar || '—'} actualizat</div>
-                    <div className="mt-px text-[#8b9ab5]">{timpRelativ(d.updatedAt as string)}</div>
+                    <div className="truncate font-bold text-foreground">Dosar {d.nrAutoPagubit || d.nrDosar || '—'} actualizat</div>
+                    <div className="mt-px text-tx-3">{timpRelativ(d.updatedAt as string)}</div>
                   </div>
                 </button>
               </li>

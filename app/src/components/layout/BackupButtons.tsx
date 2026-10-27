@@ -48,16 +48,16 @@ export function BackupButtons() {
 
   return (
     <>
-      <button type="button" className={cn('flex size-[34px] items-center justify-center rounded-[10px] border border-[#253150] bg-[#253150]/[.28] text-[#cbd5e1] transition-colors hover:bg-[#253150]/60 hover:text-white', deBackup && 'backup-glow')} onClick={() => {
+      <button type="button" className={cn('flex size-[34px] items-center justify-center rounded-[10px] border border-border bg-border/[.28] text-tx-2 transition-colors hover:bg-border/60 hover:text-white', deBackup && 'backup-glow')} onClick={() => {
           exportaBackup(dosare, servicii)
           setZileBackup(zileDeLaBackup())
         }} title={deBackup ? (zileBackup === null ? 'Exportă backup — nu ai făcut încă niciunul' : `Exportă backup — ultimul acum ${zileBackup} zile`) : 'Exportă backup'} aria-label="Exportă backup">
         <Download className="size-4" aria-hidden="true" />
       </button>
-      <button type="button" className="flex size-[34px] items-center justify-center rounded-[10px] border border-[#253150] bg-[#253150]/[.28] text-[#cbd5e1] transition-colors hover:bg-[#253150]/60 hover:text-white" onClick={() => inputRef.current?.click()} title="Importă backup" aria-label="Importă backup">
+      <button type="button" className="flex size-[34px] items-center justify-center rounded-[10px] border border-border bg-border/[.28] text-tx-2 transition-colors hover:bg-border/60 hover:text-white" onClick={() => inputRef.current?.click()} title="Importă backup" aria-label="Importă backup">
         <Upload className="size-4" aria-hidden="true" />
       </button>
-      <button type="button" className="flex size-[34px] items-center justify-center rounded-[10px] border border-[#253150] bg-[#253150]/[.28] text-[#cbd5e1] transition-colors hover:bg-[#253150]/60 hover:text-white" onClick={() => setRecuperare(true)} title="Recuperare dosare (șterse / versiuni vechi)" aria-label="Recuperare dosare">
+      <button type="button" className="flex size-[34px] items-center justify-center rounded-[10px] border border-border bg-border/[.28] text-tx-2 transition-colors hover:bg-border/60 hover:text-white" onClick={() => setRecuperare(true)} title="Recuperare dosare (șterse / versiuni vechi)" aria-label="Recuperare dosare">
         <History className="size-4" aria-hidden="true" />
       </button>
       <RecuperareModal open={recuperare} onClose={() => setRecuperare(false)} />

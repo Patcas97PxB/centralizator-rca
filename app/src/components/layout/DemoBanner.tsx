@@ -10,15 +10,15 @@ export function DemoBanner() {
 
   return (
     <div
-      className="relative z-[31] flex flex-wrap items-center justify-center gap-x-3 gap-y-1 px-4 py-1.5 text-center text-[11.5px] font-bold text-[#fde68a]"
-      style={{ background: 'linear-gradient(90deg, rgba(245,158,11,.22), rgba(124,58,237,.22))', borderBottom: '1px solid rgba(245,158,11,.35)' }}
+      className="relative z-[31] flex flex-wrap items-center justify-center gap-x-3 gap-y-1 px-4 py-1.5 text-center text-[11.5px] font-bold text-st-amber-tx"
+      style={{ background: 'linear-gradient(90deg, color-mix(in srgb, var(--st-amber) 22%, transparent), color-mix(in srgb, var(--st-violet) 22%, transparent))', borderBottom: '1px solid color-mix(in srgb, var(--st-amber) 35%, transparent)' }}
     >
       <span className="flex items-center gap-1.5">
         <FlaskConical className="size-3.5" aria-hidden="true" />
         VARIANTĂ DE TEST — modificările rămân doar pe acest dispozitiv
       </span>
       {confirm ? (
-        <span className="flex items-center gap-2 text-[#f8fafc]">
+        <span className="flex items-center gap-2 text-foreground">
           Revii la dosarele inițiale?
           <button
             type="button"
@@ -28,7 +28,7 @@ export function DemoBanner() {
               await reseteazaDemo()
               window.location.reload()
             }}
-            className="rounded-md bg-[#f59e0b] px-2 py-0.5 text-[11px] font-extrabold text-[#1b1220] disabled:opacity-60"
+            className="rounded-md bg-st-amber px-2 py-0.5 text-[11px] font-extrabold text-background disabled:opacity-60"
           >
             {lucreaza ? '…' : 'Da'}
           </button>
@@ -40,7 +40,7 @@ export function DemoBanner() {
         <button
           type="button"
           onClick={() => setConfirm(true)}
-          className="flex items-center gap-1 rounded-md border border-[#f59e0b]/45 px-2 py-0.5 text-[11px] text-[#fde68a] transition-colors hover:bg-[#f59e0b]/15"
+          className="flex items-center gap-1 rounded-md border border-st-amber/45 px-2 py-0.5 text-[11px] text-st-amber-tx transition-colors hover:bg-st-amber/15"
         >
           <RotateCcw className="size-3" aria-hidden="true" />
           Resetează datele

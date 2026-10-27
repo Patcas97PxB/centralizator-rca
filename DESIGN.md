@@ -19,8 +19,9 @@ colors:
   state-warning: "#FBBF24"
   state-ok: "#34D399"
   state-scheduled: "#60A5FA"
-  state-closed: "#64748B"
+  state-closed: "#94A3B8"
   state-violet: "#C084FC"
+  state-reminder: "#FB923C"
 typography:
   title:
     fontFamily: Plus Jakarta Sans
@@ -105,7 +106,7 @@ Mișcarea apare doar ca răspuns la o acțiune.
 - Neutrele fac aproape toată munca; `primary` (#2563EB, alb pe el 5,2:1) e singura culoare de acțiune pe butoane;
   textul albastru pe fundal închis folosește `accent-text` (#60A5FA, 6,8:1).
 - **Culoarea înseamnă stare** (ex. termen): `state-urgent` expirat/azi, `state-warning` 1–2 zile, `state-ok` ≥ 3 zile,
-  `state-scheduled` programat, `state-closed` închis. Apare ca bară îngustă pe marginea cardului, culoarea
+  `state-scheduled` programat, `state-closed` închis; `state-violet` = etapa DE TRIMIS, `state-reminder` = „Amintește-mi”. Apare ca bară îngustă pe marginea cardului, culoarea
   textului de stare și bara de progres — nu ca fundal, contur și umbră în același timp.
 - Text slab (`text-muted`) doar pentru informație secundară; contrast ≥ 4,5:1 pe `surface`.
 
@@ -143,5 +144,7 @@ Colțuri 12 px pe carduri și panouri, 8 px pe butoane și câmpuri, pastile com
 - Do: un singur pas următor per card; detaliile în panou; texte în limbajul utilizatorului.
 - Do: respectă `prefers-reduced-motion`; animații 150–300 ms, doar `transform`/`opacity`.
 - Don't: raze de lumină care se plimbă, glow, particule, degradeuri ca decor.
-- Don't: culori hex scrise direct în componente — doar roluri.
+- Don't: culori hex scrise direct în componente — doar roluri (clase `bg-surface-2`, `text-tx-3`, `text-accent-tx`,
+  `text-st-green`… sau `var(--rol)`). Excepție: `app/src/lib/culori.ts` (`STARE`), oglinda TS a culorilor de stare,
+  pentru locurile unde culoarea se combină în cod cu transparență.
 - Don't: două sisteme de culoare pe același card (stare + etapă colorată).

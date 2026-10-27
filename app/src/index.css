@@ -42,6 +42,27 @@
     --color-info-foreground: var(--info-foreground);
     --color-violet: var(--violet);
     --color-violet-foreground: var(--violet-foreground);
+    /* roluri „Liniștit” ca clase Tailwind: bg-surface-2, text-tx-3, text-accent-tx, text-st-green… */
+    --color-surface-2: var(--surface-2);
+    --color-surface-hover: var(--surface-hover);
+    --color-border-strong: var(--border-strong);
+    --color-tx-2: var(--tx-2);
+    --color-tx-3: var(--tx-3);
+    --color-accent-tx: var(--accent-tx);
+    --color-st-red: var(--st-red);
+    --color-st-red-tx: var(--st-red-tx);
+    --color-st-amber: var(--st-amber);
+    --color-st-amber-tx: var(--st-amber-tx);
+    --color-st-green: var(--st-green);
+    --color-st-green-tx: var(--st-green-tx);
+    --color-st-blue: var(--st-blue);
+    --color-st-blue-tx: var(--st-blue-tx);
+    --color-st-gray: var(--st-gray);
+    --color-st-gray-tx: var(--st-gray-tx);
+    --color-st-violet: var(--st-violet);
+    --color-st-violet-tx: var(--st-violet-tx);
+    --color-st-orange: var(--st-orange);
+    --color-st-orange-tx: var(--st-orange-tx);
     --radius-sm: calc(var(--radius) * 0.6);
     --radius-md: calc(var(--radius) * 0.8);
     --radius-lg: var(--radius);
@@ -104,6 +125,7 @@
 
     /* roluri „Liniștit” (DESIGN.md) — componentele noi folosesc doar acestea */
     --surface-2: #1c2333;
+    --surface-hover: #232c40;
     --border-strong: #334059;
     --tx-2: #a9b3c7;
     --tx-3: #8a95ac;
@@ -112,7 +134,9 @@
     --st-amber: #fbbf24; --st-amber-bg: rgba(251, 191, 36, .12); --st-amber-tx: #fcd34d;
     --st-green: #34d399; --st-green-bg: rgba(52, 211, 153, .12); --st-green-tx: #6ee7b7;
     --st-blue: #60a5fa;  --st-blue-bg: rgba(96, 165, 250, .13);  --st-blue-tx: #93c5fd;
-    --st-gray: #64748b;  --st-gray-bg: rgba(148, 163, 184, .12); --st-gray-tx: #cbd5e1;
+    --st-gray: #94a3b8;  --st-gray-bg: rgba(148, 163, 184, .12); --st-gray-tx: #cbd5e1;
+    --st-violet: #c084fc; --st-violet-tx: #d8b4fe;
+    --st-orange: #fb923c; --st-orange-tx: #fdba74;
 
     --hdrH: 66px;
     --danger-strong: #ff4d6d;

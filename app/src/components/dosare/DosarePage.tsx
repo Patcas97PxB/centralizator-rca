@@ -141,14 +141,14 @@ export function DosarePage({ actiune }: { actiune?: ActiuneRapida | null }) {
       <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_250px]">
         <div className="min-w-0 space-y-4">
 
-          <div className="rounded-[20px] border border-[#253150] bg-[#10172a] p-3">
+          <div className="rounded-[20px] border border-border bg-card p-3">
             <FilterBar filtre={filtre} onChange={setFiltre} servicii={servicii} onExport={() => exportDosareXlsx(filtrate)} nrAleMele={remindere(dosare).length} />
           </div>
 
           {filtre.doarAmintite && (
-            <div className="flex items-center justify-between rounded-xl border border-[#fb923c]/40 bg-[#fb923c]/10 px-3 py-2 text-sm text-[#fb923c]">
+            <div className="flex items-center justify-between rounded-xl border border-st-orange/40 bg-st-orange/10 px-3 py-2 text-sm text-st-orange">
               <span>Arăt doar dosarele marcate „Amintește-mi”.</span>
-              <Button variant="ghost" size="sm" className="h-7 gap-1 text-[#fb923c] hover:text-[#fb923c]" onClick={() => setFiltre({ ...filtre, doarAmintite: false })}>
+              <Button variant="ghost" size="sm" className="h-7 gap-1 text-st-orange hover:text-st-orange" onClick={() => setFiltre({ ...filtre, doarAmintite: false })}>
                 <X className="size-3.5" aria-hidden="true" />
                 Arată toate
               </Button>
@@ -193,7 +193,7 @@ export function DosarePage({ actiune }: { actiune?: ActiuneRapida | null }) {
         </div>
 
         <div className="flex flex-col gap-4">
-          <Button onClick={deschideNou} className="btn-brand-gradient hidden h-[42px] w-full gap-2 rounded-[13px] border border-[#bfdbfe]/45 text-sm font-extrabold tracking-[.01em] lg:flex">
+          <Button onClick={deschideNou} className="btn-brand-gradient hidden h-[42px] w-full gap-2 rounded-[13px] border border-accent-tx/45 text-sm font-extrabold tracking-[.01em] lg:flex">
             <Plus className="size-4" aria-hidden="true" />
             Dosar nou
           </Button>

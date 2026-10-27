@@ -15,7 +15,7 @@ export function SiteFooter({ className }: { className?: string }) {
   const doc = deschis ? DOCUMENTE_LEGALE[deschis] : null
 
   return (
-    <footer className={cn('flex flex-wrap items-center justify-center gap-x-4 gap-y-1.5 px-4 py-4 text-center text-[11.5px] text-[#8b9ab5]', className)}>
+    <footer className={cn('flex flex-wrap items-center justify-center gap-x-4 gap-y-1.5 px-4 py-4 text-center text-[11.5px] text-tx-3', className)}>
       <span>
         © {new Date().getFullYear()} {TITULAR} · Centralizator RCA. Toate drepturile rezervate.
       </span>
@@ -25,7 +25,7 @@ export function SiteFooter({ className }: { className?: string }) {
             key={cheie}
             type="button"
             onClick={() => setDeschis(cheie)}
-            className="rounded underline-offset-2 transition-colors hover:text-[#cbd5e1] hover:underline focus-visible:outline-2 focus-visible:outline-[#60a5fa]"
+            className="rounded underline-offset-2 transition-colors hover:text-tx-2 hover:underline focus-visible:outline-2 focus-visible:outline-accent-tx"
           >
             {eticheta}
           </button>

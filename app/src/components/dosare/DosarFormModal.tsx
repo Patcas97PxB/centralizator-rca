@@ -43,9 +43,9 @@ import { ContractFinalSection } from './ContractFinalSection'
 
 function Sectiune({ children }: { children: string }) {
   return (
-    <h3 className="mt-2 flex items-center gap-2 text-[10.5px] font-extrabold uppercase tracking-[.1em] text-[#7b8aa6] first:mt-0 sm:col-span-2">
+    <h3 className="mt-2 flex items-center gap-2 text-[10.5px] font-extrabold uppercase tracking-[.1em] text-tx-3 first:mt-0 sm:col-span-2">
       {children}
-      <span className="h-px flex-1 bg-[#1e2a45]" aria-hidden="true" />
+      <span className="h-px flex-1 bg-border" aria-hidden="true" />
     </h3>
   )
 }
@@ -162,23 +162,23 @@ export function DosarFormModal({
     <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
       <DialogContent
         showCloseButton={false}
-        className="max-h-[90vh] grid-cols-[minmax(0,1fr)] gap-0 overflow-x-hidden overflow-y-auto rounded-[22px] border border-[#2c3a5c] bg-[#0d1524] bg-none p-0 shadow-[0_40px_90px_-30px_#000] sm:max-w-[760px]"
+        className="max-h-[90vh] grid-cols-[minmax(0,1fr)] gap-0 overflow-x-hidden overflow-y-auto rounded-[22px] border border-border-strong bg-card bg-none p-0 shadow-[0_40px_90px_-30px_#000] sm:max-w-[760px]"
       >
-        <DialogHeader className="sticky top-0 z-[5] flex-row items-center gap-3 rounded-t-[22px] border-b border-[#1e2a45] bg-[#0d1524] px-[22px] py-[18px]">
-          <span className="flex size-9 shrink-0 items-center justify-center rounded-[11px] border border-[#2563eb]/45 bg-[#2563eb]/[.16] text-[#60a5fa]">
+        <DialogHeader className="sticky top-0 z-[5] flex-row items-center gap-3 rounded-t-[22px] border-b border-border bg-card px-[22px] py-[18px]">
+          <span className="flex size-9 shrink-0 items-center justify-center rounded-[11px] border border-primary/45 bg-primary/[.16] text-accent-tx">
             {dosar ? <Pencil className="size-[18px]" aria-hidden="true" /> : <FolderPlus className="size-[18px]" aria-hidden="true" />}
           </span>
           <div className="min-w-0 flex-1">
-            <DialogTitle className="text-[17px] font-extrabold leading-tight text-[#f8fafc]">{dosar ? 'Editează dosar' : 'Dosar nou'}</DialogTitle>
+            <DialogTitle className="text-[17px] font-extrabold leading-tight text-foreground">{dosar ? 'Editează dosar' : 'Dosar nou'}</DialogTitle>
             {dosar && (draft.nrAutoPagubit || draft.nrDosar) && (
-              <p className="mt-0.5 truncate text-[12.5px] text-[#94a3b8]">{[draft.nrAutoPagubit, draft.nrDosar].filter(Boolean).join(' · ')}</p>
+              <p className="mt-0.5 truncate text-[12.5px] text-tx-3">{[draft.nrAutoPagubit, draft.nrDosar].filter(Boolean).join(' · ')}</p>
             )}
           </div>
           <button
             type="button"
             aria-label="Închide"
             onClick={onClose}
-            className="flex size-[34px] shrink-0 items-center justify-center rounded-[10px] border border-[#253150] bg-[#253150]/[.28] text-[#cbd5e1] transition-colors hover:bg-[#253150]/60 hover:text-white"
+            className="flex size-[34px] shrink-0 items-center justify-center rounded-[10px] border border-border bg-border/[.28] text-tx-2 transition-colors hover:bg-border/60 hover:text-white"
           >
             <X className="size-4" strokeWidth={2.5} aria-hidden="true" />
           </button>
@@ -369,12 +369,12 @@ export function DosarFormModal({
 
         </div>
 
-        <div className="sticky bottom-0 z-[5] flex items-center justify-between gap-2 rounded-b-[22px] border-t border-[#1e2a45] bg-[#0d1524] px-[22px] py-3.5">
+        <div className="sticky bottom-0 z-[5] flex items-center justify-between gap-2 rounded-b-[22px] border-t border-border bg-card px-[22px] py-3.5">
           {dosar ? (
             <button
               type="button"
               onClick={() => setConfirmStergere(true)}
-              className="flex h-9 items-center gap-1.5 whitespace-nowrap rounded-[10px] px-2.5 text-[12.5px] font-bold text-[#f87171] transition-colors hover:bg-[#f87171]/10"
+              className="flex h-9 items-center gap-1.5 whitespace-nowrap rounded-[10px] px-2.5 text-[12.5px] font-bold text-st-red transition-colors hover:bg-st-red/10"
             >
               <Trash2 className="size-4" aria-hidden="true" />
               Șterge dosar
@@ -386,7 +386,7 @@ export function DosarFormModal({
             <button
               type="button"
               onClick={onClose}
-              className="h-9 rounded-[10px] border border-[#2c3a5c] bg-[#1a2335] px-4 text-[12.5px] font-bold text-[#e2e8f5] transition-colors hover:bg-[#222d46]"
+              className="h-9 rounded-[10px] border border-border-strong bg-surface-2 px-4 text-[12.5px] font-bold text-foreground transition-colors hover:bg-surface-hover"
             >
               Anulează
             </button>
@@ -394,7 +394,7 @@ export function DosarFormModal({
               type="button"
               onClick={() => handleSubmit()}
               disabled={saving}
-              className="h-9 rounded-[10px] border border-[#3b82f6] bg-[#2563eb] px-[18px] text-[12.5px] font-extrabold text-white transition-colors hover:bg-[#2563eb]/90 disabled:opacity-60"
+              className="h-9 rounded-[10px] border border-primary bg-primary px-[18px] text-[12.5px] font-extrabold text-white transition-colors hover:bg-primary/90 disabled:opacity-60"
             >
               {saving ? 'Se salvează…' : 'Salvează'}
             </button>

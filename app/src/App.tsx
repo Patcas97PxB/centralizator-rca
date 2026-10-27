@@ -73,7 +73,7 @@ function AppContent() {
       )}
 
       <Dialog open={devizDeschis} onOpenChange={setDevizDeschis}>
-        <DialogContent className="max-w-[calc(100%-2rem)] gap-3 rounded-[22px] border border-[#2c3a5c] bg-[#0d1524] bg-none p-4 sm:max-w-[380px]">
+        <DialogContent className="max-w-[calc(100%-2rem)] gap-3 rounded-[22px] border border-border-strong bg-card bg-none p-4 sm:max-w-[380px]">
           <DialogTitle className="sr-only">Zile din deviz</DialogTitle>
           <ScanDevizCard
             onApply={(an: AnalizaDeviz) => {

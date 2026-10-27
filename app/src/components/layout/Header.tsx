@@ -21,6 +21,7 @@ import { initiale, numeDinEmail } from '@/lib/autentificare'
 import { useDosareContext } from '@/contexts/DosareContext'
 import { faraReminder, fmtZi, peste, remindere, reminderScadent, textCand } from '@/lib/reminder'
 import { cn } from '@/lib/utils'
+import { STARE } from '@/lib/culori'
 
 type Tab = 'toate' | 'ale_mele'
 const CHEIE_TAB = 'rca-clopotel-tab'
@@ -39,7 +40,7 @@ function descriereAviz(tip: TipAviz, zile: number | null, d: Dosar): { culoare: 
   switch (tip) {
     case 'termen':
       return {
-        culoare: zile !== null && zile <= 0 ? '#ff4d6d' : '#fbbf24',
+        culoare: zile !== null && zile <= 0 ? STARE.rosu : STARE.galben,
         eticheta: zile === null ? 'termen' : zile < 0 ? `expirat (+${Math.abs(zile)})` : zile === 0 ? 'azi' : zileText(zile),
         detaliu: d.telClient
           ? `Sună clientul: ${d.telClient}`
@@ -47,19 +48,19 @@ function descriereAviz(tip: TipAviz, zile: number | null, d: Dosar): { culoare: 
       }
     case 'deviz':
       return {
-        culoare: '#60a5fa',
+        culoare: STARE.albastru,
         eticheta: 'fără deviz',
         detaliu: `Sună service-ul după deviz${d.telService ? `: ${d.telService}` : ''} · predată de ${zileText(zile ?? 0)}`,
       }
     case 'netrimis':
       return {
-        culoare: '#e879f9',
+        culoare: STARE.mov,
         eticheta: 'netrimis',
         detaliu: `Preluată de ${zileText(zile ?? 0)} · centralizează documentele și trimite mailul`,
       }
     default:
       return {
-        culoare: '#fb923c',
+        culoare: STARE.portocaliu,
         eticheta: textCand(d.amintesteLa),
         detaliu: d.amintesteNota
           ? d.amintesteNota + (/client/i.test(d.amintesteNota) && d.telClient ? `: ${d.telClient}` : /service/i.test(d.amintesteNota) && d.telService ? `: ${d.telService}` : '')
@@ -114,7 +115,7 @@ export function Header({
 
   return (
     <header ref={headerRef} className="isolate sticky top-0 z-30 flex min-h-[58px] flex-wrap items-center gap-3 overflow-hidden px-4 py-3 backdrop-blur-[14px] md:px-6 md:py-[14px]"
-      style={{ background: 'rgba(14,19,32,.94)' }}>
+      style={{ background: 'color-mix(in srgb, var(--background) 94%, transparent)' }}>
       <span
         aria-hidden
         className="pointer-events-none absolute inset-x-0 bottom-0 h-px"
@@ -123,8 +124,8 @@ export function Header({
       <img src={assetUrl('/icons/logo.png')} alt="Centralizator RCA" className="h-8 w-auto md:hidden" />
 
       <div className="hidden min-w-0 md:block">
-        <h1 className="truncate text-[19px] font-extrabold tracking-[-.015em] text-[#f8fafc]">{title}</h1>
-        {subtitle && <p className="mt-0.5 truncate text-[12.5px] text-[#9fb3d9]">{subtitle}</p>}
+        <h1 className="truncate text-[19px] font-extrabold tracking-[-.015em] text-foreground">{title}</h1>
+        {subtitle && <p className="mt-0.5 truncate text-[12.5px] text-tx-3">{subtitle}</p>}
       </div>
 
       <div className="ml-auto flex flex-wrap items-center justify-end gap-2.5">
@@ -133,11 +134,11 @@ export function Header({
         <div className="hidden items-center gap-1.5 lg:flex">
           <BackupButtons />
         </div>
-        <div className="hidden items-center gap-[9px] rounded-xl border border-[#253150] bg-[#10172a] px-3 py-1.5 lg:flex">
-          <Clock3 className="size-4 text-[#94a3b8]" aria-hidden="true" />
+        <div className="hidden items-center gap-[9px] rounded-xl border border-border bg-card px-3 py-1.5 lg:flex">
+          <Clock3 className="size-4 text-tx-3" aria-hidden="true" />
           <div className="text-right leading-[1.15]">
             <div className="text-[13px] font-bold tabular-nums">{time}</div>
-            <div className="text-[11px] text-[#94a3b8]">{date}</div>
+            <div className="text-[11px] text-tx-3">{date}</div>
           </div>
         </div>
 
@@ -145,13 +146,13 @@ export function Header({
           <PopoverTrigger asChild>
             <button
               type="button"
-              className="relative flex size-[34px] items-center justify-center rounded-[10px] border border-[#253150] bg-[#253150]/[.28] text-[#cbd5e1] transition-colors hover:bg-[#253150]/60 hover:text-white"
+              className="relative flex size-[34px] items-center justify-center rounded-[10px] border border-border bg-border/[.28] text-tx-2 transition-colors hover:bg-border/60 hover:text-white"
               aria-label={deSunat.length > 0 ? `${deSunat.length} ${deSunat.length === 1 ? "aviz" : "avize"}` : 'Notificări'}
             >
               <Bell className="size-4" aria-hidden="true" />
               {deSunat.length > 0 && (
                 <span
-                  className="absolute -right-1.5 -top-1.5 flex h-5 min-w-5 items-center justify-center rounded-full bg-[#ef4444] px-[5px] text-[10px] font-extrabold text-white"
+                  className="absolute -right-1.5 -top-1.5 flex h-5 min-w-5 items-center justify-center rounded-full bg-st-red px-[5px] text-[10px] font-extrabold text-white"
                   style={{ boxShadow: '0 0 0 2px var(--background)' }}
                 >
                   {deSunat.length > 9 ? '9+' : deSunat.length}
@@ -159,13 +160,13 @@ export function Header({
               )}
             </button>
           </PopoverTrigger>
-          <PopoverContent align="end" className="w-[360px] max-w-[calc(100vw-1.5rem)] gap-0 rounded-2xl border-[#253150] bg-[#0d1524] p-0">
-            <div className="flex items-center justify-between border-b border-[#1e2a45] px-4 pb-2 pt-3">
-              <span className="flex items-center gap-2 text-[13.5px] font-bold text-[#f1f5f9]">
-                <Bell className="size-4 text-[#fb923c]" aria-hidden="true" />
+          <PopoverContent align="end" className="w-[360px] max-w-[calc(100vw-1.5rem)] gap-0 rounded-2xl border-border bg-card p-0">
+            <div className="flex items-center justify-between border-b border-border px-4 pb-2 pt-3">
+              <span className="flex items-center gap-2 text-[13.5px] font-bold text-foreground">
+                <Bell className="size-4 text-st-orange" aria-hidden="true" />
                 De făcut
               </span>
-              <div className="flex rounded-full border border-[#253150] bg-[#10172a] p-0.5 text-[11px] font-bold" role="tablist">
+              <div className="flex rounded-full border border-border bg-card p-0.5 text-[11px] font-bold" role="tablist">
                 {([['toate', 'Toate', deSunat.length], ['ale_mele', 'Ale mele', aleMele.length]] as const).map(([k, label, n]) => (
                   <button
                     key={k}
@@ -175,7 +176,7 @@ export function Header({
                     onClick={() => setTab(k)}
                     className={cn(
                       'rounded-full px-2.5 py-1 transition-colors',
-                      tab === k ? (k === 'ale_mele' ? 'bg-[#fb923c]/20 text-[#fb923c]' : 'bg-[#253150] text-white') : 'text-[#8b9ab5] hover:text-[#cbd5e1]',
+                      tab === k ? (k === 'ale_mele' ? 'bg-st-orange/20 text-st-orange' : 'bg-border text-white') : 'text-tx-3 hover:text-tx-2',
                     )}
                   >
                     {label} {n}
@@ -185,7 +186,7 @@ export function Header({
             </div>
             {tab === 'toate' ? (
               deSunat.length === 0 ? (
-                <p className="px-4 py-6 text-center text-[12.5px] text-[#8b9ab5]">Nimic de făcut acum.</p>
+                <p className="px-4 py-6 text-center text-[12.5px] text-tx-3">Nimic de făcut acum.</p>
               ) : (
                 <ul className="max-h-[340px] overflow-y-auto p-1.5">
                   {deSunat.map(({ dosar, zile, tip }) => {
@@ -202,11 +203,11 @@ export function Header({
                         >
                           <span className="size-2 shrink-0 rounded-full" style={{ background: culoare }} />
                           <span className="min-w-0 flex-1">
-                            <span className="block truncate text-[13px] font-bold text-[#e2e8f5]">
+                            <span className="block truncate text-[13px] font-bold text-foreground">
                               {dosar.nrAutoPagubit || dosar.nrDosar || '—'}
-                              {dosar.marcaModel && <span className="font-medium text-[#8b9ab5]"> · {dosar.marcaModel}</span>}
+                              {dosar.marcaModel && <span className="font-medium text-tx-3"> · {dosar.marcaModel}</span>}
                             </span>
-                            <span className="block truncate text-[11px] text-[#8b9ab5]">{detaliu}</span>
+                            <span className="block truncate text-[11px] text-tx-3">{detaliu}</span>
                           </span>
                           <span
                             className="shrink-0 rounded-full border px-2 py-0.5 text-[10px] font-extrabold uppercase"
@@ -221,7 +222,7 @@ export function Header({
                 </ul>
               )
             ) : aleMele.length === 0 ? (
-              <p className="px-4 py-6 text-center text-[12.5px] leading-relaxed text-[#8b9ab5]">
+              <p className="px-4 py-6 text-center text-[12.5px] leading-relaxed text-tx-3">
                 Nu ai remindere.
                 <br />
                 Pe card, apasă pe etapă → „Amintește-mi…”.
@@ -230,7 +231,7 @@ export function Header({
               <ul className="max-h-[340px] overflow-y-auto p-1.5">
                 {aleMele.map((dosar) => {
                   const scadent = reminderScadent(dosar)
-                  const culoare = scadent ? '#fb923c' : '#64748b'
+                  const culoare = scadent ? STARE.portocaliu : STARE.gri
                   return (
                     <li key={dosar.id} className="flex items-center gap-1 rounded-xl pr-1 transition-colors hover:bg-white/5">
                       <button
@@ -243,11 +244,11 @@ export function Header({
                       >
                         <span className="size-2 shrink-0 rounded-full" style={{ background: culoare }} />
                         <span className="min-w-0 flex-1">
-                          <span className="block truncate text-[13px] font-bold text-[#e2e8f5]">
+                          <span className="block truncate text-[13px] font-bold text-foreground">
                             {dosar.nrAutoPagubit || dosar.nrDosar || '—'}
-                            {dosar.marcaModel && <span className="font-medium text-[#8b9ab5]"> · {dosar.marcaModel}</span>}
+                            {dosar.marcaModel && <span className="font-medium text-tx-3"> · {dosar.marcaModel}</span>}
                           </span>
-                          <span className="block truncate text-[11px] text-[#8b9ab5]">
+                          <span className="block truncate text-[11px] text-tx-3">
                             {dosar.amintesteNota || 'Amintește-mi'}
                             {dosar.amintesteLa && !scadent ? ` · ${fmtZi(dosar.amintesteLa)}` : ''}
                           </span>
@@ -270,7 +271,7 @@ export function Header({
                           const p = (x: number) => String(x).padStart(2, '0')
                           void salveazaRapid({ ...dosar, amintesteLa: `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}` })
                         }}
-                        className="shrink-0 rounded-lg px-1.5 py-1 text-[10.5px] font-extrabold text-[#8b9ab5] transition-colors hover:bg-white/10 hover:text-white"
+                        className="shrink-0 rounded-lg px-1.5 py-1 text-[10.5px] font-extrabold text-tx-3 transition-colors hover:bg-white/10 hover:text-white"
                       >
                         +1 zi
                       </button>
@@ -279,7 +280,7 @@ export function Header({
                         title="Gata — scoate reminderul"
                         aria-label="Gata — scoate reminderul"
                         onClick={() => void salveazaRapid({ ...dosar, ...faraReminder })}
-                        className="flex size-7 shrink-0 items-center justify-center rounded-lg text-[#3ddc97] transition-colors hover:bg-[#3ddc97]/15"
+                        className="flex size-7 shrink-0 items-center justify-center rounded-lg text-st-green transition-colors hover:bg-st-green/15"
                       >
                         <Check className="size-4" strokeWidth={3} aria-hidden="true" />
                       </button>
@@ -294,16 +295,16 @@ export function Header({
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <button type="button" className="flex items-center gap-[9px] rounded-xl py-[5px] pl-[5px] pr-2 transition-colors hover:bg-white/5">
-              <Avatar className="size-[34px] ring-1 ring-[#60a5fa]/45">
-                <AvatarFallback className="bg-[#2563eb] text-xs font-extrabold text-white">
+              <Avatar className="size-[34px] ring-1 ring-accent-tx/45">
+                <AvatarFallback className="bg-primary text-xs font-extrabold text-white">
                   {INITIALE_UTILIZATOR}
                 </AvatarFallback>
               </Avatar>
               <span className="hidden text-left leading-[1.2] sm:block">
                 <span className="block text-[13px] font-bold">{NUME_UTILIZATOR}</span>
-                <span className="block text-[11.5px] text-[#94a3b8]">{ROL_UTILIZATOR}</span>
+                <span className="block text-[11.5px] text-tx-3">{ROL_UTILIZATOR}</span>
               </span>
-              <ChevronDown className="hidden size-[15px] text-[#94a3b8] sm:block" aria-hidden="true" />
+              <ChevronDown className="hidden size-[15px] text-tx-3 sm:block" aria-hidden="true" />
             </button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">

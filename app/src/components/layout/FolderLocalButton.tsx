@@ -8,7 +8,7 @@ import {
 } from '@/components/ui/dropdown-menu'
 
 const BTN =
-  'relative flex size-[34px] items-center justify-center rounded-[10px] border border-[#253150] bg-[#253150]/[.28] text-[#cbd5e1] transition-colors hover:bg-[#253150]/60 hover:text-white'
+  'relative flex size-[34px] items-center justify-center rounded-[10px] border border-border bg-border/[.28] text-tx-2 transition-colors hover:bg-border/60 hover:text-white'
 
 function Punct({ culoare }: { culoare: string }) {
   return (
@@ -43,7 +43,7 @@ export function FolderLocalButton() {
         aria-label="Permite citirea folderului de pe laptop"
       >
         <Laptop className="size-4" aria-hidden="true" />
-        <Punct culoare="#fbbf24" />
+        <Punct culoare="var(--st-amber)" />
       </button>
     )
   }
@@ -54,7 +54,7 @@ export function FolderLocalButton() {
       <DropdownMenuTrigger asChild>
         <button type="button" className={BTN} title={`Folder legat: „${f.nume}” · ${f.nrDosare} dosare`} aria-label="Folderul de pe laptop">
           <Laptop className="size-4" aria-hidden="true" />
-          <Punct culoare="#00f5a0" />
+          <Punct culoare="var(--st-green)" />
         </button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-64">

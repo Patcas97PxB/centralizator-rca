@@ -17,7 +17,7 @@ import { cn } from '@/lib/utils'
 import { LegendaButton } from './LegendaCulori'
 
 const CONTROL =
-  'h-[34px] rounded-[11px] border-[#253150] bg-[#253150]/[.24] text-[13.5px] font-semibold text-[#f1f5f9] transition-colors hover:bg-[#253150]/50'
+  'h-[34px] rounded-[11px] border-border bg-border/[.24] text-[13.5px] font-semibold text-foreground transition-colors hover:bg-border/50'
 
 export function FilterBar({
   filtre,
@@ -40,12 +40,12 @@ export function FilterBar({
     filtre.perioada !== 'toate' ||
     filtre.sortare !== 'actualizare'
   )
-  const statusColor = filtre.status === 'toate' ? '#8b9ab5' : (ETAPA_META[filtre.status]?.color ?? '#8b9ab5')
+  const statusColor = filtre.status === 'toate' ? 'var(--tx-3)' : (ETAPA_META[filtre.status]?.color ?? 'var(--tx-3)')
 
   return (
     <div className="flex flex-wrap items-center gap-2.5">
       <div className="relative w-full sm:w-auto sm:min-w-[140px] sm:flex-1">
-        <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-[#94a3b8]" aria-hidden="true" />
+        <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-tx-3" aria-hidden="true" />
         <Input
           value={filtre.search}
           onChange={(e) => onChange({ ...filtre, search: e.target.value })}
@@ -82,8 +82,8 @@ export function FilterBar({
             className={cn(
               CONTROL,
               // pe telefon doar iconitele (Filtre, Ale mele), ca filtrul de etape sa ramana lizibil
-              'flex shrink-0 items-center justify-center gap-2 whitespace-nowrap border px-2.5 text-[#cbd5e1] hover:text-white sm:w-[142px] sm:px-3',
-              activeFiltreAvansate && 'border-[#2563eb] bg-[#2563eb]/20 text-white',
+              'flex shrink-0 items-center justify-center gap-2 whitespace-nowrap border px-2.5 text-tx-2 hover:text-white sm:w-[142px] sm:px-3',
+              activeFiltreAvansate && 'border-primary bg-primary/20 text-white',
             )}
           >
             <SlidersHorizontal className="size-4" aria-hidden="true" />
@@ -183,13 +183,13 @@ export function FilterBar({
         aria-label="Ale mele"
         className={cn(
           CONTROL,
-          'flex shrink-0 items-center gap-1.5 whitespace-nowrap border px-2.5 text-[#cbd5e1] hover:text-white sm:px-3',
-          filtre.doarAmintite && 'border-[#fb923c] bg-[#fb923c]/15 text-[#fb923c] hover:bg-[#fb923c]/25 hover:text-[#fb923c]',
+          'flex shrink-0 items-center gap-1.5 whitespace-nowrap border px-2.5 text-tx-2 hover:text-white sm:px-3',
+          filtre.doarAmintite && 'border-st-orange bg-st-orange/15 text-st-orange hover:bg-st-orange/25 hover:text-st-orange',
         )}
       >
         <Bell className="size-4" aria-hidden="true" />
         <span className="hidden sm:inline">Ale mele</span>
-        <span className={cn('rounded-full px-1.5 text-[11px] font-extrabold tabular-nums', filtre.doarAmintite ? 'bg-[#fb923c]/25' : 'bg-[#253150]')}>
+        <span className={cn('rounded-full px-1.5 text-[11px] font-extrabold tabular-nums', filtre.doarAmintite ? 'bg-st-orange/25' : 'bg-border')}>
           {nrAleMele}
         </span>
       </button>

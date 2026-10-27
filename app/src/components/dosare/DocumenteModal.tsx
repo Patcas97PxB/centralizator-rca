@@ -28,7 +28,7 @@ function MutaCategoria({ curent, nume, onAlege }: { curent: string; nume: string
           type="button"
           aria-label={'Schimbă categoria pentru ' + nume}
           title="Schimbă categoria"
-          className="flex size-6 shrink-0 items-center justify-center rounded-md text-[#94a3b8] transition-colors hover:bg-white/10 hover:text-white"
+          className="flex size-6 shrink-0 items-center justify-center rounded-md text-tx-3 transition-colors hover:bg-white/10 hover:text-white"
         >
           <ArrowLeftRight className="size-3.5" aria-hidden="true" />
         </button>
@@ -237,21 +237,21 @@ export function DocumenteModal({
     <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
       <DialogContent
         showCloseButton={false}
-        className="max-h-[90vh] grid-cols-[minmax(0,1fr)] gap-0 overflow-x-hidden overflow-y-auto rounded-[22px] border border-[#2c3a5c] bg-[#0d1524] bg-none p-0 shadow-[0_40px_90px_-30px_#000] sm:max-w-[620px]"
+        className="max-h-[90vh] grid-cols-[minmax(0,1fr)] gap-0 overflow-x-hidden overflow-y-auto rounded-[22px] border border-border-strong bg-card bg-none p-0 shadow-[0_40px_90px_-30px_#000] sm:max-w-[620px]"
       >
-        <DialogHeader className="sticky top-0 z-[5] flex-row items-center gap-3 rounded-t-[22px] border-b border-[#1e2a45] bg-[#0d1524] px-[22px] py-[18px]">
-          <span className="flex size-9 shrink-0 items-center justify-center rounded-[11px] border border-[#2563eb]/45 bg-[#2563eb]/[.16] text-[#60a5fa]">
+        <DialogHeader className="sticky top-0 z-[5] flex-row items-center gap-3 rounded-t-[22px] border-b border-border bg-card px-[22px] py-[18px]">
+          <span className="flex size-9 shrink-0 items-center justify-center rounded-[11px] border border-primary/45 bg-primary/[.16] text-accent-tx">
             <FolderPlus className="size-[18px]" aria-hidden="true" />
           </span>
           <div className="min-w-0 flex-1">
-            <DialogTitle className="text-[17px] font-extrabold leading-tight text-[#f8fafc]">Documente dosar</DialogTitle>
-            {subtitlu && <p className="mt-0.5 truncate text-[12.5px] text-[#94a3b8]">{subtitlu}</p>}
+            <DialogTitle className="text-[17px] font-extrabold leading-tight text-foreground">Documente dosar</DialogTitle>
+            {subtitlu && <p className="mt-0.5 truncate text-[12.5px] text-tx-3">{subtitlu}</p>}
           </div>
           <button
             type="button"
             aria-label="Închide"
             onClick={onClose}
-            className="flex size-[34px] shrink-0 items-center justify-center rounded-[10px] border border-[#253150] bg-[#253150]/[.28] text-[#cbd5e1] transition-colors hover:bg-[#253150]/60 hover:text-white"
+            className="flex size-[34px] shrink-0 items-center justify-center rounded-[10px] border border-border bg-border/[.28] text-tx-2 transition-colors hover:bg-border/60 hover:text-white"
           >
             <X className="size-4" strokeWidth={2.5} aria-hidden="true" />
           </button>
@@ -260,25 +260,25 @@ export function DocumenteModal({
         <div className="flex flex-col gap-3.5 px-[22px] py-[18px]">
           <div className="flex flex-col gap-1.5">
             <div className="flex items-baseline justify-between gap-2.5">
-              <span className="text-[12.5px] font-bold text-[#cbd5e1]">Progres documente</span>
-              <span className="text-sm font-extrabold tabular-nums" style={{ color: st.complete ? '#00f5a0' : '#fbbf24' }}>
+              <span className="text-[12.5px] font-bold text-tx-2">Progres documente</span>
+              <span className="text-sm font-extrabold tabular-nums" style={{ color: st.complete ? 'var(--st-green)' : 'var(--st-amber)' }}>
                 {st.have} / {st.total}
               </span>
             </div>
-            <div className="h-1.5 overflow-hidden rounded-full bg-[#253150]/55">
+            <div className="h-1.5 overflow-hidden rounded-full bg-border/55">
               <span
                 className="block h-full rounded-full transition-[width,background] duration-[400ms]"
                 style={{
                   width: `${procent}%`,
-                  background: st.complete ? '#00f5a0' : '#3d8bff',
+                  background: st.complete ? 'var(--st-green)' : 'var(--primary)',
                 }}
               />
             </div>
           </div>
 
           {folder.nume && (
-            <p className="flex items-center gap-1.5 text-[11.5px] text-[#8b9ab5]">
-              <Laptop className="size-3.5 shrink-0 text-[#93c5fd]" aria-hidden="true" />
+            <p className="flex items-center gap-1.5 text-[11.5px] text-tx-3">
+              <Laptop className="size-3.5 shrink-0 text-accent-tx" aria-hidden="true" />
               {folder.permis !== 'granted'
                 ? `Folderul „${folder.nume}” de pe laptop așteaptă permisiunea — apasă iconița cu laptop din antet.`
                 : peLaptop.length > 0
@@ -298,15 +298,15 @@ export function DocumenteModal({
             onDragLeave={() => setDragOver(false)}
             onDrop={onDrop}
             className={cn(
-              'flex flex-col items-center justify-center gap-1.5 rounded-2xl border-[1.5px] border-dashed p-5 text-[#93c5fd] transition-colors hover:bg-[#2563eb]/10',
-              dragOver ? 'border-[#7dd3fc] bg-[#2563eb]/15' : 'border-[#60a5fa]/45 bg-[#2563eb]/[.06]',
+              'flex flex-col items-center justify-center gap-1.5 rounded-2xl border-[1.5px] border-dashed p-5 text-accent-tx transition-colors hover:bg-primary/10',
+              dragOver ? 'border-accent-tx bg-primary/15' : 'border-accent-tx/45 bg-primary/[.06]',
             )}
           >
             <Upload className="size-[26px]" strokeWidth={1.8} aria-hidden="true" />
-            <span className="text-[13.5px] font-extrabold text-[#e2e8f5]">
+            <span className="text-[13.5px] font-extrabold text-foreground">
               {seIncarca ? 'Se încarcă…' : 'Trage fișierele aici sau click pentru a alege'}
             </span>
-            <span className="text-[11.5px] text-[#8b9ab5]">Se bifează după nume · fișierul nu se urcă nicăieri, doar contractul final se citește pentru zile și tarif</span>
+            <span className="text-[11.5px] text-tx-3">Se bifează după nume · fișierul nu se urcă nicăieri, doar contractul final se citește pentru zile și tarif</span>
           </button>
           <input
             ref={inputRef}
@@ -320,11 +320,11 @@ export function DocumenteModal({
           />
 
           {status ? (
-            <p className={cn('text-xs leading-snug', statusEroare ? 'font-semibold text-[#ff8a9f]' : 'text-[#aab8d0]')}>{status}</p>
+            <p className={cn('text-xs leading-snug', statusEroare ? 'font-semibold text-st-red-tx' : 'text-tx-2')}>{status}</p>
           ) : stareLaptop?.stare === 'citeste' ? (
-            <p className="text-xs leading-snug text-[#aab8d0]">Se citește contractul final de pe laptop…</p>
+            <p className="text-xs leading-snug text-tx-2">Se citește contractul final de pe laptop…</p>
           ) : stareLaptop?.stare === 'eroare' && !draft.valoareContract ? (
-            <p className="text-xs font-semibold leading-snug text-[#ff8a9f]">{stareLaptop.mesaj}</p>
+            <p className="text-xs font-semibold leading-snug text-st-red-tx">{stareLaptop.mesaj}</p>
           ) : null}
 
           <div className="flex flex-col gap-2">
@@ -340,32 +340,32 @@ export function DocumenteModal({
                   className={cn(
                     // pe telefon butoanele trec sub nume, ca numele sa se vada intreg
                     'flex flex-wrap items-center gap-x-[11px] gap-y-2 rounded-[13px] border px-3 py-2.5 transition-colors sm:flex-nowrap',
-                    are ? 'border-[#00f5a0]/35 bg-[#00f5a0]/[.06]' : optional ? 'border-[#253150] bg-white/[.02] opacity-70' : 'border-[#2c3a5c] bg-white/[.02]',
+                    are ? 'border-st-green/35 bg-st-green/[.06]' : optional ? 'border-border bg-white/[.02] opacity-70' : 'border-border-strong bg-white/[.02]',
                   )}
                 >
                   <span
                     className="flex size-[34px] shrink-0 items-center justify-center rounded-[10px] border"
                     style={
                       are
-                        ? { borderColor: 'rgba(0,245,160,.5)', background: 'rgba(0,245,160,.16)', color: '#00f5a0' }
-                        : { borderColor: '#2c3a5c', background: 'transparent', color: '#5b6884' }
+                        ? { borderColor: 'color-mix(in srgb, var(--st-green) 50%, transparent)', background: 'color-mix(in srgb, var(--st-green) 16%, transparent)', color: 'var(--st-green)' }
+                        : { borderColor: 'var(--border-strong)', background: 'transparent', color: 'var(--tx-3)' }
                     }
                   >
                     {are ? <Check className="size-[17px]" strokeWidth={2.6} aria-hidden="true" /> : <span className="size-2 rounded-full bg-current opacity-50" />}
                   </span>
                   <div className="min-w-0 flex-1">
-                    <div className="flex flex-wrap items-center gap-x-2 text-[13.5px] font-bold text-[#f1f5f9] sm:flex-nowrap sm:truncate">
+                    <div className="flex flex-wrap items-center gap-x-2 text-[13.5px] font-bold text-foreground sm:flex-nowrap sm:truncate">
                       {docLabelText(key)}
                       {key === 'contract' && (
-                        <span className="rounded-full border border-[#a855f7]/50 bg-[#a855f7]/15 px-1.5 py-px text-[9px] font-extrabold tracking-wide text-[#d8b4fe]">OBLIGATORIU</span>
+                        <span className="rounded-full border border-st-violet/50 bg-st-violet/15 px-1.5 py-px text-[9px] font-extrabold tracking-wide text-st-violet-tx">OBLIGATORIU</span>
                       )}
                     </div>
                     {doarFlag ? (
-                      <div className="truncate text-[11.5px] text-[#3ddc97]">încărcat din „Editează” (Contract final)</div>
+                      <div className="truncate text-[11.5px] text-st-green">încărcat din „Editează” (Contract final)</div>
                     ) : are ? (
                       <div className="mt-0.5 flex flex-col gap-0.5">
                         {locale.map((f) => (
-                          <div key={'loc-' + f.nume} className="flex items-center gap-1.5 text-[11.5px] text-[#93c5fd]" title="Găsit în folderul dosarului de pe laptop">
+                          <div key={'loc-' + f.nume} className="flex items-center gap-1.5 text-[11.5px] text-accent-tx" title="Găsit în folderul dosarului de pe laptop">
                             <Laptop className="size-3.5 shrink-0" aria-hidden="true" />
                             <span className="min-w-0 flex-1 truncate">{f.nume}</span>
                             {key === 'contract' && f.deschide && (
@@ -375,7 +375,7 @@ export function DocumenteModal({
                                 disabled={seIncarca}
                                 aria-label={'Citește din nou ' + f.nume}
                                 title="Citește din nou contractul (zile, valoare, tarif)"
-                                className="flex size-6 shrink-0 items-center justify-center rounded-md text-[#93c5fd] transition-colors hover:bg-white/10 hover:text-white disabled:opacity-40"
+                                className="flex size-6 shrink-0 items-center justify-center rounded-md text-accent-tx transition-colors hover:bg-white/10 hover:text-white disabled:opacity-40"
                               >
                                 <RefreshCw className={cn('size-3.5', seIncarca && 'animate-spin')} aria-hidden="true" />
                               </button>
@@ -384,7 +384,7 @@ export function DocumenteModal({
                           </div>
                         ))}
                         {fisiere.map((f) => (
-                          <div key={f.id} className="flex items-center gap-1.5 text-[11.5px] text-[#3ddc97]">
+                          <div key={f.id} className="flex items-center gap-1.5 text-[11.5px] text-st-green">
                             <span className="min-w-0 flex-1 truncate">{f.nume}</span>
                             <MutaCategoria curent={key} nume={f.nume} onAlege={(k) => mutaDocument(f, k)} />
                             <button
@@ -392,7 +392,7 @@ export function DocumenteModal({
                               onClick={() => elimina(f)}
                               aria-label={'Șterge ' + f.nume}
                               title="Șterge"
-                              className="flex size-6 shrink-0 items-center justify-center rounded-md text-[#f87171] transition-colors hover:bg-[#f87171]/10"
+                              className="flex size-6 shrink-0 items-center justify-center rounded-md text-st-red transition-colors hover:bg-st-red/10"
                             >
                               <Trash2 className="size-3.5" aria-hidden="true" />
                             </button>
@@ -400,7 +400,7 @@ export function DocumenteModal({
                         ))}
                       </div>
                     ) : (
-                      <div className="truncate text-[11.5px] text-[#7b8aa6]">
+                      <div className="truncate text-[11.5px] text-tx-3">
                         {optional ? 'nu se aplică' : key === 'contract' ? 'lipsește — PDF winMentor, completează valoarea, zilele și durata contractului' : 'lipsește'}
                       </div>
                     )}
@@ -411,7 +411,7 @@ export function DocumenteModal({
                         <button
                           type="button"
                           onClick={() => alege(key)}
-                          className="h-8 rounded-[9px] border border-[#2c3a5c] bg-[#1a2335] px-3 text-xs font-bold text-[#e2e8f5] transition-colors hover:bg-[#222d46]"
+                          className="h-8 rounded-[9px] border border-border-strong bg-surface-2 px-3 text-xs font-bold text-foreground transition-colors hover:bg-surface-hover"
                         >
                           Încarcă
                         </button>
@@ -421,7 +421,7 @@ export function DocumenteModal({
                         type="button"
                         onClick={() => toggleOptional(key)}
                         title={optional ? 'Redevine obligatoriu' : 'Marchează ca nu se aplică'}
-                        className="h-8 rounded-[9px] px-2 text-[11px] font-semibold text-[#7b8aa6] transition-colors hover:text-[#e2e8f5]"
+                        className="h-8 rounded-[9px] px-2 text-[11px] font-semibold text-tx-3 transition-colors hover:text-foreground"
                       >
                         {optional ? 'obligatoriu' : 'nu se aplică'}
                       </button>
@@ -435,10 +435,10 @@ export function DocumenteModal({
           </div>
         </div>
 
-        <div className="sticky bottom-0 z-[5] flex items-center justify-between gap-3 rounded-b-[22px] border-t border-[#1e2a45] bg-[#0d1524] px-[22px] py-3.5">
+        <div className="sticky bottom-0 z-[5] flex items-center justify-between gap-3 rounded-b-[22px] border-t border-border bg-card px-[22px] py-3.5">
           <span
             className="flex min-w-0 items-center gap-2 text-[13px] font-bold"
-            style={{ color: lipsuri.length === 0 ? '#00f5a0' : '#fbbf24' }}
+            style={{ color: lipsuri.length === 0 ? 'var(--st-green)' : 'var(--st-amber)' }}
           >
             {lipsuri.length === 0 ? <Check className="size-4 shrink-0" strokeWidth={2.6} aria-hidden="true" /> : <AlertTriangle className="size-4 shrink-0" aria-hidden="true" />}
             <span className="line-clamp-2 leading-snug" title={lipsuri.join(', ') || undefined}>
@@ -448,7 +448,7 @@ export function DocumenteModal({
           <button
             type="button"
             onClick={onClose}
-            className="h-9 shrink-0 rounded-[10px] border border-[#3b82f6] bg-[#2563eb] px-[18px] text-[12.5px] font-extrabold text-white transition-colors hover:bg-[#2563eb]/90"
+            className="h-9 shrink-0 rounded-[10px] border border-primary bg-primary px-[18px] text-[12.5px] font-extrabold text-white transition-colors hover:bg-primary/90"
           >
             Gata
           </button>

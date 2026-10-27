@@ -104,14 +104,14 @@ export function PreluareDateSection({
   }
 
   return (
-    <div className="space-y-2 rounded-2xl border border-[#2563eb]/35 bg-[#2563eb]/[.08] p-3.5">
+    <div className="space-y-2 rounded-2xl border border-primary/35 bg-primary/[.08] p-3.5">
       <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-3">
         <div className="min-w-0 flex-[1_1_260px]">
-          <div className="flex items-center gap-2 text-[13.5px] font-bold text-[#f1f5f9]">
-            <FileScan className="size-4 shrink-0 text-[#60a5fa]" aria-hidden="true" />
+          <div className="flex items-center gap-2 text-[13.5px] font-bold text-foreground">
+            <FileScan className="size-4 shrink-0 text-accent-tx" aria-hidden="true" />
             Preluare date din document
           </div>
-          <p className="ml-6 mt-[5px] text-[11.5px] leading-[1.5] text-[#94a3b8] [text-wrap:pretty]">
+          <p className="ml-6 mt-[5px] text-[11.5px] leading-[1.5] text-tx-3 [text-wrap:pretty]">
             Notă de constatare, deviz sau orice document PDF/poză — completează automat câmpurile de mai jos.
           </p>
         </div>
@@ -119,7 +119,7 @@ export function PreluareDateSection({
           type="button"
           disabled={seIncarca}
           onClick={() => inputRef.current?.click()}
-          className="h-9 shrink-0 gap-[7px] whitespace-nowrap rounded-[10px] border border-[#3b82f6] bg-[#2563eb] px-4 text-[12.5px] font-extrabold tracking-[.02em] text-white hover:bg-[#2563eb]/90"
+          className="h-9 shrink-0 gap-[7px] whitespace-nowrap rounded-[10px] border border-primary bg-primary px-4 text-[12.5px] font-extrabold tracking-[.02em] text-white hover:bg-primary/90"
         >
           <Sparkles className="size-3.5" aria-hidden="true" />
           {seIncarca ? 'Se citește…' : 'PRELUARE DATE'}

@@ -15,17 +15,18 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
+import { STARE } from '@/lib/culori'
 
 // Culoarea cardului urmeaza termenul (0 rosu, 1 galben, 2 verde, 3 albastru, 4 finalizat), nu statusul.
-const RANK_COLOR = ['#ff4d6d', '#fbbf24', '#00f5a0', '#3d8bff', '#94a3b8']
+const RANK_COLOR = [STARE.rosu, STARE.galben, STARE.verde, STARE.albastru, STARE.gri]
 
 function Plate({ nr, model }: { nr: string; model?: string }) {
   return (
     <div className="flex w-full min-w-0 items-baseline gap-1.5">
-      <span className="shrink-0 whitespace-nowrap rounded-md border border-[#3a4a6e] bg-[#161f33] px-1.5 py-px text-[12.5px] font-extrabold leading-[1.3] tracking-[.02em] text-[#f8fafc]">
+      <span className="shrink-0 whitespace-nowrap rounded-md border border-border-strong bg-surface-2 px-1.5 py-px text-[12.5px] font-extrabold leading-[1.3] tracking-[.02em] text-foreground">
         {nr || '–'}
       </span>
-      {model && <span className="min-w-0 truncate text-[10.5px] font-semibold text-[#aab8d0]">{model}</span>}
+      {model && <span className="min-w-0 truncate text-[10.5px] font-semibold text-tx-2">{model}</span>}
     </div>
   )
 }
@@ -131,14 +132,14 @@ export function DosarCard({
           <span
             aria-hidden
             className="pointer-events-none absolute inset-0 z-[6] animate-[finalWash_2.2s_ease-out_both] rounded-[inherit]"
-            style={{ background: 'radial-gradient(circle at 50% 50%, rgba(0,245,160,.25), transparent 65%)' }}
+            style={{ background: 'radial-gradient(circle at 50% 50%, color-mix(in srgb, var(--st-green) 25%, transparent), transparent 65%)' }}
           />
           <span
             aria-hidden
             className="pointer-events-none absolute left-1/2 top-1/2 z-[7] flex size-16 -translate-x-1/2 -translate-y-1/2 animate-[finalCheck_2.2s_cubic-bezier(.2,.9,.2,1)_both] items-center justify-center rounded-full"
-            style={{ background: '#00f5a0', boxShadow: '0 0 30px 4px rgba(0,245,160,.7)' }}
+            style={{ background: 'var(--st-green)', boxShadow: '0 0 30px 4px color-mix(in srgb, var(--st-green) 70%, transparent)' }}
           >
-            <svg viewBox="0 0 24 24" className="size-9" fill="none" stroke="#052e16" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+            <svg viewBox="0 0 24 24" className="size-9" fill="none" stroke="var(--background)" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
               <path d="M5 12.5l4.5 4.5L19 7.5" style={{ strokeDasharray: 24, strokeDashoffset: 24, animation: 'finalDraw .5s .25s ease-out forwards' }} />
             </svg>
           </span>
@@ -160,8 +161,8 @@ export function DosarCard({
           className={cn(
             'flex items-center gap-1 self-center whitespace-nowrap rounded-full border px-2 py-0.5 text-[10px] font-extrabold',
             dst.complete
-              ? 'border-[#3ddc97]/45 bg-[#3ddc97]/12 text-[#3ddc97]'
-              : 'border-[#fbbf24]/45 bg-[#fbbf24]/12 text-[#fbbf24]',
+              ? 'border-st-green/45 bg-st-green/12 text-st-green'
+              : 'border-st-amber/45 bg-st-amber/12 text-st-amber',
           )}
         >
           {!dst.complete && <AlertTriangle className="size-3" aria-hidden="true" />}
@@ -183,13 +184,13 @@ export function DosarCard({
           className="flex min-w-0 flex-wrap items-center gap-x-1.5 gap-y-0.5 text-[10.5px]"
           title={dosar.updatedAt ? 'Actualizat ' + new Date(dosar.updatedAt).toLocaleString('ro-RO') : undefined}
         >
-          {dosar.nrDosar && <span className="whitespace-nowrap font-extrabold tabular-nums text-[#e2e8f5]">{dosar.nrDosar}</span>}
+          {dosar.nrDosar && <span className="whitespace-nowrap font-extrabold tabular-nums text-foreground">{dosar.nrDosar}</span>}
           {dosar.nrRezervare && (
-            <span title="Nr. rezervare intern" className="whitespace-nowrap font-extrabold tabular-nums text-[#93c5fd]">
+            <span title="Nr. rezervare intern" className="whitespace-nowrap font-extrabold tabular-nums text-accent-tx">
               {dosar.nrRezervare}
             </span>
           )}
-          {dosar.asigurator && <span className="max-w-full truncate whitespace-nowrap font-semibold text-[#aab8d0]">{dosar.asigurator}</span>}
+          {dosar.asigurator && <span className="max-w-full truncate whitespace-nowrap font-semibold text-tx-2">{dosar.asigurator}</span>}
         </div>
       </div>
 
@@ -206,7 +207,7 @@ export function DosarCard({
               <span className="min-w-0 flex-1 truncate text-left">{meta.label}</span>
               {dosar.amintesteMi && (
                 <Bell
-                  className="size-[11px] shrink-0 text-[#fb923c]"
+                  className="size-[11px] shrink-0 text-st-orange"
                   strokeWidth={2.5}
                   aria-label={'Amintește-mi ' + textCand(dosar.amintesteLa)}
                 />
@@ -234,41 +235,41 @@ export function DosarCard({
         </DropdownMenu>
         <div className="flex min-w-0 flex-col gap-0.5 text-[11px]">
           <div className="flex min-w-0 items-center gap-[5px]" title="Telefon client">
-            <span className="w-11 shrink-0 text-[9px] font-extrabold tracking-[.06em] text-[#e2e8f5]">CLIENT</span>
-            <span className="truncate font-bold tabular-nums text-[#e2e8f5]">{dosar.telClient || '—'}</span>
+            <span className="w-11 shrink-0 text-[9px] font-extrabold tracking-[.06em] text-foreground">CLIENT</span>
+            <span className="truncate font-bold tabular-nums text-foreground">{dosar.telClient || '—'}</span>
           </div>
           <div className="mt-0.5 flex min-w-0 items-center gap-[5px]" title="Service">
-            <span className="w-11 shrink-0 text-[9px] font-extrabold tracking-[.06em] text-[#e2e8f5]">SERVICE</span>
-            <span className="truncate font-bold text-[#e2e8f5]">{dosar.service || '—'}</span>
+            <span className="w-11 shrink-0 text-[9px] font-extrabold tracking-[.06em] text-foreground">SERVICE</span>
+            <span className="truncate font-bold text-foreground">{dosar.service || '—'}</span>
           </div>
           <div className="flex min-w-0 items-center gap-[5px]" title="Telefon service">
-            <span className="w-11 shrink-0 pr-0.5 text-right text-[9px] font-bold text-[#6b7a96]">tel.</span>
-            <span className="truncate font-semibold tabular-nums text-[#cbd5e1]">{dosar.telService || '—'}</span>
+            <span className="w-11 shrink-0 pr-0.5 text-right text-[9px] font-bold text-tx-3">tel.</span>
+            <span className="truncate font-semibold tabular-nums text-tx-2">{dosar.telService || '—'}</span>
           </div>
         </div>
       </div>
 
-      <div className="relative col-span-full grid grid-cols-2 items-center gap-x-3 gap-y-2 border-t border-[#1e2a45] pt-[7px] sm:grid-cols-[auto_minmax(0,1fr)_auto]">
+      <div className="relative col-span-full grid grid-cols-2 items-center gap-x-3 gap-y-2 border-t border-border pt-[7px] sm:grid-cols-[auto_minmax(0,1fr)_auto]">
         <button
           type="button"
           onClick={() => onPatch(dosar.id, predatFacut ? { predatBifat: false, preluatBifat: false, preluatLa: '' } : { predatBifat: true })}
           aria-pressed={predatFacut}
           title={predatFacut ? 'Contract început — click pentru a anula' : 'Marchează începutul contractului (mașina predată)'}
-          className="order-1 flex items-center gap-2 justify-self-start text-left text-[#9aa8c1] transition-colors hover:text-[#e2e8f5]"
+          className="order-1 flex items-center gap-2 justify-self-start text-left text-tx-3 transition-colors hover:text-foreground"
         >
           <span
             className="flex size-6 shrink-0 items-center justify-center rounded-full border-[1.5px] transition-colors"
             style={{
-              borderColor: predatFacut ? '#00f5a0' : '#3a4a6e',
-              background: predatFacut ? 'rgba(0,245,160,.22)' : 'transparent',
-              color: '#00f5a0',
+              borderColor: predatFacut ? 'var(--st-green)' : 'var(--border-strong)',
+              background: predatFacut ? 'color-mix(in srgb, var(--st-green) 22%, transparent)' : 'transparent',
+              color: 'var(--st-green)',
             }}
           >
             {predatFacut && <Check className="size-3.5" strokeWidth={3} aria-hidden="true" />}
           </span>
           <span className="flex flex-col items-start gap-px">
             <span className="whitespace-nowrap text-[10.5px] font-bold">Predat</span>
-            <span className="whitespace-nowrap text-xs font-extrabold tabular-nums text-[#e2e8f5]">{fmtDate(dosar.start) || '—'}</span>
+            <span className="whitespace-nowrap text-xs font-extrabold tabular-nums text-foreground">{fmtDate(dosar.start) || '—'}</span>
           </span>
         </button>
 
@@ -284,22 +285,22 @@ export function DosarCard({
                 ? 'Mașina s-a întors — click pentru a anula'
                 : 'Marchează că mașina s-a întors la client'
           }
-          className="order-2 flex flex-row-reverse items-center gap-2 justify-self-end text-right transition-colors enabled:hover:text-[#e2e8f5] disabled:cursor-not-allowed sm:order-3"
-          style={{ opacity: predatFacut ? 1 : 0.55, color: predatFacut ? '#9aa8c1' : '#5b6884' }}
+          className="order-2 flex flex-row-reverse items-center gap-2 justify-self-end text-right transition-colors enabled:hover:text-foreground disabled:cursor-not-allowed sm:order-3"
+          style={{ opacity: predatFacut ? 1 : 0.55, color: predatFacut ? 'var(--tx-2)' : 'var(--tx-3)' }}
         >
           <span
             className="flex size-6 shrink-0 items-center justify-center rounded-full border-[1.5px] transition-colors"
             style={{
-              borderColor: preluatFacut ? '#00f5a0' : '#2c3a5c',
-              background: preluatFacut ? 'rgba(0,245,160,.22)' : 'rgba(148,163,184,.08)',
-              color: '#00f5a0',
+              borderColor: preluatFacut ? 'var(--st-green)' : 'var(--border-strong)',
+              background: preluatFacut ? 'color-mix(in srgb, var(--st-green) 22%, transparent)' : 'color-mix(in srgb, var(--st-gray) 8%, transparent)',
+              color: 'var(--st-green)',
             }}
           >
             {preluatFacut && <Check className="size-3.5" strokeWidth={3} aria-hidden="true" />}
           </span>
           <span className="flex flex-col items-end gap-px">
             <span className="whitespace-nowrap text-[10.5px] font-bold">Preluat</span>
-            <span className="whitespace-nowrap text-xs font-extrabold tabular-nums" style={{ color: predatFacut ? '#e2e8f5' : '#5b6884' }}>
+            <span className="whitespace-nowrap text-xs font-extrabold tabular-nums" style={{ color: predatFacut ? 'var(--foreground)' : 'var(--tx-3)' }}>
               {fmtDate(rca.dataPreluare) || '—'}
             </span>
           </span>
@@ -317,16 +318,16 @@ export function DosarCard({
               {urgenta.bigLabel}
             </span>
           </div>
-          <div className="relative h-2 rounded-full border" style={{ background: 'rgba(37,49,80,.55)', borderColor: hex(urgColor, '73') }}>
+          <div className="relative h-2 rounded-full border" style={{ background: 'color-mix(in srgb, var(--border) 55%, transparent)', borderColor: hex(urgColor, '73') }}>
             <span
               className="absolute inset-y-0 left-0 origin-left rounded-full animate-[barGrow_.8s_cubic-bezier(.2,.8,.2,1)_both]"
               style={{
                 width: `${pct}%`,
-                background: `linear-gradient(90deg, ${hex(urgColor, '55')}, ${urgColor})`,
+                background: urgColor,
               }}
             />
           </div>
-          <div className="flex justify-center gap-1.5 whitespace-nowrap text-center text-[9.5px] font-semibold text-[#6b7a96]">
+          <div className="flex justify-center gap-1.5 whitespace-nowrap text-center text-[9.5px] font-semibold text-tx-3">
             {subStanga && <span>{subStanga}</span>}
             {subStanga && subDreapta && <span aria-hidden="true">·</span>}
             <span>{subDreapta}</span>
@@ -334,14 +335,14 @@ export function DosarCard({
         </div>
       </div>
 
-      <div className="relative col-span-full flex min-h-[22px] min-w-0 items-center gap-2 border-t border-[#1e2a45] pt-1.5">
+      <div className="relative col-span-full flex min-h-[22px] min-w-0 items-center gap-2 border-t border-border pt-1.5">
         {blocat ? (
           <span className="flex min-w-0 items-center gap-1.5 text-[11px] font-bold text-[var(--danger-strong)]" role="alert">
             <AlertTriangle className="size-3.5 shrink-0" aria-hidden="true" />
             <span className="truncate" title={blocat}>{blocat}</span>
           </span>
         ) : (
-          <span className="min-w-0 truncate text-[11px] leading-[1.35] text-[#aab8d0]" title={dosar.notes || undefined}>
+          <span className="min-w-0 truncate text-[11px] leading-[1.35] text-tx-2" title={dosar.notes || undefined}>
             {dosar.notes || '—'}
           </span>
         )}
@@ -351,7 +352,7 @@ export function DosarCard({
         <button
           type="button"
           onClick={() => onDeschide(dosar.id)}
-          className="flex h-7 w-full max-w-[170px] min-w-0 items-center justify-center gap-1.5 justify-self-start overflow-hidden whitespace-nowrap rounded-[9px] border border-[#2c3a5c] bg-[#1a2335] px-2.5 text-xs font-bold text-[#e2e8f5] transition-colors hover:border-[#3b4d78] hover:bg-[#222d46]"
+          className="flex h-7 w-full max-w-[170px] min-w-0 items-center justify-center gap-1.5 justify-self-start overflow-hidden whitespace-nowrap rounded-[9px] border border-border-strong bg-surface-2 px-2.5 text-xs font-bold text-foreground transition-colors hover:border-border-strong hover:bg-surface-hover"
         >
           <Pencil className="size-[13px]" aria-hidden="true" />
           Editează
@@ -366,11 +367,11 @@ export function DosarCard({
           style={
             finalizat
               ? {
-                  borderColor: '#00f5a0',
-                  background: 'rgba(0,245,160,.22)',
-                  color: '#00f5a0',
+                  borderColor: 'var(--st-green)',
+                  background: 'color-mix(in srgb, var(--st-green) 22%, transparent)',
+                  color: 'var(--st-green)',
                 }
-              : { borderColor: '#3a4a6e', background: 'transparent', color: '#5b6884' }
+              : { borderColor: 'var(--border-strong)', background: 'transparent', color: 'var(--tx-3)' }
           }
         >
           <Check className="size-[17px]" strokeWidth={3} aria-hidden="true" />
@@ -378,7 +379,7 @@ export function DosarCard({
         <button
           type="button"
           onClick={() => onDocumente(dosar.id)}
-          className="flex h-7 w-full max-w-[170px] min-w-0 items-center justify-center gap-1.5 justify-self-end overflow-hidden whitespace-nowrap rounded-[9px] border border-[#2c3a5c] bg-[#1a2335] px-2.5 text-xs font-bold text-[#e2e8f5] transition-colors hover:border-[#3b4d78] hover:bg-[#222d46]"
+          className="flex h-7 w-full max-w-[170px] min-w-0 items-center justify-center gap-1.5 justify-self-end overflow-hidden whitespace-nowrap rounded-[9px] border border-border-strong bg-surface-2 px-2.5 text-xs font-bold text-foreground transition-colors hover:border-border-strong hover:bg-surface-hover"
         >
           <FolderPlus className="size-[13px] shrink-0" aria-hidden="true" />
           <span className="truncate">Documente</span>

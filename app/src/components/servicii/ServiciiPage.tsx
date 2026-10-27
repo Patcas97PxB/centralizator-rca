@@ -19,8 +19,8 @@ import {
 // Portat din openServiceModal()/addService()/deleteService() (index.html), mutat dintr-un
 // modal accesat din formularul de dosar intr-o pagina dedicata (inlocuieste intrarea
 // "Clienți" din sidebar, care nu exista in aplicatia veche).
-const LABEL = 'mb-1.5 block text-[12.5px] font-semibold text-[#cbd5e1]'
-const INPUT = 'h-[38px] w-full rounded-[11px] border-[#253150] bg-[#253150]/[.24] px-3 text-[13.5px] text-[#f1f5f9]'
+const LABEL = 'mb-1.5 block text-[12.5px] font-semibold text-tx-2'
+const INPUT = 'h-[38px] w-full rounded-[11px] border-border bg-border/[.24] px-3 text-[13.5px] text-foreground'
 
 export function ServiciiPage() {
   const { servicii, salveazaServiciu, stergeServiciu } = useDosareContext()
@@ -60,7 +60,7 @@ export function ServiciiPage() {
         <p className="text-sm text-muted-foreground">Lista de service-uri folosită la completarea dosarelor.</p>
       </div>
 
-      <div className="flex flex-wrap items-end gap-2.5 rounded-[20px] border border-[#253150] bg-[#10172a] p-3.5">
+      <div className="flex flex-wrap items-end gap-2.5 rounded-[20px] border border-border bg-card p-3.5">
         <div className="min-w-[170px] flex-1">
           <Label htmlFor="serviceNume" className={LABEL}>Nume service</Label>
           <Input id="serviceNume" className={INPUT} value={nume} onChange={(e) => setNume(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && adauga()} />
@@ -69,7 +69,7 @@ export function ServiciiPage() {
           <Label htmlFor="serviceTel" className={LABEL}>Telefon</Label>
           <Input id="serviceTel" className={INPUT} value={telefon} onChange={(e) => setTelefon(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && adauga()} />
         </div>
-        <Button onClick={adauga} disabled={seAdauga} className="h-[38px] rounded-[11px] border border-[#3b82f6] bg-[#2563eb] px-[18px] text-[13.5px] font-bold text-white hover:bg-[#2563eb]/90">
+        <Button onClick={adauga} disabled={seAdauga} className="h-[38px] rounded-[11px] border border-primary bg-primary px-[18px] text-[13.5px] font-bold text-white hover:bg-primary/90">
           {seAdauga ? 'Se adaugă…' : 'Adaugă'}
         </Button>
       </div>
@@ -82,17 +82,17 @@ export function ServiciiPage() {
           {servicii.map((s, i) => (
             <div
               key={s.id}
-              className="animate-fade-up group flex items-center gap-3 rounded-[14px] border border-[#253150] bg-[#10172a] px-3.5 py-[11px] transition-all hover:-translate-y-0.5 hover:border-[#3b4d78]"
+              className="animate-fade-up group flex items-center gap-3 rounded-[14px] border border-border bg-card px-3.5 py-[11px] transition-all hover:-translate-y-0.5 hover:border-border-strong"
               style={staggerDelay(i)}
             >
-              <span className="flex size-8 shrink-0 items-center justify-center rounded-[10px] border border-[#253150] bg-[#253150]/30 text-[#94a3b8]">
+              <span className="flex size-8 shrink-0 items-center justify-center rounded-[10px] border border-border bg-border/30 text-tx-3">
                 <Wrench className="size-4" aria-hidden="true" />
               </span>
               <div className="min-w-0 flex-1">
-                <p className="truncate text-[13.5px] font-bold text-[#f1f5f9]">{s.nume}</p>
-                <p className="mt-px truncate text-[11.5px] tabular-nums text-[#8b9ab5]">{s.telefon || '—'}</p>
+                <p className="truncate text-[13.5px] font-bold text-foreground">{s.nume}</p>
+                <p className="mt-px truncate text-[11.5px] tabular-nums text-tx-3">{s.telefon || '—'}</p>
               </div>
-              <Button variant="ghost" size="icon" aria-label="Șterge service" className="size-8 rounded-[10px] text-[#f87171] hover:bg-[#f87171]/10 hover:text-[#f87171]" onClick={() => setDeStersId(s.id)}>
+              <Button variant="ghost" size="icon" aria-label="Șterge service" className="size-8 rounded-[10px] text-st-red hover:bg-st-red/10 hover:text-st-red" onClick={() => setDeStersId(s.id)}>
                 <Trash2 className="size-4" aria-hidden="true" />
               </Button>
             </div>

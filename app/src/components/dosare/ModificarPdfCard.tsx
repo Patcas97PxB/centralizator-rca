@@ -23,21 +23,21 @@ export function ModificarPdfCard() {
         }}
       >
         <div className="relative flex items-center justify-between gap-2">
-          <span className="whitespace-nowrap text-[13px] font-extrabold text-[#f1f5f9]">Modificare PDF</span>
-          <span className="shrink-0 rounded-full bg-[#2563eb] px-[7px] py-0.5 text-[9.5px] font-extrabold text-white">
+          <span className="whitespace-nowrap text-[13px] font-extrabold text-foreground">Modificare PDF</span>
+          <span className="shrink-0 rounded-full bg-primary px-[7px] py-0.5 text-[9.5px] font-extrabold text-white">
             NOU
           </span>
         </div>
         <div className="relative flex items-center gap-3">
           <span
-            className="flex h-16 w-[54px] shrink-0 items-center justify-center rounded-xl border border-[#00f5a0]/40 text-[#00f5a0]"
-            style={{ background: 'linear-gradient(#0b1633, #0a1230)' }}
+            className="flex h-16 w-[54px] shrink-0 items-center justify-center rounded-xl border border-st-green/40 text-st-green"
+            style={{ background: 'var(--background)' }}
           >
             <FileEdit className="size-6" aria-hidden="true" />
           </span>
           <div className="min-w-0 flex-1">
-            <div className="text-[12.5px] font-extrabold text-[#e2e8f5]">Încarcă PDF-ul</div>
-            <div className="text-[10.5px] text-[#8ba3cf]">date, ore, nr. auto, pagini</div>
+            <div className="text-[12.5px] font-extrabold text-foreground">Încarcă PDF-ul</div>
+            <div className="text-[10.5px] text-tx-3">date, ore, nr. auto, pagini</div>
           </div>
         </div>
       </button>
