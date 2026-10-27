@@ -11,6 +11,7 @@ import {
   modificaNotita,
   notitaCuAmintire,
   notitaScadenta,
+  observatiiCuNotita,
   rezumat,
   stergeNotita,
   useNotite,
@@ -60,7 +61,7 @@ export function AlegeZi({ zi, onZi }: { zi: string; onZi: (z: string) => void })
 }
 
 /** Plăcuțele dosarelor legate; click → cardul dosarului. */
-export function DosareLegate({ dosare, onAlege }: { dosare: Dosar[]; onAlege?: (id: string) => void }) {
+export function DosareLegate({ dosare, onAlege, adaugate }: { dosare: Dosar[]; onAlege?: (id: string) => void; adaugate?: string[] }) {
   if (!dosare.length) return null
   return (
     <div className="flex flex-wrap items-center gap-1.5">
@@ -70,10 +71,14 @@ export function DosareLegate({ dosare, onAlege }: { dosare: Dosar[]; onAlege?: (
           type="button"
           disabled={!onAlege}
           onClick={() => onAlege?.(d.id)}
-          title={onAlege ? 'Mergi la dosar' : undefined}
+          title={(adaugate?.includes(d.id) ? 'Adăugată la observații · ' : '') + (onAlege ? 'Mergi la dosar' : '')}
           className="inline-flex h-7 items-center gap-1.5 rounded-md border border-border bg-surface-2 px-2 text-[12px] font-bold text-foreground transition-colors enabled:hover:border-border-strong enabled:hover:bg-surface-hover"
         >
-          <Link2 className="size-3.5 text-accent-tx" aria-hidden="true" />
+          {adaugate?.includes(d.id) ? (
+            <Check className="size-3.5 text-st-green" aria-hidden="true" />
+          ) : (
+            <Link2 className="size-3.5 text-accent-tx" aria-hidden="true" />
+          )}
           {d.nrAutoPagubit || d.nrDosar || '–'}
           {d.asigurator && <span className="font-medium text-tx-3">· {d.asigurator}</span>}
         </button>
@@ -82,31 +87,43 @@ export function DosareLegate({ dosare, onAlege }: { dosare: Dosar[]; onAlege?: (
   )
 }
 
-/** Câmpul de scris o notiță nouă (pagina Notițe și panoul dosarului). */
-export function NotitaNoua({ dosar, onSalvat, compact }: { dosar?: Dosar; onSalvat?: () => void; compact?: boolean }) {
+/** Câmpul de scris o notiță nouă. Dacă textul pomenește un dosar (nr. auto, nr. dosar, RBH), notița se
+ * adaugă și la Observațiile lui (cererea utilizatorului: „BH52LCA - posibil gata joi” → la dosar). */
+export function NotitaNoua() {
   const { dosare, salveazaRapid } = useDosareContext()
   const [text, setText] = useState('')
   const [zi, setZi] = useState('')
+  const [comutate, setComutate] = useState<Set<string>>(new Set())
   const [salvez, setSalvez] = useState(false)
   const [eroare, setEroare] = useState('')
-  const legate = useMemo(() => {
-    const dinText = dosareDinText(text, dosare)
-    return dosar ? [dosar, ...dinText.filter((d) => d.id !== dosar.id)] : dinText
-  }, [text, dosare, dosar])
+  const [mesaj, setMesaj] = useState('')
+  const legate = useMemo(() => dosareDinText(text, dosare), [text, dosare])
+  // Un singur dosar găsit → bifat singur; mai multe → alegi tu pe care.
+  const alese = legate.filter((d) => (legate.length === 1 ? !comutate.has(d.id) : comutate.has(d.id)))
+  const comuta = (id: string) =>
+    setComutate((c) => {
+      const n = new Set(c)
+      if (n.has(id)) n.delete(id)
+      else n.add(id)
+      return n
+    })
 
   async function salveaza() {
     if (!text.trim() || salvez) return
     setSalvez(true)
     setEroare('')
     try {
-      await adaugaNotita({ text, dosarId: dosar?.id, amintesteLa: zi || undefined })
-      // Amintirea ajunge și în clopoțel, când notița e a unui singur dosar.
-      if (zi && legate.length === 1) {
-        await salveazaRapid(majuscule({ ...legate[0], amintesteMi: true, amintesteLa: zi, amintesteNota: rezumat(text) }))
+      await adaugaNotita({ text, amintesteLa: zi || undefined, adaugatLa: alese.map((d) => d.id) })
+      for (const d of alese) {
+        const patch: Partial<Dosar> = { notes: observatiiCuNotita(d.notes, text) }
+        // Amintirea ajunge și în clopoțel, când notița e a unui singur dosar.
+        if (zi && alese.length === 1) Object.assign(patch, { amintesteMi: true, amintesteLa: zi, amintesteNota: rezumat(text) })
+        await salveazaRapid(majuscule({ ...d, ...patch }))
       }
+      setMesaj(alese.length ? `Adăugată la observațiile: ${alese.map((d) => d.nrAutoPagubit || d.nrDosar).join(', ')}` : 'Notiță salvată.')
       setText('')
       setZi('')
-      onSalvat?.()
+      setComutate(new Set())
     } catch (e) {
       setEroare(e instanceof Error ? e.message : 'Nu s-a putut salva.')
     } finally {
@@ -115,32 +132,50 @@ export function NotitaNoua({ dosar, onSalvat, compact }: { dosar?: Dosar; onSalv
   }
 
   return (
-    <div className={cn('flex flex-col gap-3', !compact && 'rounded-[14px] border border-border bg-card p-4')}>
+    <div className="flex flex-col gap-3 rounded-[14px] border border-border bg-card p-4">
       <textarea
         value={text}
-        onChange={(e) => setText(e.target.value)}
+        onChange={(e) => {
+          setText(e.target.value)
+          setMesaj('')
+        }}
         onKeyDown={(e) => {
           if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) void salveaza()
         }}
-        rows={compact ? 3 : 4}
-        placeholder={
-          dosar
-            ? 'Ce ai vorbit la telefon pe dosarul ăsta…'
-            : 'Ce ai vorbit cu clientul? Scrie și nr. auto (ex. BH 52 LCA) sau RBH-ul — notița se leagă singură de dosar.'
-        }
+        rows={4}
+        placeholder="Ce ai vorbit cu clientul? Ex.: BH52LCA - posibil gata joi, se așteaptă bara spate. Cu nr. auto sau RBH, se adaugă singură la observațiile dosarului."
         className="w-full resize-y rounded-lg border border-border-strong bg-background px-3 py-2.5 text-[14px] leading-relaxed text-foreground placeholder:text-tx-3 focus:border-accent-tx focus:outline-none"
       />
-      {legate.length > 0 && !dosar && (
-        <div className="flex flex-wrap items-center gap-2 text-[12.5px] text-tx-3">
-          Se leagă de: <DosareLegate dosare={legate} />
+      {legate.length > 0 && (
+        <div className="flex flex-wrap items-center gap-1.5 text-[12.5px] text-tx-3">
+          <span className="mr-1">{legate.length === 1 ? 'Se adaugă la observațiile dosarului:' : 'Am găsit mai multe dosare — alege la care se adaugă:'}</span>
+          {legate.map((d) => {
+            const on = alese.includes(d)
+            return (
+              <button
+                key={d.id}
+                type="button"
+                aria-pressed={on}
+                onClick={() => comuta(d.id)}
+                className={cn(
+                  'inline-flex h-8 items-center gap-1.5 rounded-md border px-2 text-[12.5px] font-bold transition-colors',
+                  on ? 'border-accent-tx/60 bg-primary/15 text-foreground' : 'border-border-strong text-tx-2 hover:bg-surface-hover',
+                )}
+              >
+                {on ? <Check className="size-3.5 text-accent-tx" aria-hidden="true" /> : <Link2 className="size-3.5 text-tx-3" aria-hidden="true" />}
+                {d.nrAutoPagubit || d.nrDosar || '–'}
+                {d.asigurator && <span className="font-medium text-tx-3">· {d.asigurator}</span>}
+              </button>
+            )
+          })}
         </div>
       )}
       <AlegeZi zi={zi} onZi={setZi} />
-      {zi && legate.length === 1 && (
-        <p className="-mt-1 text-[12px] text-tx-3">Apare și în clopoțel la {legate[0].nrAutoPagubit || 'dosar'}, {textCand(zi)}.</p>
+      {zi && alese.length === 1 && (
+        <p className="-mt-1 text-[12px] text-tx-3">Apare și în clopoțel la {alese[0].nrAutoPagubit || 'dosar'}, {textCand(zi)}.</p>
       )}
       <div className="flex items-center justify-between gap-3">
-        <span className="text-[12px] text-st-red-tx">{eroare}</span>
+        <span className={cn('text-[12.5px]', eroare ? 'text-st-red-tx' : 'text-st-green-tx')}>{eroare || mesaj}</span>
         <button type="button" className={BTN_PRIMAR} disabled={!text.trim() || salvez} onClick={() => void salveaza()}>
           {salvez && <Loader2 className="size-4 animate-spin" aria-hidden="true" />}
           Salvează notița
@@ -241,7 +276,7 @@ export function NotitaRand({ n, onAlegeDosar }: { n: Notita; onAlegeDosar?: (id:
 
       {!editez && (
         <div className="mt-3 flex flex-wrap items-center gap-2">
-          <DosareLegate dosare={legate} onAlege={onAlegeDosar} />
+          <DosareLegate dosare={legate} onAlege={onAlegeDosar} adaugate={n.adaugatLa} />
           <div className="ml-auto flex items-center gap-1">
             {confirmSterge ? (
               <>
@@ -300,7 +335,7 @@ export function NotitaRand({ n, onAlegeDosar }: { n: Notita; onAlegeDosar?: (id:
   )
 }
 
-// Pagina „Notițe” (unealtă nouă): sus scrii, dedesubt „De făcut” (amintirile de azi) și toate notițele
+// Pagina „Notițe” (meniul lateral → Unelte): sus scrii, dedesubt „De făcut” (amintirile de azi) și toate notițele
 // echipei, cele mai noi primele. Căutarea merge și după nr. auto scris oricum.
 export function NotitePage({ onAlegeDosar }: { onAlegeDosar: (id: string) => void }) {
   const { notite, incarcat, eroare } = useNotite()

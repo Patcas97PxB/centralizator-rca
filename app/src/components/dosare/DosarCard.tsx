@@ -16,8 +16,6 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { STARE } from '@/lib/culori'
-import { hartaNotite, useNotite } from '@/lib/notite'
-import { useDosareContext } from '@/contexts/DosareContext'
 
 // Culoarea cardului urmeaza termenul (0 rosu, 1 galben, 2 verde, 3 albastru, 4 finalizat), nu statusul.
 const RANK_COLOR = [STARE.rosu, STARE.galben, STARE.verde, STARE.albastru, STARE.gri]
@@ -44,9 +42,6 @@ export function DosarCard({
   const etapa = etapaDosar(dosar)
   const meta = ETAPA_META[etapa]
   const folder = useFolderLocal()
-  const { notite } = useNotite()
-  const { dosare } = useDosareContext()
-  const ultimaNotita = hartaNotite(notite, dosare).get(dosar.id)?.[0]
   const docLocale = cheiLocale(folder, dosar)
   const dst = docStatus(dosar, docLocale)
   const cardColor = RANK_COLOR[prioritateDosar(dosar)]
@@ -242,11 +237,10 @@ export function DosarCard({
       )}
 
       {/* Observațiile scrise de mână (câmpul Note) — mereu vizibile pe card (cererea utilizatorului) */}
-      {/* Notițe și observații sunt unificate: pe card, ultima notiță a dosarului (altfel observația veche) */}
-      {(ultimaNotita || dosar.notes) && (
-        <div className="flex min-w-0 items-start gap-1.5 rounded-lg bg-surface-2 px-2.5 py-1.5 text-[12.5px] leading-snug text-tx-2" title={ultimaNotita?.text ?? dosar.notes}>
+      {dosar.notes && (
+        <div className="flex min-w-0 items-start gap-1.5 rounded-lg bg-surface-2 px-2.5 py-1.5 text-[12.5px] leading-snug text-tx-2" title={dosar.notes}>
           <StickyNote className="mt-px size-3.5 shrink-0 text-tx-3" aria-hidden="true" />
-          <span className="line-clamp-2 min-w-0">{ultimaNotita?.text ?? dosar.notes}</span>
+          <span className="line-clamp-2 min-w-0">{dosar.notes}</span>
         </div>
       )}
 

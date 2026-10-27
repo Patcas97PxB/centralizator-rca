@@ -12,9 +12,6 @@ import { STARE } from '@/lib/culori'
 import { cn } from '@/lib/utils'
 import { ReminderModal } from './ReminderModal'
 import { majuscule } from '@/lib/majuscule'
-import { notiteDosar, useNotite } from '@/lib/notite'
-import { useDosareContext } from '@/contexts/DosareContext'
-import { NotitaNoua, NotitaRand } from '@/components/notite/NotitePage'
 
 const RANK_COLOR = [STARE.rosu, STARE.galben, STARE.verde, STARE.albastru, STARE.gri]
 const ETAPE: Etapa[] = ['rezervat', 'la_client', 'de_trimis', 'finalizat']
@@ -227,11 +224,7 @@ export function DosarPanou({
             </dl>
           </Sectiune>
 
-
-          <NotiteDosar dosar={dosar}>
-            {(dosar.notes || nota) && (
-              <div className="mt-3 rounded-[14px] border border-border p-3">
-                <div className="mb-2 text-[12px] font-semibold text-tx-3">Observație din dosar</div>
+          <Sectiune titlu="Observații">
             <textarea
               value={nota}
               onChange={(e) => {
@@ -251,9 +244,7 @@ export function DosarPanou({
                 </button>
               )}
             </div>
-              </div>
-            )}
-          </NotiteDosar>
+          </Sectiune>
 
           <Sectiune titlu="Amintește-mi">
             {dosar.amintesteMi ? (
@@ -319,27 +310,5 @@ export function DosarPanou({
         <ReminderModal dosar={dosar} open={reminderDeschis} onClose={() => setReminderDeschis(false)} onPatch={(p) => onPatch(dosar.id, p)} />
       </SheetContent>
     </Sheet>
-  )
-}
-
-// Notițele echipei despre dosar (din unealta Notițe: legate de mână sau după nr. auto/RBH din text).
-// Unificate cu Observațiile (cererea utilizatorului): observația veche a dosarului (câmpul `notes`) apare
-// tot aici, dedesubt, editabilă; ce scrii nou devine notiță.
-function NotiteDosar({ dosar, children }: { dosar: Dosar; children?: React.ReactNode }) {
-  const { notite } = useNotite()
-  const { dosare } = useDosareContext()
-  const ale = notiteDosar(dosar, notite, dosare)
-  return (
-    <Sectiune titlu={ale.length ? `Notițe · ${ale.length}` : 'Notițe'}>
-      <NotitaNoua dosar={dosar} compact />
-      {ale.length > 0 && (
-        <div className="mt-3 flex flex-col gap-2">
-          {ale.map((n) => (
-            <NotitaRand key={n.id} n={n} />
-          ))}
-        </div>
-      )}
-      {children}
-    </Sectiune>
   )
 }

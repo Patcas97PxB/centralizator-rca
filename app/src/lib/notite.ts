@@ -21,6 +21,8 @@ export interface Notita {
   dosarId?: string
   /** Ziua (YYYY-MM-DD) din care notița apare la „De făcut”. */
   amintesteLa?: string
+  /** Dosarele la ale căror Observații a fost adăugat textul. */
+  adaugatLa?: string[]
   rezolvata?: boolean
   stearsa?: boolean
 }
@@ -112,7 +114,7 @@ async function pune(n: Notita) {
   seteaza({ notite: n.stearsa ? rest : [n, ...rest] })
 }
 
-export async function adaugaNotita(date: Pick<Notita, 'text'> & Partial<Pick<Notita, 'dosarId' | 'amintesteLa'>>): Promise<Notita> {
+export async function adaugaNotita(date: Pick<Notita, 'text'> & Partial<Pick<Notita, 'dosarId' | 'amintesteLa' | 'adaugatLa'>>): Promise<Notita> {
   const acum = new Date().toISOString()
   const n: Notita = {
     id: crypto.randomUUID(),
@@ -122,6 +124,7 @@ export async function adaugaNotita(date: Pick<Notita, 'text'> & Partial<Pick<Not
     actualizatLa: acum,
     ...(date.dosarId ? { dosarId: date.dosarId } : {}),
     ...(date.amintesteLa ? { amintesteLa: date.amintesteLa } : {}),
+    ...(date.adaugatLa?.length ? { adaugatLa: date.adaugatLa } : {}),
   }
   await pune(n)
   return n
@@ -192,6 +195,15 @@ export function notiteDosar(dosar: Dosar, notite: Notita[], dosare: Dosar[]): No
 // ---- Amintiri --------------------------------------------------------------------------------
 export const notitaScadenta = (n: Notita) => !!n.amintesteLa && !n.rezolvata && n.amintesteLa <= todayStr()
 export const notitaCuAmintire = (n: Notita) => !!n.amintesteLa && !n.rezolvata
+
+/** Observațiile dosarului cu notița adăugată la sfârșit, pe rând nou, cu ziua în față („27.10: …”). */
+export function observatiiCuNotita(notes: string | undefined, text: string): string {
+  const d = new Date()
+  const zi = `${String(d.getDate()).padStart(2, '0')}.${String(d.getMonth() + 1).padStart(2, '0')}`
+  const rand = `${zi}: ${text.trim()}`
+  return notes?.trim() ? `${notes.trimEnd()}
+${rand}` : rand
+}
 
 /** Textul scurt pus ca reminder pe dosar (în clopoțel): primul rând, max. 80 de caractere. */
 export function rezumat(text: string, max = 80): string {

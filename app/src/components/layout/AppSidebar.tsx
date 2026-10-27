@@ -48,6 +48,31 @@ export function AppSidebar({
   const setariAtentie = atentie.folder || atentie.backup
   const notiteAzi = useNotite().notite.filter(notitaScadenta).length
   const ICON = 'size-[18px]'
+  const randSectiune = (item: (typeof NAV_ITEMS)[number]) => (
+    <Rand
+      key={item.key}
+      on={active === item.key}
+      icon={<item.icon className={ICON} strokeWidth={1.9} aria-hidden="true" />}
+      label={item.label}
+      onClick={() => {
+        onSelect(item.key)
+        setOpenMobile(false)
+      }}
+      dupa={
+        item.key === 'dosare' && badgeDosare > 0 ? (
+          <span className="rounded-full bg-st-red/15 px-2 py-0.5 text-[11.5px] font-bold tabular-nums text-st-red-tx" title="De făcut în clopoțel">
+            {badgeDosare}
+          </span>
+        ) : item.key === 'notite' && notiteAzi > 0 ? (
+          <span className="rounded-full bg-st-orange/15 px-2 py-0.5 text-[11.5px] font-bold tabular-nums text-st-orange-tx" title="Notițe cu amintire azi">
+            {notiteAzi}
+          </span>
+        ) : item.key === 'setari' && setariAtentie ? (
+          <span className="size-2 rounded-full bg-st-amber" title={atentie.folder ? 'Folderul de pe laptop așteaptă permisiunea' : 'E timpul pentru un backup'} />
+        ) : null
+      }
+    />
+  )
   return (
     <Sidebar collapsible="offcanvas" className="border-border [&_[data-sidebar=sidebar]]:bg-[var(--sidebar)]">
       <SidebarHeader className="flex-row items-center px-5 pb-4 pt-5">
@@ -58,37 +83,14 @@ export function AppSidebar({
           {GROUP_ORDER.map((group) => (
             <div key={group} className="flex flex-col gap-0.5">
               <div className={GRUP}>{NAV_GROUP_LABELS[group]}</div>
-              {NAV_ITEMS.filter((item) => item.group === group && item.disponibil).map((item) => (
-                <Rand
-                  key={item.key}
-                  on={active === item.key}
-                  icon={<item.icon className={ICON} strokeWidth={1.9} aria-hidden="true" />}
-                  label={item.label}
-                  onClick={() => {
-                    onSelect(item.key)
-                    setOpenMobile(false)
-                  }}
-                  dupa={
-                    item.key === 'dosare' && badgeDosare > 0 ? (
-                      <span className="rounded-full bg-st-red/15 px-2 py-0.5 text-[11.5px] font-bold tabular-nums text-st-red-tx" title="De făcut în clopoțel">
-                        {badgeDosare}
-                      </span>
-                    ) : item.key === 'notite' && notiteAzi > 0 ? (
-                      <span className="rounded-full bg-st-orange/15 px-2 py-0.5 text-[11.5px] font-bold tabular-nums text-st-orange-tx" title="Notițe cu amintire azi">
-                        {notiteAzi}
-                      </span>
-                    ) : item.key === 'setari' && setariAtentie ? (
-                      <span className="size-2 rounded-full bg-st-amber" title={atentie.folder ? 'Folderul de pe laptop așteaptă permisiunea' : 'E timpul pentru un backup'} />
-                    ) : null
-                  }
-                />
-              ))}
+              {NAV_ITEMS.filter((item) => item.group === group && item.disponibil).map(randSectiune)}
             </div>
           ))}
         </nav>
         {/* Unelte (redesign F4): mutate din coloana din dreapta a paginii Dosare */}
         <div className="mt-auto flex flex-col gap-0.5 pb-4 pt-6">
-          <div className={GRUP}>Unelte</div>
+          <div className={GRUP}>{NAV_GROUP_LABELS.unelte}</div>
+          {NAV_ITEMS.filter((item) => item.group === 'unelte').map(randSectiune)}
           {[
             { label: 'Zile din deviz', icon: Calculator, onClick: onDeviz },
             { label: 'Modificare PDF', icon: FilePen, onClick: onPdf },

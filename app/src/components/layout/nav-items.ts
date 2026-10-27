@@ -5,11 +5,12 @@ export const SIDEBAR_ACCENT = 'var(--primary)'
 
 export type SectionKey = 'dosare' | 'notite' | 'dashboard' | 'servicii' | 'rapoarte' | 'setari'
 
-export type NavGroup = 'operational' | 'administrare'
+export type NavGroup = 'operational' | 'administrare' | 'unelte'
 
 export const NAV_GROUP_LABELS: Record<NavGroup, string> = {
   operational: 'Lucru',
   administrare: 'Administrare',
+  unelte: 'Unelte',
 }
 
 export interface NavItem {
@@ -26,7 +27,7 @@ export interface NavItem {
 // Iconițe lucide cu același contur (redesign: fără țigle cu chenar în jurul lor).
 export const NAV_ITEMS: NavItem[] = [
   { key: 'dosare', label: 'Dosare RCA', scurt: 'Dosare', icon: FolderOpen, group: 'operational', disponibil: true },
-  { key: 'notite', label: 'Notițe', icon: NotebookPen, group: 'operational', disponibil: true },
+  { key: 'notite', label: 'Notițe', icon: NotebookPen, group: 'unelte', disponibil: true },
   { key: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, group: 'operational', disponibil: false },
   { key: 'servicii', label: 'Service-uri', scurt: 'Service', icon: Wrench, group: 'administrare', disponibil: true },
   { key: 'rapoarte', label: 'Rapoarte', icon: ChartColumn, group: 'administrare', disponibil: true },
