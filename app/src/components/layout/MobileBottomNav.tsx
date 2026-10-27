@@ -58,7 +58,7 @@ export function MobileBottomNav({
             'btn-brand-gradient relative -mt-7 mb-2 flex size-[62px] items-center justify-center rounded-full border border-[#bfdbfe]/45',
             'transition-transform duration-150 active:scale-90 motion-reduce:transition-none',
           )}
-          style={{ boxShadow: '0 0 0 5px #070b14, 0 12px 28px -8px rgba(37,99,235,.9), 0 0 22px -4px rgba(124,58,237,.7)' }}
+          style={{ boxShadow: '0 0 0 5px #070b14' }}
         >
           <Plus className="size-7 text-white [filter:drop-shadow(0_1px_4px_rgba(0,0,0,.35))]" strokeWidth={2.6} aria-hidden="true" />
         </button>

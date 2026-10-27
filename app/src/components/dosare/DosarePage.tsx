@@ -193,7 +193,7 @@ export function DosarePage({ actiune }: { actiune?: ActiuneRapida | null }) {
         </div>
 
         <div className="flex flex-col gap-4">
-          <Button onClick={deschideNou} className="btn-brand-gradient hidden h-[42px] w-full gap-2 rounded-[13px] border border-[#bfdbfe]/45 text-sm font-extrabold tracking-[.01em] [text-shadow:0_1px_6px_rgba(0,0,0,.35)] lg:flex">
+          <Button onClick={deschideNou} className="btn-brand-gradient hidden h-[42px] w-full gap-2 rounded-[13px] border border-[#bfdbfe]/45 text-sm font-extrabold tracking-[.01em] lg:flex">
             <Plus className="size-4" aria-hidden="true" />
             Dosar nou
           </Button>
@@ -216,7 +216,7 @@ export function DosarePage({ actiune }: { actiune?: ActiuneRapida | null }) {
       <button
         type="button"
         onClick={deschideNou}
-        className="fixed bottom-6 right-6 z-40 hidden size-12 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg shadow-primary/30 md:flex lg:hidden"
+        className="fixed bottom-6 right-6 z-40 hidden size-12 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg md:flex lg:hidden"
         aria-label="Dosar nou"
       >
         <Plus className="size-6" aria-hidden="true" />

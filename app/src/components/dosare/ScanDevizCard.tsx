@@ -39,16 +39,12 @@ export function ScanDevizCard({ onApply }: { onApply: (an: AnalizaDeviz) => void
   return (
     <div
       className={cn(
-        'card-speech relative flex flex-col gap-3 overflow-hidden p-3.5 transition-[transform,box-shadow] duration-200 hover:-translate-y-0.5',
+        'card-speech relative flex flex-col gap-3 overflow-hidden p-3.5',
         stage === 'error' && 'animate-[devizShake_.45s_ease-in-out_both]',
       )}
       style={{
-        border: '1px solid transparent',
-        background:
-          'var(--card-gradient) padding-box, linear-gradient(135deg, rgba(96,165,250,.9), rgba(124,58,237,.7) 50%, rgba(14,165,233,.8)) border-box',
-        boxShadow:
-          'inset 0 1px 0 rgba(255,255,255,.08), 0 14px 30px -18px rgba(37,99,235,.9), 0 0 0 1px rgba(0,0,0,.4)',
-        animation: stage === 'scanning' ? 'devizGlow 2.2s ease-in-out infinite' : undefined,
+        border: '1px solid var(--border)',
+        background: 'var(--card)',
         outline: dragOver ? '2px dashed rgba(125,211,252,.8)' : undefined,
         outlineOffset: -6,
       }}
@@ -59,14 +55,11 @@ export function ScanDevizCard({ onApply }: { onApply: (an: AnalizaDeviz) => void
       onDragLeave={() => setDragOver(false)}
       onDrop={onDrop}
     >
-      <span aria-hidden className="pointer-events-none absolute -right-10 -top-10 size-[130px] rounded-full" style={{ background: 'radial-gradient(circle, rgba(124,58,237,.35), rgba(124,58,237,0) 70%)' }} />
-      <span aria-hidden className="pointer-events-none absolute -bottom-[50px] -left-10 size-[140px] rounded-full" style={{ background: 'radial-gradient(circle, rgba(14,165,233,.25), rgba(14,165,233,0) 70%)' }} />
 
       <div className="relative flex items-center justify-between gap-2">
         <span className="whitespace-nowrap text-[13px] font-extrabold text-[#f1f5f9]">Zile din deviz</span>
         <span
           className="shrink-0 rounded-full bg-[#2563eb] px-[7px] py-0.5 text-[9.5px] font-extrabold text-white"
-          style={{ boxShadow: '0 0 12px -3px rgba(59,130,246,.9)' }}
         >
           NOU
         </span>
@@ -119,7 +112,7 @@ export function ScanDevizCard({ onApply }: { onApply: (an: AnalizaDeviz) => void
           {stage === 'done' && result && (
             <div className="animate-[devizPopIn_.4s_cubic-bezier(.2,.9,.2,1)_both]">
               <div className="flex items-baseline gap-1.5">
-                <span className="text-2xl font-extrabold" style={{ color: '#00f5a0', textShadow: '0 0 14px rgba(0,245,160,.6)' }}>
+                <span className="text-2xl font-extrabold" style={{ color: '#00f5a0' }}>
                   {result.total}
                 </span>
                 <span className="text-xs font-bold" style={{ color: '#00f5a0' }}>ZILE</span>

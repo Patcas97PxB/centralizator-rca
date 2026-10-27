@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { AlertTriangle, ArrowDown, Bell, BellOff, Check, ChevronDown, FolderPlus, ImageIcon, Pencil } from 'lucide-react'
 import { imagineMasina } from '@/lib/cars'
 import { cheiLocale, useFolderLocal } from '@/lib/folder-local'
-import { ALPHA, accentStyle, hex } from '@/lib/color'
+import { accentStyle, hex } from '@/lib/color'
 import { docStatus, docLabelText, lipsuriFinalizare } from '@/lib/documente'
 import { calculRCA, etapaDosar, fmtDate, prioritateDosar, todayStr, urgentaDosar, zileScurseDeLaPredare } from '@/lib/rca-calc'
 import { ETAPA_META, type Dosar, type StatusDosar } from '@/lib/types'
@@ -51,7 +51,6 @@ export function DosarCard({
   const rca = calculRCA(dosar)
   const accent = accentStyle(meta.color)
   const cardColor = RANK_COLOR[prioritateDosar(dosar)]
-  const cardAccent = accentStyle(cardColor)
   const finalizat = dosar.status === 'finalizat'
   const poza = imagineMasina(dosar.marcaModelInlocuire ?? '')
 
@@ -109,28 +108,21 @@ export function DosarCard({
     <div
       className={cn(
         'relative grid min-w-0 grid-cols-[92px_minmax(0,1fr)] content-between gap-x-3 gap-y-[7px] rounded-[18px] py-3 pl-[18px] pr-3 sm:grid-cols-[104px_minmax(0,1.15fr)_minmax(0,.85fr)]',
-        'transition-[transform,box-shadow] duration-200 hover:-translate-y-0.5',
+        'transition-colors duration-200',
         shaking && 'animate-[devizShake_.45s_ease-in-out_both]',
       )}
       style={{
-        border: `1.5px solid ${hex(cardColor, '66')}`,
-        background: 'linear-gradient(#141d33 0%, #0f1628 100%)',
-        boxShadow: `var(--shadow-card-base), 0 0 22px -12px ${cardColor}`,
+        border: '1px solid var(--border)',
+        background: 'var(--card)',
       }}
     >
       <span
         aria-hidden
-        className="pointer-events-none absolute inset-y-0 left-0 w-1.5 animate-[railBreathe_2.4s_ease-in-out_infinite]"
+        className="pointer-events-none absolute inset-y-0 left-0 w-1"
         style={{
           background: cardColor,
-          boxShadow: `${cardAccent.railGlow.replace('14px 2px', '16px 2px')}, 0 0 44px 6px ${hex(cardColor, '39')}`,
           borderRadius: '18px 0 0 18px',
         }}
-      />
-      <span
-        aria-hidden
-        className="pointer-events-none absolute inset-0 rounded-[inherit]"
-        style={{ background: `linear-gradient(103deg, ${hex(cardColor, ALPHA.wash)} 0%, ${hex(cardColor, '00')} 46%)` }}
       />
 
       {celebrating && (
@@ -210,7 +202,7 @@ export function DosarCard({
               className="flex w-full items-center gap-1.5 overflow-hidden whitespace-nowrap rounded-full border px-[9px] py-[5px] text-[10px] font-extrabold tracking-[.02em] transition-[filter] hover:brightness-125"
               style={{ borderColor: hex(meta.color, '8c'), background: accent.badgeBg, color: meta.color }}
             >
-              <span className="size-[7px] rounded-full" style={{ background: meta.color, boxShadow: `0 0 8px 1px ${hex(meta.color, 'cc')}` }} />
+              <span className="size-[7px] rounded-full" style={{ background: meta.color }} />
               <span className="min-w-0 flex-1 truncate text-left">{meta.label}</span>
               {dosar.amintesteMi && (
                 <Bell
@@ -270,7 +262,6 @@ export function DosarCard({
               borderColor: predatFacut ? '#00f5a0' : '#3a4a6e',
               background: predatFacut ? 'rgba(0,245,160,.22)' : 'transparent',
               color: '#00f5a0',
-              boxShadow: predatFacut ? '0 0 12px -2px rgba(0,245,160,.7)' : 'none',
             }}
           >
             {predatFacut && <Check className="size-3.5" strokeWidth={3} aria-hidden="true" />}
@@ -302,7 +293,6 @@ export function DosarCard({
               borderColor: preluatFacut ? '#00f5a0' : '#2c3a5c',
               background: preluatFacut ? 'rgba(0,245,160,.22)' : 'rgba(148,163,184,.08)',
               color: '#00f5a0',
-              boxShadow: preluatFacut ? '0 0 12px -2px rgba(0,245,160,.7)' : 'none',
             }}
           >
             {preluatFacut && <Check className="size-3.5" strokeWidth={3} aria-hidden="true" />}
@@ -319,7 +309,7 @@ export function DosarCard({
           <div className="flex flex-col items-center gap-1 text-center">
             <span
               className="text-[32px] font-extrabold leading-none tracking-[-.02em] tabular-nums"
-              style={{ color: urgColor, textShadow: `0 0 18px ${hex(urgColor, '80')}` }}
+              style={{ color: urgColor }}
             >
               {urgenta.bigNum}
             </span>
@@ -333,7 +323,6 @@ export function DosarCard({
               style={{
                 width: `${pct}%`,
                 background: `linear-gradient(90deg, ${hex(urgColor, '55')}, ${urgColor})`,
-                boxShadow: `0 0 10px -1px ${urgColor}`,
               }}
             />
           </div>
@@ -380,7 +369,6 @@ export function DosarCard({
                   borderColor: '#00f5a0',
                   background: 'rgba(0,245,160,.22)',
                   color: '#00f5a0',
-                  boxShadow: '0 0 0 1px rgba(0,245,160,.4), 0 0 22px -2px rgba(0,245,160,.95), inset 0 0 10px -2px rgba(0,245,160,.7)',
                 }
               : { borderColor: '#3a4a6e', background: 'transparent', color: '#5b6884' }
           }

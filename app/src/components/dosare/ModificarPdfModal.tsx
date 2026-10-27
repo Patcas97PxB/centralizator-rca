@@ -425,7 +425,7 @@ export function ModificarPdfModal({ open, onClose }: { open: boolean; onClose: (
                       type="button"
                       disabled={ocupat || (textNou.trim() === textAles && textNou.trim() !== '')}
                       onClick={aplica}
-                      className="h-9 rounded-[10px] border border-[#3b82f6] bg-[#2563eb] px-4 text-[12.5px] font-extrabold text-white shadow-[0_10px_24px_-14px_#2563eb] transition-colors hover:bg-[#2563eb]/90 disabled:opacity-50"
+                      className="h-9 rounded-[10px] border border-[#3b82f6] bg-[#2563eb] px-4 text-[12.5px] font-extrabold text-white transition-colors hover:bg-[#2563eb]/90 disabled:opacity-50"
                     >
                       {textNou.trim() === '' ? 'Șterge textul ales' : 'Aplică modificarea'}
                     </button>

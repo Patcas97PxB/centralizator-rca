@@ -1,106 +1,9 @@
 import { Sidebar, SidebarContent, SidebarHeader, useSidebar } from '@/components/ui/sidebar'
 import { assetUrl } from '@/lib/asset-url'
-import { usePrefersReducedMotion } from '@/hooks/usePrefersReducedMotion'
 import { cn } from '@/lib/utils'
 import { NAV_GROUP_LABELS, NAV_ITEMS, SIDEBAR_ACCENT, type NavGroup, type SectionKey } from './nav-items'
 
 const GROUP_ORDER: NavGroup[] = ['operational', 'administrare']
-
-const TWINKLES = [
-  { left: 6, top: '48%', size: 2, delay: '2.3s' },
-  { left: 232, top: '58%', size: 3, delay: '.6s' },
-  { left: 10, top: '72%', size: 2, delay: '1.7s' },
-  { left: 226, top: '80%', size: 3, delay: '2.9s' },
-  { left: 120, top: '94%', size: 2, delay: '3.4s' },
-  { left: 40, top: '97%', size: 2, delay: '1.9s' },
-]
-
-function SidebarDecor({ reduced }: { reduced: boolean }) {
-  return (
-    <div aria-hidden className="pointer-events-none absolute inset-0 z-0 overflow-hidden">
-      <span className="absolute inset-0" style={{ background: 'linear-gradient(#0a1224 0%, #070b14 45%, #0b0a1c 100%)' }} />
-      <span
-        className="absolute inset-0"
-        style={{
-          backgroundImage: 'radial-gradient(rgba(96,165,250,.28) 1px, transparent 1.3px)',
-          backgroundSize: '15px 15px',
-          maskImage: 'linear-gradient(rgba(0,0,0,0) 0%, rgba(0,0,0,0) 55%, rgba(0,0,0,.35) 100%)',
-          WebkitMaskImage: 'linear-gradient(rgba(0,0,0,0) 0%, rgba(0,0,0,0) 55%, rgba(0,0,0,.35) 100%)',
-        }}
-      />
-      <span
-        className="absolute -left-[90px] -top-[110px] size-[320px] animate-[orbDrift_14s_ease-in-out_infinite] rounded-full"
-        style={{ background: 'radial-gradient(circle, rgba(37,99,235,.28) 0%, rgba(37,99,235,0) 66%)' }}
-      />
-      <span
-        className="absolute -left-[140px] top-[38%] size-[260px] animate-[orbDrift_20s_ease-in-out_-4s_infinite] rounded-full"
-        style={{ background: 'radial-gradient(circle, rgba(34,194,255,.22) 0%, rgba(34,194,255,0) 66%)' }}
-      />
-      <span
-        className="absolute -bottom-[130px] -right-[130px] size-[360px] animate-[orbDrift_18s_ease-in-out_-6s_infinite_reverse] rounded-full"
-        style={{ background: 'radial-gradient(circle, rgba(124,58,237,.45) 0%, rgba(124,58,237,0) 64%)' }}
-      />
-      <svg viewBox="0 0 245 900" preserveAspectRatio="none" className="absolute inset-0 size-full">
-        <defs>
-          <linearGradient id="sbL1" x1="0" x2="1">
-            <stop offset="0" stopColor="#3d8bff" stopOpacity="0" />
-            <stop offset=".5" stopColor="#3d8bff" stopOpacity=".7" />
-            <stop offset="1" stopColor="#b26bff" stopOpacity="0" />
-          </linearGradient>
-          <linearGradient id="sbL2" x1="0" x2="1">
-            <stop offset="0" stopColor="#b26bff" stopOpacity="0" />
-            <stop offset=".5" stopColor="#b26bff" stopOpacity=".6" />
-            <stop offset="1" stopColor="#00f5a0" stopOpacity="0" />
-          </linearGradient>
-        </defs>
-        <path d="M-10 600 C 60 550, 130 680, 260 580" fill="none" stroke="url(#sbL1)" strokeWidth="1.4" />
-        <path d="M-10 650 C 80 600, 150 730, 260 630" fill="none" stroke="url(#sbL2)" strokeWidth="1.2" />
-        <path
-          d="M-10 700 C 90 650, 170 790, 260 690"
-          fill="none"
-          stroke="rgba(0,245,160,.35)"
-          strokeWidth="1.2"
-          strokeDasharray="4 8"
-          style={{ animation: 'dashFlow 3s linear infinite' }}
-        />
-        <path
-          d="M-10 750 C 100 710, 160 830, 260 745"
-          fill="none"
-          stroke="rgba(96,165,250,.3)"
-          strokeWidth="1"
-          strokeDasharray="2 10"
-          style={{ animation: 'dashFlow 4.5s linear infinite reverse' }}
-        />
-        <path d="M-10 800 C 70 770, 180 870, 260 800" fill="none" stroke="rgba(178,107,255,.28)" strokeWidth="1" />
-      </svg>
-      <span
-        className="absolute right-0 top-0 h-full w-0.5"
-        style={{
-          background: 'linear-gradient(180deg, rgba(96,165,250,0) 0, rgba(96,165,250,.95) var(--hdrH, 66px), rgba(124,58,237,.7) 65%, rgba(124,58,237,0) 100%)',
-          boxShadow: '0 0 12px 1px rgba(96,165,250,.45)',
-        }}
-      />
-      {!reduced && (
-        <>
-          {TWINKLES.map((t) => (
-            <span
-              key={`${t.left}-${t.top}`}
-              className="absolute animate-[twinkle_3.2s_ease-in-out_infinite] rounded-full bg-[#dbeafe]"
-              style={{
-                left: t.left,
-                top: t.top,
-                width: t.size,
-                height: t.size,
-                animationDelay: t.delay,
-                boxShadow: '0 0 6px 1px rgba(191,219,254,.9)',
-              }}
-            />
-          ))}
-        </>
-      )}
-    </div>
-  )
-}
 
 const SECTION_LABEL = 'px-2 pb-1.5 pt-2 text-[10px] font-extrabold tracking-[.1em] text-[#5d6b86]'
 
@@ -113,11 +16,9 @@ export function AppSidebar({
   onSelect: (key: SectionKey) => void
   badgeDosare?: number
 }) {
-  const reduced = usePrefersReducedMotion()
   const { setOpenMobile } = useSidebar()
   return (
-    <Sidebar collapsible="offcanvas" className="border-[#1c273f] [&_[data-sidebar=sidebar]]:bg-[#070b14]">
-      <SidebarDecor reduced={reduced} />
+    <Sidebar collapsible="offcanvas" className="border-[#1c273f] [&_[data-sidebar=sidebar]]:bg-[var(--sidebar)]">
       <SidebarHeader className="relative z-10 flex-row items-center px-[18px] pb-[18px] pt-5">
         <img src={assetUrl('/icons/logo.png')} alt="Centralizator RCA" className="block h-[52px] w-auto max-w-full" />
       </SidebarHeader>
@@ -149,10 +50,10 @@ export function AppSidebar({
                   >
                     <span
                       aria-hidden
-                      className={cn('absolute -left-2.5 top-[13px] h-5 w-[3px] rounded-r-[3px]', on && 'animate-[railBreathe_2.4s_ease-in-out_infinite]')}
+                      className="absolute -left-2.5 top-[13px] h-5 w-[3px] rounded-r-[3px]"
                       style={
                         on
-                          ? { background: SIDEBAR_ACCENT, boxShadow: '0 0 14px 2px rgba(37,99,235,.667)' }
+                          ? { background: SIDEBAR_ACCENT }
                           : { background: 'transparent' }
                       }
                     />

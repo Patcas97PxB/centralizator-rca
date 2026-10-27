@@ -51,7 +51,7 @@ export function ActivitateRecenta({
                 >
                   <span
                     className="mt-[5px] size-2 shrink-0 rounded-full"
-                    style={{ background: c, boxShadow: `0 0 9px 1px ${c}bb` }}
+                    style={{ background: c }}
                     aria-hidden="true"
                   />
                   <div className="min-w-0">

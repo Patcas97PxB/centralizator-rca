@@ -74,7 +74,6 @@ export function DevizRecalculeazaButton({
             borderColor: stage === 'scanning' ? 'rgba(96,165,250,.5)' : stage === 'done' ? 'rgba(0,245,160,.35)' : 'rgba(255,77,109,.45)',
             background:
               stage === 'done' ? 'rgba(0,245,160,.06)' : stage === 'error' ? 'rgba(255,77,109,.06)' : 'rgba(37,99,235,.08)',
-            animation: stage === 'scanning' ? 'devizGlow 2.2s ease-in-out infinite' : undefined,
           }}
         >
           <span
@@ -113,7 +112,7 @@ export function DevizRecalculeazaButton({
             {stage === 'done' && result && (
               <div className="animate-[devizPopIn_.4s_cubic-bezier(.2,.9,.2,1)_both]">
                 <div className="flex items-baseline gap-1.5">
-                  <span className="text-2xl font-extrabold leading-none" style={{ color: '#00f5a0', textShadow: '0 0 14px rgba(0,245,160,.6)' }}>
+                  <span className="text-2xl font-extrabold leading-none" style={{ color: '#00f5a0' }}>
                     {result.total}
                   </span>
                   <span className="text-xs font-bold" style={{ color: '#00f5a0' }}>ZILE DE REPARAȚIE</span>

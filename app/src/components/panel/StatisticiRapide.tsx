@@ -30,7 +30,7 @@ function Cifra({ label, value, color }: { label: string; value: number; color: s
   return (
     <div className="flex items-center justify-between gap-2 text-[12.5px]">
       <span className="flex min-w-0 items-center gap-2 whitespace-nowrap text-[#aab8d0]">
-        <span className="size-2 shrink-0 rounded-[2px]" style={{ background: color, boxShadow: `0 0 8px -1px ${color}` }} />
+        <span className="size-2 shrink-0 rounded-[2px]" style={{ background: color }} />
         {label}
       </span>
       <span className="text-[17px] font-extrabold tabular-nums text-[#f8fafc]">{afisat}</span>

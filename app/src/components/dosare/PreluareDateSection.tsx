@@ -119,7 +119,7 @@ export function PreluareDateSection({
           type="button"
           disabled={seIncarca}
           onClick={() => inputRef.current?.click()}
-          className="h-9 shrink-0 gap-[7px] whitespace-nowrap rounded-[10px] border border-[#3b82f6] bg-[#2563eb] px-4 text-[12.5px] font-extrabold tracking-[.02em] text-white shadow-[0_10px_24px_-14px_#2563eb] hover:bg-[#2563eb]/90"
+          className="h-9 shrink-0 gap-[7px] whitespace-nowrap rounded-[10px] border border-[#3b82f6] bg-[#2563eb] px-4 text-[12.5px] font-extrabold tracking-[.02em] text-white hover:bg-[#2563eb]/90"
         >
           <Sparkles className="size-3.5" aria-hidden="true" />
           {seIncarca ? 'Se citește…' : 'PRELUARE DATE'}

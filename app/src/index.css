@@ -52,31 +52,30 @@
 }
 
 /*
-  Aplicatia e dark-only (fara comutator light/dark, la fel ca site-ul actual) — tokenii
-  se definesc direct pe :root, nu sub o clasa `.dark` separata. Paleta imbina brandul
-  existent (File/design.md: albastru #2563EB, verde #22C55E, mov #7C3AED) cu scala unui
-  "Financial Dashboard" din ui-ux-pro-max (bg foarte inchis + carduri usor mai deschise,
-  contrast bun pentru text pe fundal dens).
+  Tema „Liniștit” (redesign aprobat 27.10.2026, vezi DESIGN.md din rădăcina repo-ului): dark mat, fără
+  umbre colorate, fără strălucire, fără lumini care se mișcă singure. Culoarea înseamnă stare (termen).
+  Tokenii se definesc direct pe :root (aplicația e dark; un comutator light vine într-o etapă ulterioară).
+  Butoanele folosesc --primary #2563EB (alb pe el 5,2:1); textul albastru pe card folosește --accent-tx.
 */
 :root {
     color-scheme: dark;
 
-    --background: #0a0e17;
-    --foreground: #f1f5f9;
-    --card: #10172a;
-    --card-foreground: #f1f5f9;
-    --popover: #10172a;
-    --popover-foreground: #f1f5f9;
+    --background: #0e1320;
+    --foreground: #e8ecf4;
+    --card: #151b29;
+    --card-foreground: #e8ecf4;
+    --popover: #151b29;
+    --popover-foreground: #e8ecf4;
 
     --primary: #2563eb;
     --primary-foreground: #ffffff;
-    --secondary: #1a2335;
-    --secondary-foreground: #f1f5f9;
+    --secondary: #1c2333;
+    --secondary-foreground: #e8ecf4;
 
-    --muted: #161f33;
-    --muted-foreground: #94a3b8;
-    --accent: #1a2335;
-    --accent-foreground: #f1f5f9;
+    --muted: #1c2333;
+    --muted-foreground: #8a95ac;
+    --accent: #1c2333;
+    --accent-foreground: #e8ecf4;
 
     --success: #22c55e;
     --success-foreground: #052e16;
@@ -89,26 +88,35 @@
     --destructive: #ef4444;
     --destructive-foreground: #ffffff;
 
-    --border: #253150;
-    --input: #253150;
-    --ring: #2563eb;
+    --border: #252e41;
+    --input: #252e41;
+    --ring: #3b82f6;
     --radius: 0.75rem;
 
-    --sidebar: #070b14;
-    --sidebar-foreground: #f1f5f9;
+    --sidebar: #0b101b;
+    --sidebar-foreground: #e8ecf4;
     --sidebar-primary: #2563eb;
     --sidebar-primary-foreground: #ffffff;
-    --sidebar-accent: #161f33;
-    --sidebar-accent-foreground: #f1f5f9;
-    --sidebar-border: #1c273f;
-    --sidebar-ring: #2563eb;
+    --sidebar-accent: #1c2333;
+    --sidebar-accent-foreground: #e8ecf4;
+    --sidebar-border: #1a2232;
+    --sidebar-ring: #3b82f6;
+
+    /* roluri „Liniștit” (DESIGN.md) — componentele noi folosesc doar acestea */
+    --surface-2: #1c2333;
+    --border-strong: #334059;
+    --tx-2: #a9b3c7;
+    --tx-3: #8a95ac;
+    --accent-tx: #60a5fa;
+    --st-red: #f87171;   --st-red-bg: rgba(248, 113, 113, .13);   --st-red-tx: #fca5a5;
+    --st-amber: #fbbf24; --st-amber-bg: rgba(251, 191, 36, .12); --st-amber-tx: #fcd34d;
+    --st-green: #34d399; --st-green-bg: rgba(52, 211, 153, .12); --st-green-tx: #6ee7b7;
+    --st-blue: #60a5fa;  --st-blue-bg: rgba(96, 165, 250, .13);  --st-blue-tx: #93c5fd;
+    --st-gray: #64748b;  --st-gray-bg: rgba(148, 163, 184, .12); --st-gray-tx: #cbd5e1;
 
     --hdrH: 66px;
     --danger-strong: #ff4d6d;
-    --brand-gradient: linear-gradient(110deg, #2563eb 0%, #7c3aed 45%, #0ea5e9 75%, #2563eb 100%);
-    --card-gradient: linear-gradient(165deg, #15224a 0%, #101a36 55%, #0e1530 100%);
     --shadow-ambient: 0 22px 48px -16px rgba(0, 0, 0, 0.95);
-    --shadow-card-base: 0 0 0 1px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.06), 0 10px 28px -16px rgba(0, 0, 0, 0.9);
     --overlay-blur-bg: rgba(3, 6, 12, 0.8);
 }
 
@@ -124,14 +132,7 @@
     }
 }
 
-@keyframes backupGlow { 0%, 100% { box-shadow: 0 0 0 1px rgba(56, 189, 248, .55), 0 0 6px 0 rgba(56, 189, 248, .25); } 50% { box-shadow: 0 0 0 1px rgba(56, 189, 248, .95), 0 0 16px 3px rgba(56, 189, 248, .55); } }
-@keyframes pulseDot { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: .45; transform: scale(.82); } }
-@keyframes railBreathe { 0%, 100% { opacity: 1; } 50% { opacity: .72; } }
 @keyframes fadeUp { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
-@keyframes devizGlow {
-  0%, 100% { box-shadow: 0 0 0 1px rgba(96,165,250,.24), 0 0 22px -8px rgba(37,99,235,.75), 0 0 54px -24px rgba(96,165,250,.6); }
-  50% { box-shadow: 0 0 0 1px rgba(147,197,253,.5), 0 0 34px -4px rgba(59,130,246,.95), 0 0 72px -18px rgba(96,165,250,.85); }
-}
 @keyframes devizShake { 0%, 100% { transform: translateX(0); } 20% { transform: translateX(-4px); } 40% { transform: translateX(4px); } 60% { transform: translateX(-3px); } 80% { transform: translateX(2px); } }
 @keyframes devizProgress { from { transform: scaleX(0); } to { transform: scaleX(1); } }
 @keyframes devizBeam { from { top: -18px; } to { top: calc(100% - 2px); } }
@@ -145,45 +146,20 @@
 @keyframes finalWash { 0% { opacity: 0; } 20% { opacity: 1; } 100% { opacity: 0; } }
 @keyframes finalCheck { 0% { opacity: 0; transform: scale(.3); } 18% { opacity: 1; transform: scale(1.12); } 30% { transform: scale(1); } 75% { opacity: 1; transform: scale(1); } 100% { opacity: 0; transform: scale(.9); } }
 @keyframes finalDraw { to { stroke-dashoffset: 0; } }
-@keyframes newGrad { 0%, 100% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } }
-@keyframes btnShine { 0%, 55% { left: -40%; } 85%, 100% { left: 120%; } }
-@keyframes markFloat { 0%, 100% { transform: translateY(0) rotate(-4deg); } 50% { transform: translateY(-10px) rotate(-2deg); } }
-@keyframes rayLoopV { 0% { top: 100%; opacity: 0; } 4% { opacity: 1; } 46% { opacity: 1; } 50%, 100% { top: calc(var(--hdrH, 66px) - 80px); opacity: 0; } }
-@keyframes rayLoopH { 0%, 50% { left: -120px; opacity: 0; } 52% { opacity: 1; } 96% { opacity: 1; } 100% { left: 100%; opacity: 0; } }
 @keyframes orbDrift { 0%, 100% { transform: translate(0, 0); } 50% { transform: translate(24px, 30px); } }
-@keyframes rayRun { 0% { stroke-dashoffset: var(--l); } 68%, 100% { stroke-dashoffset: var(--e); } }
 @keyframes dashFlow { 100% { stroke-dashoffset: -48; } }
 @keyframes twinkle { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: .25; transform: scale(.55); } }
 
 .animate-fade-up { animation: fadeUp .35s ease-out both; }
 .card-speech { border-radius: 26px 26px 26px 8px; }
 
+/* Butonul principal (numele e istoric): albastru plin, fără degrade animat, fără luciu, fără umbră colorată. */
 .btn-brand-gradient {
-  position: relative;
-  overflow: hidden;
   color: #fff;
-  background-image: var(--brand-gradient);
-  background-size: 250% 100%;
-  animation: newGrad 14s ease-in-out infinite;
-  box-shadow: 0 10px 26px -12px rgba(124, 58, 237, .9), 0 0 0 1px rgba(0, 0, 0, .4);
-  transition: transform .18s, box-shadow .18s;
+  background: var(--primary);
+  transition: background-color .15s;
 }
-.btn-brand-gradient:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 18px 36px -12px rgba(124, 58, 237, 1), 0 0 24px -4px rgba(14, 165, 233, .8), 0 0 0 1px rgba(0, 0, 0, .4);
-}
-.btn-brand-gradient::after {
-  content: '';
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  left: -40%;
-  width: 35%;
-  background: linear-gradient(100deg, transparent, rgba(255, 255, 255, .38), transparent);
-  transform: skewX(-18deg);
-  pointer-events: none;
-  animation: btnShine 6s ease-in-out infinite;
-}
+.btn-brand-gradient:hover { background: #1d4ed8; }
 
 @media (prefers-reduced-motion: reduce) {
   html:not([data-motion="on"]) *, html:not([data-motion="on"]) *::before, html:not([data-motion="on"]) *::after {
@@ -194,26 +170,19 @@
   }
 }
 
-@keyframes donutIn { from { opacity: 0; transform: rotate(-90deg) scale(.85); } to { opacity: 1; transform: none; } }
-@keyframes arcDraw { from { stroke-dashoffset: var(--c); } }
-@keyframes arcGlow { 0%, 100% { filter: drop-shadow(0 0 3px rgba(0, 245, 160, .5)); } 50% { filter: drop-shadow(0 0 9px rgba(0, 245, 160, .95)); } }
-@keyframes tracerSpin { to { transform: rotate(360deg); } }
-@keyframes centerPulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.06); } }
 @keyframes barGrow { from { transform: scaleX(0); } to { transform: scaleX(1); } }
 
 @keyframes dosarEvidentiat {
-  0%, 100% { box-shadow: 0 0 0 0 rgba(125,211,252,0); }
-  20%, 70% { box-shadow: 0 0 0 3px rgba(125,211,252,.85), 0 0 34px 4px rgba(96,165,250,.55); }
+  0%, 100% { box-shadow: 0 0 0 0 rgba(96,165,250,0); }
+  20%, 70% { box-shadow: 0 0 0 3px rgba(96,165,250,.85); }
 }
 .dosar-evidentiat { animation: dosarEvidentiat 2.6s ease-out both; }
 
-/* Butonul de export backup cand au trecut 3+ zile: inel albastru static (vizibil si fara
-   animatii) + pulsatie lenta. */
+/* Butonul de export backup cand au trecut 3+ zile: inel albastru static (fara stralucire, fara pulsatie). */
 .backup-glow {
-  border-color: rgba(56, 189, 248, .7) !important;
-  color: #e0f2fe !important;
-  box-shadow: 0 0 0 1px rgba(56, 189, 248, .55), 0 0 8px 0 rgba(56, 189, 248, .35);
-  animation: backupGlow 2.4s ease-in-out infinite;
+  border-color: rgba(96, 165, 250, .75) !important;
+  color: #dbeafe !important;
+  box-shadow: 0 0 0 1px rgba(96, 165, 250, .55);
 }
 
 /* Login: o raza de lumina in culorile logo-ului (verde, albastru, mov) care se plimba lent pe marginea

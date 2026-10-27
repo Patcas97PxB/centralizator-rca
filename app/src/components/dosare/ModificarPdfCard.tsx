@@ -16,18 +16,15 @@ export function ModificarPdfCard() {
           setIncarcat(true)
           setDeschis(true)
         }}
-        className="card-speech relative flex w-full flex-col gap-3 overflow-hidden p-3.5 text-left transition-[transform,box-shadow] duration-200 hover:-translate-y-0.5"
+        className="card-speech relative flex w-full flex-col gap-3 overflow-hidden p-3.5 text-left transition-colors hover:bg-[var(--surface-2)]"
         style={{
-          border: '1px solid transparent',
-          background:
-            'var(--card-gradient) padding-box, linear-gradient(135deg, rgba(0,245,160,.75), rgba(14,165,233,.6) 50%, rgba(96,165,250,.7)) border-box',
-          boxShadow: 'inset 0 1px 0 rgba(255,255,255,.08), 0 14px 30px -18px rgba(14,165,233,.8), 0 0 0 1px rgba(0,0,0,.4)',
+          border: '1px solid var(--border)',
+          background: 'var(--card)',
         }}
       >
-        <span aria-hidden className="pointer-events-none absolute -right-10 -top-10 size-[130px] rounded-full" style={{ background: 'radial-gradient(circle, rgba(14,165,233,.3), rgba(14,165,233,0) 70%)' }} />
         <div className="relative flex items-center justify-between gap-2">
           <span className="whitespace-nowrap text-[13px] font-extrabold text-[#f1f5f9]">Modificare PDF</span>
-          <span className="shrink-0 rounded-full bg-[#2563eb] px-[7px] py-0.5 text-[9.5px] font-extrabold text-white" style={{ boxShadow: '0 0 12px -3px rgba(59,130,246,.9)' }}>
+          <span className="shrink-0 rounded-full bg-[#2563eb] px-[7px] py-0.5 text-[9.5px] font-extrabold text-white">
             NOU
           </span>
         </div>

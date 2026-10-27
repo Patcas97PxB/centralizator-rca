@@ -14,7 +14,7 @@ function Punct({ culoare }: { culoare: string }) {
   return (
     <span
       className="absolute -right-0.5 -top-0.5 size-2.5 rounded-full"
-      style={{ background: culoare, boxShadow: `0 0 0 2px #0a0e17, 0 0 8px ${culoare}` }}
+      style={{ background: culoare, boxShadow: '0 0 0 2px var(--background)' }}
     />
   )
 }

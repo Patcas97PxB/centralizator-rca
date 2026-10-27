@@ -220,7 +220,7 @@ export function DosarFormModal({
               style={{ color: etapa.color }}
               title="Se schimbă singură din bifele Predat, Preluat și Finalizat de pe card"
             >
-              <span className="size-2 shrink-0 rounded-full" style={{ background: etapa.color, boxShadow: `0 0 8px 1px ${etapa.color}` }} />
+              <span className="size-2 shrink-0 rounded-full" style={{ background: etapa.color }} />
               {etapa.label}
               <span className="ml-auto truncate text-[11px] font-medium text-muted-foreground">din bifele de pe card</span>
             </div>
@@ -394,7 +394,7 @@ export function DosarFormModal({
               type="button"
               onClick={() => handleSubmit()}
               disabled={saving}
-              className="h-9 rounded-[10px] border border-[#3b82f6] bg-[#2563eb] px-[18px] text-[12.5px] font-extrabold text-white shadow-[0_10px_24px_-14px_#2563eb] transition-colors hover:bg-[#2563eb]/90 disabled:opacity-60"
+              className="h-9 rounded-[10px] border border-[#3b82f6] bg-[#2563eb] px-[18px] text-[12.5px] font-extrabold text-white transition-colors hover:bg-[#2563eb]/90 disabled:opacity-60"
             >
               {saving ? 'Se salvează…' : 'Salvează'}
             </button>

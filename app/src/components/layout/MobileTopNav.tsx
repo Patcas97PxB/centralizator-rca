@@ -1,5 +1,5 @@
 import { cn } from '@/lib/utils'
-import { NAV_ITEMS, SIDEBAR_ACCENT, type SectionKey } from './nav-items'
+import { NAV_ITEMS, type SectionKey } from './nav-items'
 
 // Pe mobil (<md) sectiunile disponibile (Dosare, Service-uri, Rapoarte) stau sus, sub header —
 // bara de jos e rezervata actiunilor rapide (MobileBottomNav).
@@ -29,7 +29,7 @@ export function MobileTopNav({
               'relative flex min-w-0 flex-col items-center justify-center gap-1 rounded-[11px] border px-1 py-1.5 text-[10.5px] font-bold transition-colors',
               on ? 'text-[#f8fafc]' : 'border-[#1e2a45] bg-white/[.03] text-[#9aa8c1] active:bg-white/5',
             )}
-            style={on ? { borderColor: 'rgba(37,99,235,.6)', background: 'rgba(37,99,235,.18)', boxShadow: `0 0 14px -4px ${SIDEBAR_ACCENT}` } : undefined}
+            style={on ? { borderColor: 'rgba(37,99,235,.6)', background: 'rgba(37,99,235,.18)' } : undefined}
           >
             <span className="relative">
               <item.icon className="size-[17px]" style={{ color: on ? '#bfdbfe' : '#8fa0bd' }} aria-hidden="true" />

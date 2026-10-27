@@ -114,11 +114,11 @@ export function Header({
 
   return (
     <header ref={headerRef} className="isolate sticky top-0 z-30 flex min-h-[58px] flex-wrap items-center gap-3 overflow-hidden px-4 py-3 backdrop-blur-[14px] md:px-6 md:py-[14px]"
-      style={{ background: 'linear-gradient(90deg, rgba(10,18,36,.94) 0%, rgba(10,14,23,.9) 100%)' }}>
+      style={{ background: 'rgba(14,19,32,.94)' }}>
       <span
         aria-hidden
         className="pointer-events-none absolute inset-x-0 bottom-0 h-px"
-        style={{ background: 'linear-gradient(90deg, rgba(96,165,250,.85) 0%, rgba(124,58,237,.6) 55%, rgba(124,58,237,0) 100%)', boxShadow: '0 0 10px 0 rgba(96,165,250,.35)' }}
+        style={{ background: 'var(--border)' }}
       />
       <img src={assetUrl('/icons/logo.png')} alt="Centralizator RCA" className="h-8 w-auto md:hidden" />
 
@@ -152,7 +152,7 @@ export function Header({
               {deSunat.length > 0 && (
                 <span
                   className="absolute -right-1.5 -top-1.5 flex h-5 min-w-5 items-center justify-center rounded-full bg-[#ef4444] px-[5px] text-[10px] font-extrabold text-white"
-                  style={{ boxShadow: '0 0 0 2px #0a0e17, 0 0 12px rgba(239,68,68,.75)' }}
+                  style={{ boxShadow: '0 0 0 2px var(--background)' }}
                 >
                   {deSunat.length > 9 ? '9+' : deSunat.length}
                 </span>
@@ -200,7 +200,7 @@ export function Header({
                           }}
                           className="flex w-full items-center gap-3 rounded-xl px-2.5 py-2 text-left transition-colors hover:bg-white/5"
                         >
-                          <span className="size-2 shrink-0 rounded-full" style={{ background: culoare, boxShadow: `0 0 8px 1px ${culoare}aa` }} />
+                          <span className="size-2 shrink-0 rounded-full" style={{ background: culoare }} />
                           <span className="min-w-0 flex-1">
                             <span className="block truncate text-[13px] font-bold text-[#e2e8f5]">
                               {dosar.nrAutoPagubit || dosar.nrDosar || '—'}
@@ -241,7 +241,7 @@ export function Header({
                         }}
                         className="flex min-w-0 flex-1 items-center gap-3 px-2.5 py-2 text-left"
                       >
-                        <span className="size-2 shrink-0 rounded-full" style={{ background: culoare, boxShadow: scadent ? `0 0 8px 1px ${culoare}aa` : 'none' }} />
+                        <span className="size-2 shrink-0 rounded-full" style={{ background: culoare }} />
                         <span className="min-w-0 flex-1">
                           <span className="block truncate text-[13px] font-bold text-[#e2e8f5]">
                             {dosar.nrAutoPagubit || dosar.nrDosar || '—'}

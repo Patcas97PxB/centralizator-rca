@@ -2,7 +2,6 @@ import type { CSSProperties, ReactNode } from 'react'
 import { SidebarInset, SidebarProvider } from '@/components/ui/sidebar'
 import { AppSidebar } from './AppSidebar'
 import { Header } from './Header'
-import { LightRay } from './LightRay'
 import { MobileBottomNav } from './MobileBottomNav'
 import { StareSistem } from './StareSistem'
 import { MobileTopNav } from './MobileTopNav'
@@ -37,7 +36,6 @@ export function AppShell({
 }) {
   return (
     <SidebarProvider style={{ '--sidebar-width': '245px' } as CSSProperties}>
-      <LightRay />
       <AppSidebar active={active} onSelect={onSelect} badgeDosare={deSunat.length} />
       <SidebarInset>
         {ESTE_DEMO && <DemoBanner />}

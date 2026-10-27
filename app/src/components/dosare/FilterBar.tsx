@@ -58,7 +58,7 @@ export function FilterBar({
         <SelectTrigger className={cn(CONTROL, 'min-w-0 flex-1 gap-2 px-2.5 sm:w-[168px] sm:flex-none')}>
           <span
             className="size-2 shrink-0 rounded-full"
-            style={{ background: statusColor, boxShadow: filtre.status === 'toate' ? 'none' : `0 0 8px 1px ${statusColor}` }}
+            style={{ background: statusColor }}
           />
           <span className="min-w-0 flex-1 truncate text-left">
             <SelectValue placeholder="Status" />

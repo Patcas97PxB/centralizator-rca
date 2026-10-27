@@ -271,7 +271,6 @@ export function DocumenteModal({
                 style={{
                   width: `${procent}%`,
                   background: st.complete ? '#00f5a0' : '#3d8bff',
-                  boxShadow: `0 0 10px ${st.complete ? '#00f5a0' : '#3d8bff'}`,
                 }}
               />
             </div>
@@ -449,7 +448,7 @@ export function DocumenteModal({
           <button
             type="button"
             onClick={onClose}
-            className="h-9 shrink-0 rounded-[10px] border border-[#3b82f6] bg-[#2563eb] px-[18px] text-[12.5px] font-extrabold text-white shadow-[0_10px_24px_-14px_#2563eb] transition-colors hover:bg-[#2563eb]/90"
+            className="h-9 shrink-0 rounded-[10px] border border-[#3b82f6] bg-[#2563eb] px-[18px] text-[12.5px] font-extrabold text-white transition-colors hover:bg-[#2563eb]/90"
           >
             Gata
           </button>
