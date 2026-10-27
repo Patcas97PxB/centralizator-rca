@@ -197,3 +197,19 @@
   color: #dbeafe !important;
   box-shadow: 0 0 0 1px rgba(96, 165, 250, .55);
 }
+
+/* Bară de derulare subțire, în tema aplicației (liste derulante: alegerea dosarului în unelte) */
+@utility scroll-fin {
+  scrollbar-width: thin;
+  scrollbar-color: var(--border-strong) transparent;
+  &::-webkit-scrollbar {
+    width: 6px;
+  }
+  &::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  &::-webkit-scrollbar-thumb {
+    background: var(--border-strong);
+    border-radius: 999px;
+  }
+}

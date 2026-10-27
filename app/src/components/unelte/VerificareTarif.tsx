@@ -1,5 +1,5 @@
-import { useMemo, useState } from 'react'
-import { AlertTriangle, CheckCircle2 } from 'lucide-react'
+import { useMemo, useRef, useState } from 'react'
+import { AlertTriangle, CheckCircle2, ChevronDown, Search, X } from 'lucide-react'
 import { Dialog, DialogContent } from '@/components/ui/dialog'
 import { FereastraAntet } from '@/components/ui/fereastra'
 import { useDosareContext } from '@/contexts/DosareContext'
@@ -8,6 +8,8 @@ import { formatSuma, parseSuma, type Moneda } from '@/lib/financiar'
 import { calculRCA } from '@/lib/rca-calc'
 import { ALLIANZ_GROUPS, GROUPAMA_TARIFE, TARIFE_GRID, calcTarifGrila } from '@/lib/tarife-grid'
 import { cn } from '@/lib/utils'
+import { corespundeCautarii } from '@/lib/dosare-filter'
+import type { Dosar } from '@/lib/types'
 
 // Unealta „Verificare tarif” (meniul lateral → Unelte): asigurator + clasă + zile → suma din grilă,
 // înainte să închizi contractul. Aceeași grilă ca în Rapoarte (`calcTarifGrila`). Opțional: alegi un
@@ -27,6 +29,93 @@ const CAMP =
   'h-10 w-full rounded-lg border border-border-strong bg-background px-3 text-[14px] text-foreground focus:border-accent-tx focus:outline-none [color-scheme:dark]'
 const ETICHETA = 'mb-1 block text-[12.5px] font-semibold text-tx-2'
 
+/** Alegerea dosarului, în tema aplicației (în locul listei native a browserului): scrii o bucată din nr.
+ * auto / RBH / nr. dosar, iar dedesubt apare o listă scurtă, derulabilă, cu ↑↓ + Enter. */
+function AlegeDosar({ dosare, ales, onAlege }: { dosare: Dosar[]; ales: string; onAlege: (id: string) => void }) {
+  const [q, setQ] = useState('')
+  const [deschis, setDeschis] = useState(false)
+  const [activ, setActiv] = useState(0)
+  const listaRef = useRef<HTMLDivElement>(null)
+  const d = dosare.find((x) => x.id === ales)
+  const lista = q.trim() ? dosare.filter((x) => corespundeCautarii(x, q.trim())) : dosare
+  const eticheta = (x: Dosar) => [x.asigurator, x.clasaAuto && `clasa ${x.clasaAuto}`].filter(Boolean).join(' · ')
+
+  function alege(x: Dosar) {
+    onAlege(x.id)
+    setQ('')
+    setDeschis(false)
+  }
+
+  return (
+    <div className="relative">
+      <div className={cn(CAMP, 'flex items-center gap-2 px-2.5 focus-within:border-accent-tx')}>
+        <Search className="size-4 shrink-0 text-tx-3" aria-hidden="true" />
+        <input
+          role="combobox"
+          aria-expanded={deschis}
+          value={deschis ? q : d ? `${d.nrAutoPagubit} · ${eticheta(d)}` : ''}
+          placeholder="Caută nr. auto, RBH…"
+          onFocus={() => {
+            setDeschis(true)
+            setActiv(0)
+          }}
+          onBlur={() => setTimeout(() => setDeschis(false), 120)}
+          onChange={(e) => {
+            setQ(e.target.value)
+            setActiv(0)
+            setDeschis(true)
+          }}
+          onKeyDown={(e) => {
+            if (!lista.length) return
+            if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+              e.preventDefault()
+              const n = (activ + (e.key === 'ArrowDown' ? 1 : lista.length - 1)) % lista.length
+              setActiv(n)
+              listaRef.current?.children[n]?.scrollIntoView({ block: 'nearest' })
+            } else if (e.key === 'Enter') {
+              e.preventDefault()
+              alege(lista[activ])
+            } else if (e.key === 'Escape') setDeschis(false)
+          }}
+          className="h-full min-w-0 flex-1 bg-transparent text-[14px] text-foreground placeholder:text-tx-3 focus:outline-none"
+        />
+        {d && !deschis ? (
+          <button type="button" aria-label="Scoate dosarul" onClick={() => onAlege('')} className="flex size-6 items-center justify-center rounded-md text-tx-3 hover:bg-surface-hover hover:text-foreground">
+            <X className="size-3.5" aria-hidden="true" />
+          </button>
+        ) : (
+          <ChevronDown className="size-4 shrink-0 text-tx-3" aria-hidden="true" />
+        )}
+      </div>
+      {deschis && (
+        <div
+          ref={listaRef}
+          role="listbox"
+          className="scroll-fin absolute inset-x-0 top-[calc(100%+4px)] z-30 max-h-[232px] overflow-y-auto rounded-xl border border-border-strong bg-surface-2 p-1 shadow-lg shadow-black/40"
+        >
+          {lista.length === 0 && <p className="px-2.5 py-2 text-[13px] text-tx-3">Niciun dosar nu se potrivește.</p>}
+          {lista.map((x, k) => (
+            <button
+              key={x.id}
+              type="button"
+              role="option"
+              aria-selected={x.id === ales}
+              onMouseDown={(e) => e.preventDefault()}
+              onMouseEnter={() => setActiv(k)}
+              onClick={() => alege(x)}
+              className={cn('flex w-full items-baseline gap-2 rounded-lg px-2.5 py-1.5 text-left', k === activ && 'bg-surface-hover')}
+            >
+              <span className="shrink-0 text-[13.5px] font-bold text-foreground">{x.nrAutoPagubit || '–'}</span>
+              <span className="min-w-0 truncate text-[12.5px] text-tx-3">{eticheta(x)}</span>
+              {x.id === ales && <CheckCircle2 className="ml-auto size-3.5 shrink-0 self-center text-accent-tx" aria-hidden="true" />}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
 export function VerificareTarif({ open, onClose }: { open: boolean; onClose: () => void }) {
   const { dosare } = useDosareContext()
   const [dosarId, setDosarId] = useState('')
@@ -44,7 +133,7 @@ export function VerificareTarif({ open, onClose }: { open: boolean; onClose: () 
   function dinDosar(id: string) {
     setDosarId(id)
     const d = dosare.find((x) => x.id === id)
-    if (!d) return
+    if (!d) return setValoare('')
     if (d.asigurator) setAsig(d.asigurator)
     if (d.clasaAuto) setClasa(d.clasaAuto)
     const z = d.zileContractFinal ? Number(d.zileContractFinal) : (calculRCA(d).zile ?? Number(d.zileDeviz))
@@ -64,17 +153,10 @@ export function VerificareTarif({ open, onClose }: { open: boolean; onClose: () 
       <DialogContent showCloseButton={false} className="gap-0 overflow-hidden p-0 sm:max-w-[460px]">
         <FereastraAntet titlu="Verificare tarif" subtitlu="Suma din grila asiguratorului, înainte să închizi contractul" onClose={onClose} />
         <div className="flex flex-col gap-3.5 px-5 py-4">
-          <label>
+          <div>
             <span className={ETICHETA}>Din dosar (opțional)</span>
-            <select value={dosarId} onChange={(e) => dinDosar(e.target.value)} className={CAMP}>
-              <option value="">— alege un dosar —</option>
-              {deschise.map((d) => (
-                <option key={d.id} value={d.id}>
-                  {[d.nrAutoPagubit, d.asigurator, d.clasaAuto && `clasa ${d.clasaAuto}`].filter(Boolean).join(' · ')}
-                </option>
-              ))}
-            </select>
-          </label>
+            <AlegeDosar dosare={deschise} ales={dosarId} onAlege={dinDosar} />
+          </div>
           <div className="grid grid-cols-[1.4fr_1fr_0.8fr] gap-2.5">
             <label>
               <span className={ETICHETA}>Asigurator</span>
