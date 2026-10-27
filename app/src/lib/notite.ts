@@ -165,10 +165,28 @@ export function dosareNotita(n: Notita, dosare: Dosar[]): Dosar[] {
   return manual ? [manual, ...dinText.filter((d) => d.id !== manual.id)] : dinText
 }
 
+// dosar → notițele lui (cele mai noi primele), calculat o dată pe pereche (notițe, dosare): cardurile îl
+// citesc fiecare, iar căutarea în text e scumpă.
+const cacheHarta = new WeakMap<Notita[], WeakMap<Dosar[], Map<string, Notita[]>>>()
+export function hartaNotite(notite: Notita[], dosare: Dosar[]): Map<string, Notita[]> {
+  let m = cacheHarta.get(notite)
+  if (!m) cacheHarta.set(notite, (m = new WeakMap()))
+  let h = m.get(dosare)
+  if (h) return h
+  h = new Map()
+  const noi = [...notite].sort((a, b) => b.creatLa.localeCompare(a.creatLa))
+  for (const n of noi)
+    for (const d of dosareNotita(n, dosare)) {
+      const l = h.get(d.id)
+      if (l) l.push(n)
+      else h.set(d.id, [n])
+    }
+  m.set(dosare, h)
+  return h
+}
+
 export function notiteDosar(dosar: Dosar, notite: Notita[], dosare: Dosar[]): Notita[] {
-  return notite
-    .filter((n) => n.dosarId === dosar.id || dosareDinText(n.text, dosare).some((d) => d.id === dosar.id))
-    .sort((a, b) => b.creatLa.localeCompare(a.creatLa))
+  return hartaNotite(notite, dosare).get(dosar.id) ?? []
 }
 
 // ---- Amintiri --------------------------------------------------------------------------------

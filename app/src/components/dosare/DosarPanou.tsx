@@ -227,7 +227,11 @@ export function DosarPanou({
             </dl>
           </Sectiune>
 
-          <Sectiune titlu="Observații">
+
+          <NotiteDosar dosar={dosar}>
+            {(dosar.notes || nota) && (
+              <div className="mt-3 rounded-[14px] border border-border p-3">
+                <div className="mb-2 text-[12px] font-semibold text-tx-3">Observație din dosar</div>
             <textarea
               value={nota}
               onChange={(e) => {
@@ -247,9 +251,9 @@ export function DosarPanou({
                 </button>
               )}
             </div>
-          </Sectiune>
-
-          <NotiteDosar dosar={dosar} />
+              </div>
+            )}
+          </NotiteDosar>
 
           <Sectiune titlu="Amintește-mi">
             {dosar.amintesteMi ? (
@@ -319,7 +323,9 @@ export function DosarPanou({
 }
 
 // Notițele echipei despre dosar (din unealta Notițe: legate de mână sau după nr. auto/RBH din text).
-function NotiteDosar({ dosar }: { dosar: Dosar }) {
+// Unificate cu Observațiile (cererea utilizatorului): observația veche a dosarului (câmpul `notes`) apare
+// tot aici, dedesubt, editabilă; ce scrii nou devine notiță.
+function NotiteDosar({ dosar, children }: { dosar: Dosar; children?: React.ReactNode }) {
   const { notite } = useNotite()
   const { dosare } = useDosareContext()
   const ale = notiteDosar(dosar, notite, dosare)
@@ -333,6 +339,7 @@ function NotiteDosar({ dosar }: { dosar: Dosar }) {
           ))}
         </div>
       )}
+      {children}
     </Sectiune>
   )
 }
