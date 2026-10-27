@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import { Bell, Check, Link2, Loader2, Pencil, Search, Trash2 } from 'lucide-react'
+import { Bell, Check, Link2, Loader2, Pencil, Plus, Search, Trash2, X } from 'lucide-react'
 import { useDosareContext } from '@/contexts/DosareContext'
 import { initiale, numeDinEmail } from '@/lib/autentificare'
 import { majuscule } from '@/lib/majuscule'
@@ -7,6 +7,7 @@ import {
   adaugaNotita,
   cand,
   dosareDinText,
+  dosarePartiale,
   dosareNotita,
   modificaNotita,
   notitaCuAmintire,
@@ -97,9 +98,26 @@ export function NotitaNoua() {
   const [salvez, setSalvez] = useState(false)
   const [eroare, setEroare] = useState('')
   const [mesaj, setMesaj] = useState('')
+  // Din pop-up: dosarele alese de mână (potriviri parțiale) și cele închise cu ×.
+  const [alesePartial, setAlesePartial] = useState<Set<string>>(new Set())
+  const [inchise, setInchise] = useState<Set<string>>(new Set())
   const legate = useMemo(() => dosareDinText(text, dosare), [text, dosare])
-  // Un singur dosar găsit → bifat singur; mai multe → alegi tu pe care.
-  const alese = legate.filter((d) => (legate.length === 1 ? !comutate.has(d.id) : comutate.has(d.id)))
+  const partiale = useMemo(() => dosarePartiale(text, dosare).filter((d) => !legate.includes(d)), [text, dosare, legate])
+  const dinPopup = dosare.filter((d) => alesePartial.has(d.id) && !legate.includes(d))
+  const popup = partiale.filter((d) => !alesePartial.has(d.id) && !inchise.has(d.id))
+  const candidati = [...legate, ...dinPopup]
+  // Un singur dosar găsit exact → bifat singur; mai multe → alegi tu pe care. Cele din pop-up sunt alese.
+  const alese = [
+    ...legate.filter((d) => (legate.length === 1 ? !comutate.has(d.id) : comutate.has(d.id))),
+    ...dinPopup,
+  ]
+  const comutaPartial = (id: string) =>
+    setAlesePartial((c) => {
+      const n = new Set(c)
+      if (n.has(id)) n.delete(id)
+      else n.add(id)
+      return n
+    })
   const comuta = (id: string) =>
     setComutate((c) => {
       const n = new Set(c)
@@ -124,6 +142,8 @@ export function NotitaNoua() {
       setText('')
       setZi('')
       setComutate(new Set())
+      setAlesePartial(new Set())
+      setInchise(new Set())
     } catch (e) {
       setEroare(e instanceof Error ? e.message : 'Nu s-a putut salva.')
     } finally {
@@ -133,30 +153,73 @@ export function NotitaNoua() {
 
   return (
     <div className="flex flex-col gap-3 rounded-[14px] border border-border bg-card p-4">
-      <textarea
-        value={text}
-        onChange={(e) => {
-          setText(e.target.value)
-          setMesaj('')
-        }}
-        onKeyDown={(e) => {
-          if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) void salveaza()
-        }}
-        rows={4}
-        placeholder="Ce ai vorbit cu clientul? Ex.: BH52LCA - posibil gata joi, se așteaptă bara spate. Cu nr. auto sau RBH, se adaugă singură la observațiile dosarului."
-        className="w-full resize-y rounded-lg border border-border-strong bg-background px-3 py-2.5 text-[14px] leading-relaxed text-foreground placeholder:text-tx-3 focus:border-accent-tx focus:outline-none"
-      />
-      {legate.length > 0 && (
+      <div className="relative">
+        <textarea
+          value={text}
+          onChange={(e) => {
+            setText(e.target.value)
+            setMesaj('')
+          }}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) void salveaza()
+          }}
+          rows={4}
+          placeholder="Ce ai vorbit cu clientul? Ex.: BH52LCA - posibil gata joi, se așteaptă bara spate. Cu nr. auto sau RBH, se adaugă singură la observațiile dosarului."
+          className="w-full resize-y rounded-lg border border-border-strong bg-background px-3 py-2.5 text-[14px] leading-relaxed text-foreground placeholder:text-tx-3 focus:border-accent-tx focus:outline-none"
+        />
+        {popup.length > 0 && (
+          <div
+            role="listbox"
+            aria-label="Dosare găsite"
+            className="absolute left-2 right-2 top-[calc(100%-6px)] z-20 max-w-[460px] rounded-xl border border-border-strong bg-surface-2 p-1.5 shadow-lg shadow-black/40"
+          >
+            <div className="flex items-center justify-between px-2 pb-1 pt-0.5 text-[12px] font-semibold text-tx-3">
+              <span>{popup.length === 1 ? 'Am găsit un dosar — adaug notița la el?' : `Am găsit ${popup.length} dosare — alege unde se salvează`}</span>
+              <button
+                type="button"
+                aria-label="Închide"
+                onClick={() => setInchise((c) => new Set([...c, ...popup.map((d) => d.id)]))}
+                className="flex size-6 items-center justify-center rounded-md hover:bg-surface-hover hover:text-foreground"
+              >
+                <X className="size-3.5" aria-hidden="true" />
+              </button>
+            </div>
+            {popup.map((d) => (
+              <button
+                key={d.id}
+                type="button"
+                role="option"
+                aria-selected={false}
+                onClick={() => comutaPartial(d.id)}
+                className="flex w-full items-center gap-2.5 rounded-lg px-2 py-1.5 text-left transition-colors hover:bg-surface-hover"
+              >
+                <Plus className="size-4 shrink-0 text-accent-tx" aria-hidden="true" />
+                <span className="min-w-0 flex-1">
+                  <span className="block truncate text-[13px] font-bold text-foreground">
+                    {d.nrAutoPagubit || '–'}
+                    {d.nrAutoInlocuire && <span className="font-medium text-tx-3"> → </span>}
+                    {d.nrAutoInlocuire && <span className="text-tx-2">{d.nrAutoInlocuire}</span>}
+                  </span>
+                  <span className="block truncate text-[12px] text-tx-3">
+                    {[d.asigurator, d.marcaModel, d.numeClient].filter(Boolean).join(' · ')}
+                  </span>
+                </span>
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
+      {candidati.length > 0 && (
         <div className="flex flex-wrap items-center gap-1.5 text-[12.5px] text-tx-3">
-          <span className="mr-1">{legate.length === 1 ? 'Se adaugă la observațiile dosarului:' : 'Am găsit mai multe dosare — alege la care se adaugă:'}</span>
-          {legate.map((d) => {
+          <span className="mr-1">{candidati.length === 1 || legate.length <= 1 ? 'Se adaugă la observațiile dosarului:' : 'Am găsit mai multe dosare — alege la care se adaugă:'}</span>
+          {candidati.map((d) => {
             const on = alese.includes(d)
             return (
               <button
                 key={d.id}
                 type="button"
                 aria-pressed={on}
-                onClick={() => comuta(d.id)}
+                onClick={() => (legate.includes(d) ? comuta(d.id) : comutaPartial(d.id))}
                 className={cn(
                   'inline-flex h-8 items-center gap-1.5 rounded-md border px-2 text-[12.5px] font-bold transition-colors',
                   on ? 'border-accent-tx/60 bg-primary/15 text-foreground' : 'border-border-strong text-tx-2 hover:bg-surface-hover',

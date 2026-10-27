@@ -161,6 +161,36 @@ export function dosareDinText(text: string, dosare: Dosar[]): Dosar[] {
   })
 }
 
+/**
+ * Potriviri parțiale pentru pop-up-ul de sub câmp (cererea utilizatorului: „LCA” sau „212 NOM” → îți
+ * arată dosarul): doar dosarele **nefinalizate**, după nr. auto păgubit sau de înlocuire. Bucăți din text
+ * (un cuvânt sau două lipite): doar litere → finalul numărului („LCA”); cu cifre → oriunde în număr
+ * („212”, „212NOM”, „52LCA”). Minimum 3 caractere. Rămân doar potrivirile cele mai lungi.
+ */
+export function dosarePartiale(text: string, dosare: Dosar[], max = 6): Dosar[] {
+  const cuv = (text.match(/[\p{L}\p{N}]+/gu) ?? []).map(normAuto).filter(Boolean)
+  const bucati = new Set<string>()
+  cuv.forEach((c, i) => {
+    bucati.add(c)
+    if (i + 1 < cuv.length) bucati.add(c + cuv[i + 1])
+  })
+  const scor = new Map<Dosar, number>()
+  for (const d of dosare) {
+    if (d.status === 'finalizat') continue
+    const nr = [normAuto(d.nrAutoPagubit || ''), normAuto(d.nrAutoInlocuire || '')].filter((x) => x.length >= 5)
+    let best = 0
+    for (const b of bucati) {
+      if (b.length < 3) continue
+      const cuCifre = /\d/.test(b)
+      if (nr.some((x) => (cuCifre ? x.includes(b) : x.endsWith(b)))) best = Math.max(best, b.length)
+    }
+    if (best) scor.set(d, best)
+  }
+  // doar cele mai bune: „212 NOM” → doar B212NOM, nu toate mașinile de înlocuire terminate în NOM
+  const top = Math.max(0, ...scor.values())
+  return [...scor.entries()].filter(([, v]) => v === top).slice(0, max).map(([d]) => d)
+}
+
 /** Legate de mână + pomenite în text, fără dubluri. */
 export function dosareNotita(n: Notita, dosare: Dosar[]): Dosar[] {
   const dinText = dosareDinText(n.text, dosare)
