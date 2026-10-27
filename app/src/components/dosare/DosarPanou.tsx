@@ -12,6 +12,9 @@ import { STARE } from '@/lib/culori'
 import { cn } from '@/lib/utils'
 import { ReminderModal } from './ReminderModal'
 import { majuscule } from '@/lib/majuscule'
+import { notiteDosar, useNotite } from '@/lib/notite'
+import { useDosareContext } from '@/contexts/DosareContext'
+import { NotitaNoua, NotitaRand } from '@/components/notite/NotitePage'
 
 const RANK_COLOR = [STARE.rosu, STARE.galben, STARE.verde, STARE.albastru, STARE.gri]
 const ETAPE: Etapa[] = ['rezervat', 'la_client', 'de_trimis', 'finalizat']
@@ -109,7 +112,7 @@ export function DosarPanou({
     <Sheet open onOpenChange={(o) => !o && onClose()}>
       <SheetContent side="right" showCloseButton={false} className="gap-0 border-border bg-card p-0 data-[side=right]:w-full data-[side=right]:sm:max-w-[440px]">
         <div className="flex items-start gap-3 border-b border-border px-5 py-4">
-          <div className="flex h-10 w-16 shrink-0 items-center justify-center">
+          <div className="flex h-[72px] w-[124px] shrink-0 items-center justify-center">
             {poza ? <img src={poza} alt="" className="size-full object-contain" /> : <ImageIcon className="size-5 text-tx-3" aria-hidden="true" />}
           </div>
           <div className="min-w-0 flex-1">
@@ -246,6 +249,8 @@ export function DosarPanou({
             </div>
           </Sectiune>
 
+          <NotiteDosar dosar={dosar} />
+
           <Sectiune titlu="Amintește-mi">
             {dosar.amintesteMi ? (
               <p className="flex items-center gap-1.5 text-[13.5px] font-semibold text-st-orange">
@@ -310,5 +315,24 @@ export function DosarPanou({
         <ReminderModal dosar={dosar} open={reminderDeschis} onClose={() => setReminderDeschis(false)} onPatch={(p) => onPatch(dosar.id, p)} />
       </SheetContent>
     </Sheet>
+  )
+}
+
+// Notițele echipei despre dosar (din unealta Notițe: legate de mână sau după nr. auto/RBH din text).
+function NotiteDosar({ dosar }: { dosar: Dosar }) {
+  const { notite } = useNotite()
+  const { dosare } = useDosareContext()
+  const ale = notiteDosar(dosar, notite, dosare)
+  return (
+    <Sectiune titlu={ale.length ? `Notițe · ${ale.length}` : 'Notițe'}>
+      <NotitaNoua dosar={dosar} compact />
+      {ale.length > 0 && (
+        <div className="mt-3 flex flex-col gap-2">
+          {ale.map((n) => (
+            <NotitaRand key={n.id} n={n} />
+          ))}
+        </div>
+      )}
+    </Sectiune>
   )
 }

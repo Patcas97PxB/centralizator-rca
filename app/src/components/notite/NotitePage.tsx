@@ -1,0 +1,374 @@
+import { useMemo, useState } from 'react'
+import { Bell, Check, Link2, Loader2, Pencil, Search, Trash2 } from 'lucide-react'
+import { useDosareContext } from '@/contexts/DosareContext'
+import { initiale, numeDinEmail } from '@/lib/autentificare'
+import { majuscule } from '@/lib/majuscule'
+import {
+  adaugaNotita,
+  cand,
+  dosareDinText,
+  dosareNotita,
+  modificaNotita,
+  notitaCuAmintire,
+  notitaScadenta,
+  rezumat,
+  stergeNotita,
+  useNotite,
+  type Notita,
+} from '@/lib/notite'
+import { faraReminder, fmtZi, peste, textCand } from '@/lib/reminder'
+import { normAuto } from '@/lib/folder-local'
+import type { Dosar } from '@/lib/types'
+import { BTN_PRIMAR, BTN_SECUNDAR } from '@/components/ui/fereastra'
+import { cn } from '@/lib/utils'
+
+const ZILE = [
+  { label: 'Fără', n: -1 },
+  { label: 'Azi', n: 0 },
+  { label: 'Mâine', n: 1 },
+  { label: 'Peste 2 zile', n: 2 },
+  { label: 'Peste o săptămână', n: 7 },
+]
+const CHIP = 'h-8 rounded-full border px-3 text-[12.5px] font-semibold transition-colors'
+const CHIP_OFF = 'border-border-strong text-tx-2 hover:bg-surface-hover hover:text-foreground'
+const CHIP_ON = 'border-st-orange/60 bg-st-orange/15 text-st-orange-tx'
+
+/** Alegerea zilei pentru „Amintește-mi” (gol = fără amintire). */
+export function AlegeZi({ zi, onZi }: { zi: string; onZi: (z: string) => void }) {
+  const zile = ZILE.map((z) => ({ ...z, val: z.n < 0 ? '' : peste(z.n) }))
+  const altaZi = !!zi && !zile.some((z) => z.val === zi)
+  return (
+    <div className="flex flex-wrap items-center gap-1.5">
+      <span className="mr-1 flex items-center gap-1 text-[12.5px] font-semibold text-tx-3">
+        <Bell className="size-3.5" aria-hidden="true" />
+        Amintește-mi
+      </span>
+      {zile.map((z) => (
+        <button key={z.label} type="button" onClick={() => onZi(z.val)} className={cn(CHIP, zi === z.val ? CHIP_ON : CHIP_OFF)}>
+          {z.label}
+        </button>
+      ))}
+      <input
+        type="date"
+        aria-label="Altă zi"
+        value={altaZi ? zi : ''}
+        onChange={(e) => onZi(e.target.value)}
+        className={cn(CHIP, 'bg-transparent [color-scheme:dark]', altaZi ? CHIP_ON : CHIP_OFF)}
+      />
+    </div>
+  )
+}
+
+/** Plăcuțele dosarelor legate; click → cardul dosarului. */
+export function DosareLegate({ dosare, onAlege }: { dosare: Dosar[]; onAlege?: (id: string) => void }) {
+  if (!dosare.length) return null
+  return (
+    <div className="flex flex-wrap items-center gap-1.5">
+      {dosare.map((d) => (
+        <button
+          key={d.id}
+          type="button"
+          disabled={!onAlege}
+          onClick={() => onAlege?.(d.id)}
+          title={onAlege ? 'Mergi la dosar' : undefined}
+          className="inline-flex h-7 items-center gap-1.5 rounded-md border border-border bg-surface-2 px-2 text-[12px] font-bold text-foreground transition-colors enabled:hover:border-border-strong enabled:hover:bg-surface-hover"
+        >
+          <Link2 className="size-3.5 text-accent-tx" aria-hidden="true" />
+          {d.nrAutoPagubit || d.nrDosar || '–'}
+          {d.asigurator && <span className="font-medium text-tx-3">· {d.asigurator}</span>}
+        </button>
+      ))}
+    </div>
+  )
+}
+
+/** Câmpul de scris o notiță nouă (pagina Notițe și panoul dosarului). */
+export function NotitaNoua({ dosar, onSalvat, compact }: { dosar?: Dosar; onSalvat?: () => void; compact?: boolean }) {
+  const { dosare, salveazaRapid } = useDosareContext()
+  const [text, setText] = useState('')
+  const [zi, setZi] = useState('')
+  const [salvez, setSalvez] = useState(false)
+  const [eroare, setEroare] = useState('')
+  const legate = useMemo(() => {
+    const dinText = dosareDinText(text, dosare)
+    return dosar ? [dosar, ...dinText.filter((d) => d.id !== dosar.id)] : dinText
+  }, [text, dosare, dosar])
+
+  async function salveaza() {
+    if (!text.trim() || salvez) return
+    setSalvez(true)
+    setEroare('')
+    try {
+      await adaugaNotita({ text, dosarId: dosar?.id, amintesteLa: zi || undefined })
+      // Amintirea ajunge și în clopoțel, când notița e a unui singur dosar.
+      if (zi && legate.length === 1) {
+        await salveazaRapid(majuscule({ ...legate[0], amintesteMi: true, amintesteLa: zi, amintesteNota: rezumat(text) }))
+      }
+      setText('')
+      setZi('')
+      onSalvat?.()
+    } catch (e) {
+      setEroare(e instanceof Error ? e.message : 'Nu s-a putut salva.')
+    } finally {
+      setSalvez(false)
+    }
+  }
+
+  return (
+    <div className={cn('flex flex-col gap-3', !compact && 'rounded-[14px] border border-border bg-card p-4')}>
+      <textarea
+        value={text}
+        onChange={(e) => setText(e.target.value)}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) void salveaza()
+        }}
+        rows={compact ? 3 : 4}
+        placeholder={
+          dosar
+            ? 'Ce ai vorbit la telefon pe dosarul ăsta…'
+            : 'Ce ai vorbit cu clientul? Scrie și nr. auto (ex. BH 52 LCA) sau RBH-ul — notița se leagă singură de dosar.'
+        }
+        className="w-full resize-y rounded-lg border border-border-strong bg-background px-3 py-2.5 text-[14px] leading-relaxed text-foreground placeholder:text-tx-3 focus:border-accent-tx focus:outline-none"
+      />
+      {legate.length > 0 && !dosar && (
+        <div className="flex flex-wrap items-center gap-2 text-[12.5px] text-tx-3">
+          Se leagă de: <DosareLegate dosare={legate} />
+        </div>
+      )}
+      <AlegeZi zi={zi} onZi={setZi} />
+      {zi && legate.length === 1 && (
+        <p className="-mt-1 text-[12px] text-tx-3">Apare și în clopoțel la {legate[0].nrAutoPagubit || 'dosar'}, {textCand(zi)}.</p>
+      )}
+      <div className="flex items-center justify-between gap-3">
+        <span className="text-[12px] text-st-red-tx">{eroare}</span>
+        <button type="button" className={BTN_PRIMAR} disabled={!text.trim() || salvez} onClick={() => void salveaza()}>
+          {salvez && <Loader2 className="size-4 animate-spin" aria-hidden="true" />}
+          Salvează notița
+        </button>
+      </div>
+    </div>
+  )
+}
+
+/** O notiță din listă: autor, când, text, dosarele legate, amintirea; editare pe loc. */
+export function NotitaRand({ n, onAlegeDosar }: { n: Notita; onAlegeDosar?: (id: string) => void }) {
+  const { dosare, salveazaRapid } = useDosareContext()
+  const [editez, setEditez] = useState(false)
+  const [text, setText] = useState(n.text)
+  const [zi, setZi] = useState(n.amintesteLa && !n.rezolvata ? n.amintesteLa : '')
+  const [confirmSterge, setConfirmSterge] = useState(false)
+  const [lucrez, setLucrez] = useState(false)
+  const legate = dosareNotita(n, dosare)
+  const nume = numeDinEmail(n.autor) || n.autor || '—'
+  const scadenta = notitaScadenta(n)
+
+  async function ruleaza(f: () => Promise<void>) {
+    setLucrez(true)
+    try {
+      await f()
+    } finally {
+      setLucrez(false)
+    }
+  }
+
+  // „Gata”: notița iese din „De făcut”; dacă reminderul de pe dosar e tot al ei, se stinge și acela.
+  const gata = () =>
+    ruleaza(async () => {
+      await modificaNotita(n, { rezolvata: true })
+      for (const d of legate)
+        if (d.amintesteMi && d.amintesteNota === rezumat(n.text)) await salveazaRapid({ ...d, ...faraReminder })
+    })
+
+  const salveaza = () =>
+    ruleaza(async () => {
+      const nou = { ...n, text: text.trim() }
+      await modificaNotita(n, { text: nou.text, amintesteLa: zi || undefined, rezolvata: zi ? false : n.rezolvata })
+      const leg = dosareNotita(nou, dosare)
+      if (zi && zi !== n.amintesteLa && leg.length === 1)
+        await salveazaRapid(majuscule({ ...leg[0], amintesteMi: true, amintesteLa: zi, amintesteNota: rezumat(nou.text) }))
+      setEditez(false)
+    })
+
+  return (
+    <article className={cn('rounded-[14px] border bg-card p-4', scadenta ? 'border-st-orange/45' : 'border-border')}>
+      <div className="flex items-center gap-2.5">
+        <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-surface-2 text-[11.5px] font-bold text-tx-2">
+          {initiale(nume) || '?'}
+        </span>
+        <div className="min-w-0 flex-1 leading-tight">
+          <div className="truncate text-[13.5px] font-bold text-foreground">{nume}</div>
+          <div className="text-[12px] text-tx-3">
+            {cand(n.creatLa)}
+            {n.actualizatLa.slice(0, 16) !== n.creatLa.slice(0, 16) && ' · modificată'}
+          </div>
+        </div>
+        {notitaCuAmintire(n) && !editez && (
+          <span
+            className={cn(
+              'inline-flex h-7 shrink-0 items-center gap-1 rounded-full px-2.5 text-[12px] font-bold',
+              scadenta ? 'bg-st-orange/15 text-st-orange-tx' : 'bg-surface-2 text-tx-2',
+            )}
+            title={fmtZi(n.amintesteLa)}
+          >
+            <Bell className="size-3.5" aria-hidden="true" />
+            {textCand(n.amintesteLa)}
+          </span>
+        )}
+      </div>
+
+      {editez ? (
+        <div className="mt-3 flex flex-col gap-3">
+          <textarea
+            value={text}
+            onChange={(e) => setText(e.target.value)}
+            rows={4}
+            autoFocus
+            className="w-full resize-y rounded-lg border border-border-strong bg-background px-3 py-2.5 text-[14px] leading-relaxed text-foreground focus:border-accent-tx focus:outline-none"
+          />
+          <AlegeZi zi={zi} onZi={setZi} />
+          <div className="flex justify-end gap-2">
+            <button type="button" className={BTN_SECUNDAR} onClick={() => setEditez(false)}>
+              Anulează
+            </button>
+            <button type="button" className={BTN_PRIMAR} disabled={!text.trim() || lucrez} onClick={() => void salveaza()}>
+              Salvează
+            </button>
+          </div>
+        </div>
+      ) : (
+        <p className="mt-3 whitespace-pre-wrap break-words text-[14px] leading-relaxed text-foreground">{n.text}</p>
+      )}
+
+      {!editez && (
+        <div className="mt-3 flex flex-wrap items-center gap-2">
+          <DosareLegate dosare={legate} onAlege={onAlegeDosar} />
+          <div className="ml-auto flex items-center gap-1">
+            {confirmSterge ? (
+              <>
+                <span className="mr-1 text-[12.5px] text-tx-2">Ștergi notița?</span>
+                <button type="button" className="h-8 rounded-lg px-2.5 text-[12.5px] font-bold text-tx-2 hover:bg-surface-hover" onClick={() => setConfirmSterge(false)}>
+                  Nu
+                </button>
+                <button
+                  type="button"
+                  disabled={lucrez}
+                  className="h-8 rounded-lg px-2.5 text-[12.5px] font-bold text-st-red hover:bg-st-red/10"
+                  onClick={() => void ruleaza(() => stergeNotita(n))}
+                >
+                  Da, șterge
+                </button>
+              </>
+            ) : (
+              <>
+                {notitaCuAmintire(n) && (
+                  <button
+                    type="button"
+                    disabled={lucrez}
+                    onClick={() => void gata()}
+                    className="inline-flex h-8 items-center gap-1 rounded-lg px-2.5 text-[12.5px] font-bold text-st-green-tx hover:bg-st-green/10"
+                  >
+                    <Check className="size-4" aria-hidden="true" />
+                    Gata
+                  </button>
+                )}
+                <button
+                  type="button"
+                  aria-label="Editează notița"
+                  onClick={() => {
+                    setText(n.text)
+                    setZi(n.amintesteLa && !n.rezolvata ? n.amintesteLa : '')
+                    setEditez(true)
+                  }}
+                  className="flex size-8 items-center justify-center rounded-lg text-tx-3 hover:bg-surface-hover hover:text-foreground"
+                >
+                  <Pencil className="size-4" aria-hidden="true" />
+                </button>
+                <button
+                  type="button"
+                  aria-label="Șterge notița"
+                  onClick={() => setConfirmSterge(true)}
+                  className="flex size-8 items-center justify-center rounded-lg text-tx-3 hover:bg-st-red/10 hover:text-st-red"
+                >
+                  <Trash2 className="size-4" aria-hidden="true" />
+                </button>
+              </>
+            )}
+          </div>
+        </div>
+      )}
+    </article>
+  )
+}
+
+// Pagina „Notițe” (unealtă nouă): sus scrii, dedesubt „De făcut” (amintirile de azi) și toate notițele
+// echipei, cele mai noi primele. Căutarea merge și după nr. auto scris oricum.
+export function NotitePage({ onAlegeDosar }: { onAlegeDosar: (id: string) => void }) {
+  const { notite, incarcat, eroare } = useNotite()
+  const { dosare } = useDosareContext()
+  const [cauta, setCauta] = useState('')
+
+  const filtrate = useMemo(() => {
+    const q = cauta.trim().toLocaleLowerCase('ro-RO')
+    const qAuto = normAuto(cauta)
+    const lista = [...notite].sort((a, b) => b.creatLa.localeCompare(a.creatLa))
+    if (!q) return lista
+    return lista.filter((n) => {
+      if (n.text.toLocaleLowerCase('ro-RO').includes(q)) return true
+      if (numeDinEmail(n.autor).toLocaleLowerCase('ro-RO').includes(q)) return true
+      return qAuto.length >= 3 && dosareNotita(n, dosare).some((d) => normAuto(d.nrAutoPagubit || '').includes(qAuto))
+    })
+  }, [notite, cauta, dosare])
+  const deFacut = filtrate.filter(notitaScadenta)
+  const restul = filtrate.filter((n) => !notitaScadenta(n))
+
+  return (
+    <div className="mx-auto flex w-full max-w-[760px] flex-col gap-5 pb-24 md:pb-8">
+      <NotitaNoua />
+
+      <div className="relative">
+        <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-tx-3" aria-hidden="true" />
+        <input
+          type="search"
+          value={cauta}
+          onChange={(e) => setCauta(e.target.value)}
+          placeholder="Caută în notițe (text, nr. auto, coleg)"
+          className="h-10 w-full rounded-lg border border-border-strong bg-card pl-9 pr-3 text-[14px] text-foreground placeholder:text-tx-3 focus:border-accent-tx focus:outline-none"
+        />
+      </div>
+
+      {eroare && <p className="rounded-lg border border-st-red/40 bg-st-red/10 px-3 py-2 text-[13px] text-st-red-tx">Notițele nu s-au putut încărca: {eroare}</p>}
+
+      {!incarcat ? (
+        <div className="flex items-center justify-center gap-2 py-10 text-[13.5px] text-tx-3">
+          <Loader2 className="size-4 animate-spin" aria-hidden="true" />
+          Se încarcă notițele…
+        </div>
+      ) : (
+        <>
+          {deFacut.length > 0 && (
+            <section className="flex flex-col gap-2.5">
+              <h2 className="flex items-center gap-2 text-[14px] font-bold text-foreground">
+                <Bell className="size-4 text-st-orange" aria-hidden="true" />
+                De făcut azi <span className="font-semibold text-tx-3">{deFacut.length}</span>
+              </h2>
+              {deFacut.map((n) => (
+                <NotitaRand key={n.id} n={n} onAlegeDosar={onAlegeDosar} />
+              ))}
+            </section>
+          )}
+          <section className="flex flex-col gap-2.5">
+            {deFacut.length > 0 && <h2 className="text-[14px] font-bold text-foreground">Toate notițele</h2>}
+            {restul.map((n) => (
+              <NotitaRand key={n.id} n={n} onAlegeDosar={onAlegeDosar} />
+            ))}
+            {filtrate.length === 0 && (
+              <p className="py-10 text-center text-[13.5px] text-tx-3">
+                {cauta ? 'Nicio notiță nu se potrivește.' : 'Încă nu există notițe. Scrie prima mai sus.'}
+              </p>
+            )}
+          </section>
+        </>
+      )}
+    </div>
+  )
+}

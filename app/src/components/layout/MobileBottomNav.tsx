@@ -1,4 +1,4 @@
-import { FileEdit, FileSearch, Plus } from 'lucide-react'
+import { Calculator, FilePen, Plus } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 // Bara de jos de pe mobil (<md): actiunile rapide. In centru „Dosar nou”, in stanga „Zile din deviz”,
@@ -10,7 +10,7 @@ function Actiune({
   onClick,
 }: {
   label: string
-  icon: typeof FileSearch
+  icon: typeof Calculator
   onClick: () => void
 }) {
   return (
@@ -39,7 +39,7 @@ export function MobileBottomNav({
       className="fixed inset-x-0 bottom-0 z-40 flex items-center gap-1 border-t border-border bg-sidebar px-3 pb-[env(safe-area-inset-bottom)] md:hidden"
       aria-label="Acțiuni rapide"
     >
-      <Actiune label="Zile din deviz" icon={FileSearch} onClick={onDeviz} />
+      <Actiune label="Zile din deviz" icon={Calculator} onClick={onDeviz} />
 
       <div className="flex w-[92px] shrink-0 justify-center">
         <button
@@ -56,7 +56,7 @@ export function MobileBottomNav({
         </button>
       </div>
 
-      <Actiune label="Modificare PDF" icon={FileEdit} onClick={onPdf} />
+      <Actiune label="Modificare PDF" icon={FilePen} onClick={onPdf} />
     </nav>
   )
 }

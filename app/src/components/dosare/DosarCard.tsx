@@ -132,7 +132,7 @@ export function DosarCard({
 
       {/* 1 · Cine: poza mașinii de înlocuire, păgubit → înlocuire, modelele */}
       <div className="flex min-w-0 items-start gap-3">
-        <div className="flex h-10 w-16 shrink-0 items-center justify-center">
+        <div className="flex h-[60px] w-[104px] shrink-0 items-center justify-center">
           {poza ? (
             <img src={poza} alt={dosar.marcaModelInlocuire} loading="lazy" className="size-full object-contain" />
           ) : (

@@ -2,7 +2,7 @@ import { cn } from '@/lib/utils'
 import { useAtentieSetari } from '@/lib/atentie-setari'
 import { NAV_ITEMS, type SectionKey } from './nav-items'
 
-// Pe mobil (<md) sectiunile disponibile (Dosare, Service-uri, Rapoarte) stau sus, sub header —
+// Pe mobil (<md) sectiunile disponibile (Dosare, Notițe, Service-uri, Rapoarte, Setări) stau sus, sub header —
 // bara de jos e rezervata actiunilor rapide (MobileBottomNav).
 // Sectiunile „in curand" nu ocupa loc pe telefon.
 const ITEMS_MOBIL = NAV_ITEMS.filter((i) => i.disponibil)
@@ -18,7 +18,7 @@ export function MobileTopNav({
 }) {
   const atentie = useAtentieSetari()
   return (
-    <nav style={{ gridTemplateColumns: `repeat(${ITEMS_MOBIL.length}, minmax(0, 1fr))` }} className="grid gap-1.5 border-b border-border px-3 py-2 md:hidden" aria-label="Navigare principală">
+    <nav style={{ gridTemplateColumns: `repeat(${ITEMS_MOBIL.length}, minmax(0, 1fr))` }} className="grid gap-1 border-b border-border px-3 py-2 md:hidden" aria-label="Navigare principală">
       {ITEMS_MOBIL.map((item) => {
         const on = active === item.key
         return (
@@ -28,13 +28,12 @@ export function MobileTopNav({
             onClick={() => onSelect(item.key)}
             aria-current={on ? 'page' : undefined}
             className={cn(
-              'relative flex min-w-0 flex-col items-center justify-center gap-1 rounded-[11px] border px-1 py-1.5 text-[10.5px] font-bold transition-colors',
-              on ? 'text-foreground' : 'border-border bg-white/[.03] text-tx-3 active:bg-white/5',
+              'relative flex min-h-12 min-w-0 flex-col items-center justify-center gap-1 rounded-lg px-1 py-1.5 text-[11px] font-semibold transition-colors',
+              on ? 'bg-surface-2 text-foreground' : 'text-tx-3 active:bg-surface-hover',
             )}
-            style={on ? { borderColor: 'color-mix(in srgb, var(--primary) 60%, transparent)', background: 'color-mix(in srgb, var(--primary) 18%, transparent)' } : undefined}
           >
             <span className="relative">
-              <item.icon className="size-[17px]" style={{ color: on ? 'var(--accent-tx)' : 'var(--tx-3)' }} aria-hidden="true" />
+              <item.icon className={cn('size-[18px]', on ? 'text-accent-tx' : 'text-tx-3')} strokeWidth={1.9} aria-hidden="true" />
               {item.key === 'setari' && (atentie.folder || atentie.backup) && (
                 <span className="absolute -right-1.5 -top-1 size-2 rounded-full bg-st-amber" aria-label="Cere atenție" />
               )}
@@ -44,7 +43,7 @@ export function MobileTopNav({
                 </span>
               )}
             </span>
-            <span className="max-w-full truncate leading-none">{item.label}</span>
+            <span className="max-w-full truncate leading-none">{item.scurt ?? item.label}</span>
           </button>
         )
       })}

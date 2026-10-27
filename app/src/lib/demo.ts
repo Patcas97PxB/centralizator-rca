@@ -102,6 +102,7 @@ export async function reseteazaDemo() {
   }
   await scrie('dosare', copie.dosare)
   await scrie('servicii', copie.servicii ?? [])
+  await scrie('notite', [])
   await op('docs', 'readwrite', (s) => s.clear())
 }
 
@@ -146,4 +147,12 @@ export async function demoInlocuiesteServicii(lista: Serviciu[]) {
 export const PREFIX_DOC_DEMO = 'demo:'
 export async function demoStergeDocument(id: string) {
   if (id.startsWith(PREFIX_DOC_DEMO)) await op('docs', 'readwrite', (s) => s.delete(id))
+}
+
+// ---- Notițe: doar în browserul testerului ------------------------------------------------------
+export async function demoNotite<T>(): Promise<T[]> {
+  return (await citeste<T[]>('notite')) ?? []
+}
+export async function demoSalveazaNotite<T>(lista: T[]) {
+  await scrie('notite', lista)
 }

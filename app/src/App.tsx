@@ -10,6 +10,7 @@ import { DosarePage } from '@/components/dosare/DosarePage'
 import { RapoartePage } from '@/components/rapoarte/RapoartePage'
 import { ServiciiPage } from '@/components/servicii/ServiciiPage'
 import { SetariPage } from '@/components/setari/SetariPage'
+import { NotitePage } from '@/components/notite/NotitePage'
 import { DosareProvider, useDosareContext } from '@/contexts/DosareContext'
 import { TooltipProvider } from '@/components/ui/tooltip'
 import { Dialog, DialogContent } from '@/components/ui/dialog'
@@ -21,6 +22,7 @@ const ModificarPdfModal = lazy(() => import('@/components/dosare/ModificarPdfMod
 
 const TITLURI: Record<SectionKey, { title: string; subtitle: string }> = {
   dosare: { title: 'Toate dosarele RCA. Un singur loc.', subtitle: 'Urmărește, gestionează, rezolvă mai rapid.' },
+  notite: { title: 'Notițe', subtitle: 'Ce ai vorbit la telefon — vizibile toată echipa, legate singure de dosar.' },
   dashboard: { title: 'Dashboard', subtitle: 'În curând.' },
   servicii: { title: 'Service-uri', subtitle: 'Lista folosită la completarea dosarelor.' },
   rapoarte: { title: 'Rapoarte', subtitle: 'Comision, verificare tarif din grilă și export financiar.' },
@@ -68,6 +70,7 @@ function AppContent() {
     >
       {active === 'dosare' && <DosarePage actiune={actiune} />}
       {active === 'rapoarte' && <RapoartePage onAlegeDosar={alegeDosar} />}
+      {active === 'notite' && <NotitePage onAlegeDosar={alegeDosar} />}
       {active === 'setari' && <SetariPage />}
       {active === 'servicii' && <ServiciiPage />}
       {active === 'dashboard' && (
