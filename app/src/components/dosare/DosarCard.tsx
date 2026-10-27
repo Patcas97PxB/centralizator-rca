@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, type KeyboardEvent, type MouseEvent } from 'react'
-import { AlertTriangle, Bell, BellOff, Check, ChevronDown, ImageIcon } from 'lucide-react'
+import { AlertTriangle, Bell, BellOff, Check, ChevronDown, ImageIcon, StickyNote } from 'lucide-react'
 import { imagineMasina } from '@/lib/cars'
 import { cheiLocale, useFolderLocal } from '@/lib/folder-local'
 import { docStatus, lipsuriFinalizare, numeScurtDoc } from '@/lib/documente'
@@ -58,7 +58,7 @@ export function DosarCard({
     prevStatusRef.current = dosar.status
     if (!wasFinal && dosar.status === 'finalizat') {
       setCelebrating(true)
-      const t = setTimeout(() => setCelebrating(false), 2300)
+      const t = setTimeout(() => setCelebrating(false), 1400)
       return () => clearTimeout(t)
     }
   }, [dosar.status])
@@ -118,16 +118,10 @@ export function DosarCard({
 
       {celebrating && (
         <>
-          <span aria-hidden className="pointer-events-none absolute inset-0 z-[6] animate-[finalRing_2.2s_cubic-bezier(.2,.8,.2,1)_both] rounded-[inherit]" />
           <span
             aria-hidden
-            className="pointer-events-none absolute inset-0 z-[6] animate-[finalWash_2.2s_ease-out_both] rounded-[inherit]"
-            style={{ background: 'radial-gradient(circle at 50% 50%, color-mix(in srgb, var(--st-green) 25%, transparent), transparent 65%)' }}
-          />
-          <span
-            aria-hidden
-            className="pointer-events-none absolute left-1/2 top-1/2 z-[7] flex size-16 -translate-x-1/2 -translate-y-1/2 animate-[finalCheck_2.2s_cubic-bezier(.2,.9,.2,1)_both] items-center justify-center rounded-full"
-            style={{ background: 'var(--st-green)', boxShadow: '0 0 30px 4px color-mix(in srgb, var(--st-green) 70%, transparent)' }}
+            className="pointer-events-none absolute left-1/2 top-1/2 z-[7] flex size-16 -translate-x-1/2 -translate-y-1/2 animate-[finalCheck_1.4s_cubic-bezier(.2,.8,.2,1)_both] items-center justify-center rounded-full"
+            style={{ background: 'var(--st-green)' }}
           >
             <svg viewBox="0 0 24 24" className="size-9" fill="none" stroke="var(--background)" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
               <path d="M5 12.5l4.5 4.5L19 7.5" style={{ strokeDasharray: 24, strokeDashoffset: 24, animation: 'finalDraw .5s .25s ease-out forwards' }} />
@@ -207,7 +201,7 @@ export function DosarCard({
         </span>
         <div className="h-1.5 overflow-hidden rounded-full bg-surface-2">
           <span
-            className="block h-full origin-left rounded-full animate-[barGrow_.6s_cubic-bezier(.2,.8,.2,1)_both]"
+            className="block h-full rounded-full"
             style={{ width: `${termen.procent}%`, background: cardColor }}
           />
         </div>
@@ -239,6 +233,14 @@ export function DosarCard({
         <div className="flex min-w-0 items-center gap-1.5 text-[12.5px] font-semibold text-st-amber-tx" title={'Lipsesc: ' + dst.missing.map(numeScurtDoc).join(', ')}>
           <AlertTriangle className="size-4 shrink-0" aria-hidden="true" />
           <span className="truncate">Lipsesc: {dst.missing.map(numeScurtDoc).join(', ')}</span>
+        </div>
+      )}
+
+      {/* Observațiile scrise de mână (câmpul Note) — mereu vizibile pe card (cererea utilizatorului) */}
+      {dosar.notes && (
+        <div className="flex min-w-0 items-start gap-1.5 rounded-lg bg-surface-2 px-2.5 py-1.5 text-[12.5px] leading-snug text-tx-2" title={dosar.notes}>
+          <StickyNote className="mt-px size-3.5 shrink-0 text-tx-3" aria-hidden="true" />
+          <span className="line-clamp-2 min-w-0">{dosar.notes}</span>
         </div>
       )}
 
