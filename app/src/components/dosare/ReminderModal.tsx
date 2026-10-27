@@ -8,6 +8,7 @@ import { ACTIUNI_REMINDER, faraReminder, peste } from '@/lib/reminder'
 import { todayStr } from '@/lib/rca-calc'
 import type { Dosar } from '@/lib/types'
 import { cn } from '@/lib/utils'
+import { CampData } from '@/components/ui/camp-data'
 
 const ZILE = [
   { label: 'Azi', n: 0 },
@@ -75,7 +76,7 @@ export function ReminderModal({
                 </button>
               ))}
             </div>
-            <Input type="date" aria-label="Altă zi" value={zi} min={todayStr()} onChange={(e) => setZi(e.target.value)} className="w-[170px]" />
+            <CampData aria-label="Altă zi" value={zi} min={todayStr()} golPermis={false} onChange={setZi} className="w-[170px]" />
           </div>
           <div className="grid gap-2">
             <Label htmlFor="remNota" className="text-xs">Ce ai de făcut</Label>

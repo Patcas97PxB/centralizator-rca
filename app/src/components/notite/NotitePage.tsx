@@ -26,6 +26,7 @@ import { normAuto } from '@/lib/folder-local'
 import type { Dosar } from '@/lib/types'
 import { BTN_PRIMAR, BTN_SECUNDAR } from '@/components/ui/fereastra'
 import { cn } from '@/lib/utils'
+import { CampData } from '@/components/ui/camp-data'
 
 const ZILE = [
   { label: 'Fără', n: -1 },
@@ -53,12 +54,12 @@ export function AlegeZi({ zi, onZi }: { zi: string; onZi: (z: string) => void })
           {z.label}
         </button>
       ))}
-      <input
-        type="date"
+      <CampData
         aria-label="Altă zi"
         value={altaZi ? zi : ''}
-        onChange={(e) => onZi(e.target.value)}
-        className={cn(CHIP, 'bg-transparent [color-scheme:dark]', altaZi ? CHIP_ON : CHIP_OFF)}
+        onChange={onZi}
+        placeholder="altă zi"
+        className={cn(CHIP, 'w-[136px] gap-1.5 bg-transparent', altaZi ? CHIP_ON : CHIP_OFF)}
       />
     </div>
   )

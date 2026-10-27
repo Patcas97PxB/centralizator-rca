@@ -14,6 +14,7 @@ import type { DosareFiltre } from '@/lib/dosare-filter'
 import type { Serviciu } from '@/lib/types'
 import { cn } from '@/lib/utils'
 import { LegendaButton } from './LegendaCulori'
+import { CampData } from '@/components/ui/camp-data'
 
 const CONTROL =
   'h-10 md:h-[34px] rounded-[11px] border-border bg-border/[.24] text-[13.5px] font-semibold text-foreground transition-colors hover:bg-border/50'
@@ -120,21 +121,11 @@ export function FilterBar({
           <div className="grid grid-cols-2 gap-2">
             <div className="space-y-1.5">
               <Label htmlFor="filtruStartFrom">Predare de la</Label>
-              <Input
-                id="filtruStartFrom"
-                type="date"
-                value={filtre.startFrom}
-                onChange={(e) => onChange({ ...filtre, startFrom: e.target.value })}
-              />
+              <CampData id="filtruStartFrom" value={filtre.startFrom} onChange={(v) => onChange({ ...filtre, startFrom: v })} />
             </div>
             <div className="space-y-1.5">
               <Label htmlFor="filtruStartTo">până la</Label>
-              <Input
-                id="filtruStartTo"
-                type="date"
-                value={filtre.startTo}
-                onChange={(e) => onChange({ ...filtre, startTo: e.target.value })}
-              />
+              <CampData id="filtruStartTo" value={filtre.startTo} onChange={(v) => onChange({ ...filtre, startTo: v })} />
             </div>
           </div>
           {activeFiltreAvansate && (

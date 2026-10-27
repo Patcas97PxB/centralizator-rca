@@ -47,10 +47,16 @@ function DialogOverlay({
   )
 }
 
+// Calendarul (CampData) și alte liste se deschid într-un strat separat (portal); un click acolo nu
+// înseamnă „în afara ferestrei” — altfel alegerea unei zile închidea toată fereastra.
+const inStratSeparat = (t: EventTarget | null) =>
+  t instanceof Element && !!t.closest('[data-slot=popover-content]')
+
 function DialogContent({
   className,
   children,
   showCloseButton = true,
+  onInteractOutside,
   ...props
 }: React.ComponentProps<typeof DialogPrimitive.Content> & {
   showCloseButton?: boolean
@@ -64,6 +70,10 @@ function DialogContent({
           "fixed top-1/2 left-1/2 z-50 grid w-full max-w-[calc(100%-2rem)] -translate-x-1/2 -translate-y-1/2 gap-4 rounded-[16px] border border-border bg-card p-5 shadow-[var(--shadow-ambient)] text-sm text-card-foreground duration-100 outline-none sm:max-w-sm data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95 data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-95",
           className
         )}
+        onInteractOutside={(e) => {
+          if (inStratSeparat(e.target)) e.preventDefault()
+          onInteractOutside?.(e)
+        }}
         {...props}
       >
         {children}

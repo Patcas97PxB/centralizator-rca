@@ -18,6 +18,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
+import { CampData } from '@/components/ui/camp-data'
 
 const LABEL = 'mb-1.5 block text-[12.5px] font-semibold text-tx-2'
 const FIELD = 'h-[38px] rounded-[11px] border-border bg-border/[.24] text-[13.5px] text-foreground'
@@ -92,11 +93,11 @@ export function RapoartePage({ onAlegeDosar }: { onAlegeDosar?: (id: string) => 
         </div>
         <div>
           <Label htmlFor="finFrom" className={LABEL}>Predare de la</Label>
-          <Input id="finFrom" type="date" className={cn(FIELD, 'px-2.5 [color-scheme:dark]')} value={filtru.dataFrom} onChange={(e) => setFiltru({ ...filtru, dataFrom: e.target.value })} />
+          <CampData id="finFrom" className={cn(FIELD, 'px-2.5')} value={filtru.dataFrom} onChange={(v) => setFiltru({ ...filtru, dataFrom: v })} />
         </div>
         <div>
           <Label htmlFor="finTo" className={LABEL}>până la</Label>
-          <Input id="finTo" type="date" className={cn(FIELD, 'px-2.5 [color-scheme:dark]')} value={filtru.dataTo} onChange={(e) => setFiltru({ ...filtru, dataTo: e.target.value })} />
+          <CampData id="finTo" className={cn(FIELD, 'px-2.5')} value={filtru.dataTo} onChange={(v) => setFiltru({ ...filtru, dataTo: v })} />
         </div>
         <div>
           <Label htmlFor="finService" className={LABEL}>Service</Label>

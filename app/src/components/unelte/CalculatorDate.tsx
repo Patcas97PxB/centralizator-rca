@@ -5,6 +5,7 @@ import { KNOWN_INSURERS } from '@/lib/asiguratori'
 import { calculRCA, todayStr, zileDecontabileReale, zileRamase } from '@/lib/rca-calc'
 import { dosarGol, type Vehicul } from '@/lib/types'
 import { cn } from '@/lib/utils'
+import { CampData } from '@/components/ui/camp-data'
 
 // Unealta „Calculator de date” (meniul lateral → Unelte): pentru clientul care întreabă la telefon,
 // fără să deschizi dosarul. 1) predare + zile din deviz → până când poate ține mașina (aceeași regulă
@@ -69,7 +70,7 @@ export function CalculatorDate({ open, onClose }: { open: boolean; onClose: () =
             <div className="grid grid-cols-2 gap-2.5">
               <label>
                 <span className={ETICHETA}>Data predării</span>
-                <input type="date" value={predare} onChange={(e) => setPredare(e.target.value)} className={CAMP} />
+                <CampData value={predare} onChange={setPredare} golPermis={false} className="h-10 rounded-lg" />
               </label>
               <label>
                 <span className={ETICHETA}>Zile din deviz</span>
@@ -110,11 +111,11 @@ export function CalculatorDate({ open, onClose }: { open: boolean; onClose: () =
             <div className="grid grid-cols-2 gap-2.5">
               <label>
                 <span className={ETICHETA}>Predare</span>
-                <input type="date" value={dela} onChange={(e) => setDela(e.target.value)} className={CAMP} />
+                <CampData value={dela} onChange={setDela} golPermis={false} className="h-10 rounded-lg" />
               </label>
               <label>
                 <span className={ETICHETA}>Preluare</span>
-                <input type="date" value={panala} onChange={(e) => setPanala(e.target.value)} className={CAMP} />
+                <CampData value={panala} onChange={setPanala} golPermis={false} className="h-10 rounded-lg" />
               </label>
             </div>
             <div className="rounded-[14px] border border-border bg-surface-2 px-4 py-3.5">

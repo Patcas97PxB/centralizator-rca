@@ -40,6 +40,7 @@ import { ServiceCombobox } from './ServiceCombobox'
 import { ContractFinalSection } from './ContractFinalSection'
 import { cn } from '@/lib/utils'
 import { FEREASTRA_MARE, FereastraAntet, FereastraSubsol, BTN_PRIMAR, BTN_SECUNDAR, BTN_PERICOL } from '@/components/ui/fereastra'
+import { CampData } from '@/components/ui/camp-data'
 
 function Sectiune({ children }: { children: string }) {
   return (
@@ -302,17 +303,16 @@ export function DosarFormModal({
           </DevizRecalculeazaButton>
           <div className="space-y-1.5">
             <Label htmlFor="fStart">Data predare</Label>
-            <Input id="fStart" type="date" value={draft.start} onChange={(e) => setDraft((d) => ({ ...d, start: e.target.value }))} />
+            <CampData id="fStart" value={draft.start} onChange={(v) => setDraft((d) => ({ ...d, start: v }))} />
           </div>
           <div className="space-y-1.5">
             <Label htmlFor="fEnd">Data preluare</Label>
-            <Input
+            <CampData
               id="fEnd"
-              type="date"
               value={draft.end}
-              onChange={(e) => {
+              onChange={(v) => {
                 setEndAuto(false)
-                set('end', e.target.value)
+                set('end', v)
               }}
               disabled={draft.dte}
             />
@@ -326,7 +326,7 @@ export function DosarFormModal({
           {draft.dte && (
             <div className="space-y-1.5 sm:col-span-2">
               <Label htmlFor="fDataOferta">Data ofertei de despăgubire</Label>
-              <Input id="fDataOferta" type="date" value={draft.dataOferta} onChange={(e) => set('dataOferta', e.target.value)} />
+              <CampData id="fDataOferta" value={draft.dataOferta} onChange={(v) => set('dataOferta', v)} />
             </div>
           )}
           <Sectiune>Note</Sectiune>
