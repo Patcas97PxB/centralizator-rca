@@ -21,6 +21,9 @@ export function AppShell({
   onNou,
   onDeviz,
   onPdf,
+  onTarif,
+  onDate,
+  onCautare,
   children,
 }: {
   active: SectionKey
@@ -32,11 +35,14 @@ export function AppShell({
   onNou: () => void
   onDeviz: () => void
   onPdf: () => void
+  onTarif: () => void
+  onDate: () => void
+  onCautare: () => void
   children: ReactNode
 }) {
   return (
     <SidebarProvider style={{ '--sidebar-width': '245px' } as CSSProperties}>
-      <AppSidebar active={active} onSelect={onSelect} badgeDosare={deSunat.length} onDeviz={onDeviz} onPdf={onPdf} />
+      <AppSidebar active={active} onSelect={onSelect} badgeDosare={deSunat.length} onDeviz={onDeviz} onPdf={onPdf} onTarif={onTarif} onDate={onDate} />
       <SidebarInset>
         {ESTE_DEMO && <DemoBanner />}
         <Header
@@ -45,6 +51,7 @@ export function AppShell({
           deSunat={deSunat}
           onAlegeDosar={onAlegeDosar}
           onNou={onNou}
+          onCautare={onCautare}
         />
         <MobileTopNav active={active} onSelect={onSelect} badgeDosare={deSunat.length} />
         <StareSistem />

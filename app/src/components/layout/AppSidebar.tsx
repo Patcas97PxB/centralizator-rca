@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react'
-import { Calculator, FilePen } from 'lucide-react'
+import { Calculator, CalendarClock, Coins, FilePen } from 'lucide-react'
 import { Sidebar, SidebarContent, SidebarHeader, useSidebar } from '@/components/ui/sidebar'
 import { useAtentieSetari } from '@/lib/atentie-setari'
 import { assetUrl } from '@/lib/asset-url'
@@ -36,12 +36,16 @@ export function AppSidebar({
   badgeDosare = 0,
   onDeviz,
   onPdf,
+  onTarif,
+  onDate,
 }: {
   active: SectionKey
   onSelect: (key: SectionKey) => void
   badgeDosare?: number
   onDeviz: () => void
   onPdf: () => void
+  onTarif: () => void
+  onDate: () => void
 }) {
   const { setOpenMobile } = useSidebar()
   const atentie = useAtentieSetari()
@@ -94,6 +98,8 @@ export function AppSidebar({
           {[
             { label: 'Zile din deviz', icon: Calculator, onClick: onDeviz },
             { label: 'Modificare PDF', icon: FilePen, onClick: onPdf },
+            { label: 'Verificare tarif', icon: Coins, onClick: onTarif },
+            { label: 'Calculator de date', icon: CalendarClock, onClick: onDate },
           ].map((u) => (
             <Rand
               key={u.label}

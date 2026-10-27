@@ -1,4 +1,5 @@
-import { Suspense, lazy, useState } from 'react'
+import { Suspense, lazy, useEffect, useState } from 'react'
+import { Calculator, CalendarClock, Coins, FilePen, NotebookPen } from 'lucide-react'
 import type { AnalizaDeviz } from '@/lib/deviz-analiza'
 import { filtreImplicite } from '@/lib/dosare-filter'
 import { mergiLaCardDosar } from '@/lib/mergi-la-dosar'
@@ -16,6 +17,9 @@ import { TooltipProvider } from '@/components/ui/tooltip'
 import { Dialog, DialogContent } from '@/components/ui/dialog'
 import { ScanDevizCard } from '@/components/dosare/ScanDevizCard'
 import type { ActiuneRapida } from '@/components/dosare/DosarePage'
+import { VerificareTarif } from '@/components/unelte/VerificareTarif'
+import { CalculatorDate } from '@/components/unelte/CalculatorDate'
+import { CautareRapida, type ComandaRapida } from '@/components/unelte/CautareRapida'
 
 // Editorul PDF (MuPDF + pdf-lib) e mare — se incarca doar cand e deschis.
 const ModificarPdfModal = lazy(() => import('@/components/dosare/ModificarPdfModal').then((m) => ({ default: m.ModificarPdfModal })))
@@ -42,6 +46,33 @@ function AppContent() {
   const [devizDeschis, setDevizDeschis] = useState(false)
   const [pdfDeschis, setPdfDeschis] = useState(false)
   const [pdfIncarcat, setPdfIncarcat] = useState(false)
+  const [tarifDeschis, setTarifDeschis] = useState(false)
+  const [dateDeschis, setDateDeschis] = useState(false)
+  const [cautareDeschisa, setCautareDeschisa] = useState(false)
+  const deschidePdf = () => {
+    setPdfIncarcat(true)
+    setPdfDeschis(true)
+  }
+
+  // Ctrl+K (Cmd+K pe Mac) deschide căutarea rapidă de oriunde
+  useEffect(() => {
+    const f = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
+        e.preventDefault()
+        setCautareDeschisa((o) => !o)
+      }
+    }
+    window.addEventListener('keydown', f)
+    return () => window.removeEventListener('keydown', f)
+  }, [])
+  const ICON = 'size-[18px]'
+  const comenzi: ComandaRapida[] = [
+    { cheie: 'notite', titlu: 'Notițe', icon: <NotebookPen className={ICON} />, actiune: () => setActive('notite') },
+    { cheie: 'deviz', titlu: 'Zile din deviz', icon: <Calculator className={ICON} />, actiune: () => setDevizDeschis(true) },
+    { cheie: 'pdf', titlu: 'Modificare PDF', icon: <FilePen className={ICON} />, actiune: deschidePdf },
+    { cheie: 'tarif', titlu: 'Verificare tarif', icon: <Coins className={ICON} />, actiune: () => setTarifDeschis(true) },
+    { cheie: 'date', titlu: 'Calculator de date', icon: <CalendarClock className={ICON} />, actiune: () => setDateDeschis(true) },
+  ]
   function porneste(a: { tip: 'nou' } | { tip: 'deviz'; an: AnalizaDeviz }) {
     setActive('dosare')
     setActiune({ ...a, id: Date.now() } as ActiuneRapida)
@@ -63,10 +94,10 @@ function AppContent() {
       onAlegeDosar={alegeDosar}
       onNou={() => porneste({ tip: 'nou' })}
       onDeviz={() => setDevizDeschis(true)}
-      onPdf={() => {
-        setPdfIncarcat(true)
-        setPdfDeschis(true)
-      }}
+      onPdf={deschidePdf}
+      onTarif={() => setTarifDeschis(true)}
+      onDate={() => setDateDeschis(true)}
+      onCautare={() => setCautareDeschisa(true)}
     >
       {active === 'dosare' && <DosarePage actiune={actiune} />}
       {active === 'rapoarte' && <RapoartePage onAlegeDosar={alegeDosar} />}
@@ -88,6 +119,10 @@ function AppContent() {
           />
         </DialogContent>
       </Dialog>
+
+      <VerificareTarif open={tarifDeschis} onClose={() => setTarifDeschis(false)} />
+      <CalculatorDate open={dateDeschis} onClose={() => setDateDeschis(false)} />
+      <CautareRapida open={cautareDeschisa} onClose={() => setCautareDeschisa(false)} onAlegeDosar={alegeDosar} comenzi={comenzi} />
 
       {pdfIncarcat && (
         <Suspense fallback={null}>

@@ -34,7 +34,7 @@ export const filtreImplicite: DosareFiltre = {
 const fara = (s: string) => s.replace(/[\s\-./]/g, '')
 
 // Aceleasi campuri cautate ca in render() (index.html).
-function corespundeCautarii(d: Dosar, search: string): boolean {
+export function corespundeCautarii(d: Dosar, search: string): boolean {
   if (!search) return true
   const hay = [d.nrDosar, d.nrRezervare, d.nrAutoPagubit, d.marcaModel, d.nrAutoInlocuire,
     d.asigurator, d.service, d.telClient, d.telService, d.notes]

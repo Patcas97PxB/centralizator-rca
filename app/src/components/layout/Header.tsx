@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { Bell, Check, ChevronDown, Laptop, LogOut, Plus } from 'lucide-react'
+import { Bell, Check, ChevronDown, Laptop, LogOut, Plus, Search } from 'lucide-react'
 import { useAuth } from '@/hooks/useAuth'
 import { assetUrl } from '@/lib/asset-url'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
@@ -76,12 +76,14 @@ export function Header({
   deSunat,
   onAlegeDosar,
   onNou,
+  onCautare,
 }: {
   title: string
   subtitle?: string
   deSunat: DeSunat[]
   onAlegeDosar: (id: string) => void
   onNou: () => void
+  onCautare: () => void
 }) {
   const [deschis, setDeschis] = useState(false)
   const [tab, setTabState] = useState<Tab>(tabSalvat)
@@ -141,6 +143,17 @@ export function Header({
             <span className="hidden sm:inline">Permite folderul</span>
           </button>
         )}
+        {/* Căutarea rapidă (Ctrl+K): pe calculator cu scurtătura scrisă, pe telefon doar lupa */}
+        <button
+          type="button"
+          onClick={onCautare}
+          aria-label="Caută dosar (Ctrl+K)"
+          className="flex size-10 items-center justify-center gap-2 rounded-[10px] border border-border bg-border/[.28] text-[12.5px] font-semibold text-tx-3 transition-colors hover:bg-border/60 hover:text-foreground md:h-[34px] md:w-auto md:px-2.5"
+        >
+          <Search className="size-4" aria-hidden="true" />
+          <span className="hidden md:inline">Caută</span>
+          <kbd className="hidden rounded border border-border px-1 text-[10.5px] font-semibold md:inline">Ctrl K</kbd>
+        </button>
         <button
           type="button"
           onClick={onNou}
