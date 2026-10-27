@@ -12,7 +12,7 @@ import { ServiciiPage } from '@/components/servicii/ServiciiPage'
 import { SetariPage } from '@/components/setari/SetariPage'
 import { DosareProvider, useDosareContext } from '@/contexts/DosareContext'
 import { TooltipProvider } from '@/components/ui/tooltip'
-import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog'
+import { Dialog, DialogContent } from '@/components/ui/dialog'
 import { ScanDevizCard } from '@/components/dosare/ScanDevizCard'
 import type { ActiuneRapida } from '@/components/dosare/DosarePage'
 
@@ -75,9 +75,9 @@ function AppContent() {
       )}
 
       <Dialog open={devizDeschis} onOpenChange={setDevizDeschis}>
-        <DialogContent className="max-w-[calc(100%-2rem)] gap-3 rounded-[22px] border border-border-strong bg-card bg-none p-4 sm:max-w-[380px]">
-          <DialogTitle className="sr-only">Zile din deviz</DialogTitle>
+        <DialogContent showCloseButton={false} className="gap-0 overflow-hidden p-0 sm:max-w-[440px]">
           <ScanDevizCard
+            onClose={() => setDevizDeschis(false)}
             onApply={(an: AnalizaDeviz) => {
               setDevizDeschis(false)
               porneste({ tip: 'deviz', an })

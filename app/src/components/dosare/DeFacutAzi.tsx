@@ -43,7 +43,7 @@ export function DeFacutAzi({
             aria-pressed={on}
             onClick={() => onAlege(on ? null : c.cheie)}
             className={cn(
-              'flex h-8 shrink-0 items-center gap-2 whitespace-nowrap rounded-full border px-3 text-[12.5px] font-semibold transition-colors',
+              'flex h-10 shrink-0 items-center gap-2 whitespace-nowrap rounded-full border px-3.5 text-[13px] font-semibold transition-colors md:h-8 md:px-3 md:text-[12.5px]',
               on ? 'border-primary bg-primary/15 text-foreground' : 'border-border bg-card text-tx-2 hover:bg-surface-hover',
             )}
           >

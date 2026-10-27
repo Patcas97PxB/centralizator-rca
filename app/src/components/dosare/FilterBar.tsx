@@ -16,7 +16,7 @@ import { cn } from '@/lib/utils'
 import { LegendaButton } from './LegendaCulori'
 
 const CONTROL =
-  'h-[34px] rounded-[11px] border-border bg-border/[.24] text-[13.5px] font-semibold text-foreground transition-colors hover:bg-border/50'
+  'h-10 md:h-[34px] rounded-[11px] border-border bg-border/[.24] text-[13.5px] font-semibold text-foreground transition-colors hover:bg-border/50'
 
 export function FilterBar({
   filtre,

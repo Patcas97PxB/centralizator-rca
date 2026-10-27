@@ -31,7 +31,7 @@ export function EtapeTabs({
             aria-selected={on}
             onClick={() => onAlege(t.cheie)}
             className={cn(
-              '-mb-px flex shrink-0 items-center gap-1.5 whitespace-nowrap border-b-2 px-3 py-2.5 text-[13.5px] font-semibold transition-colors',
+              '-mb-px flex min-h-11 shrink-0 items-center gap-1.5 whitespace-nowrap border-b-2 px-3 text-[13.5px] font-semibold transition-colors md:min-h-10',
               on ? 'border-primary text-foreground' : 'border-transparent text-tx-3 hover:text-foreground',
             )}
           >

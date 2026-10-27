@@ -94,8 +94,8 @@ export interface Serviciu {
 
 export const ETAPA_META: Record<Etapa, { label: string; color: string; detaliu: string }> = {
   rezervat: { label: 'REZERVAT', color: STARE.albastru, detaliu: 'mașina nu e încă predată' },
-  la_client: { label: 'LA CLIENT', color: STARE.verde, detaliu: 'bifa Predat · curge termenul' },
-  de_trimis: { label: 'DE TRIMIS', color: STARE.mov, detaliu: 'bifa Preluat · documente, drive, mail' },
+  la_client: { label: 'LA CLIENT', color: STARE.verde, detaliu: 'predată · curge termenul' },
+  de_trimis: { label: 'DE TRIMIS', color: STARE.mov, detaliu: 'preluată · documente, drive, mail' },
   finalizat: { label: 'FINALIZAT', color: STARE.gri, detaliu: 'dosar închis' },
 }
 

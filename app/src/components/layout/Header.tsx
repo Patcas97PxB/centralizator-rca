@@ -154,7 +154,7 @@ export function Header({
           <PopoverTrigger asChild>
             <button
               type="button"
-              className="relative flex size-[34px] items-center justify-center rounded-[10px] border border-border bg-border/[.28] text-tx-2 transition-colors hover:bg-border/60 hover:text-white"
+              className="relative flex size-10 items-center justify-center rounded-[10px] border border-border bg-border/[.28] md:size-[34px] text-tx-2 transition-colors hover:bg-border/60 hover:text-white"
               aria-label={deSunat.length > 0 ? `${deSunat.length} ${deSunat.length === 1 ? "aviz" : "avize"}` : 'Notificări'}
             >
               <Bell className="size-4" aria-hidden="true" />
@@ -303,7 +303,7 @@ export function Header({
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <button type="button" className="flex items-center gap-[9px] rounded-xl py-[5px] pl-[5px] pr-2 transition-colors hover:bg-white/5">
-              <Avatar className="size-[34px] ring-1 ring-accent-tx/45">
+              <Avatar className="size-10 ring-1 ring-accent-tx/45 md:size-[34px]">
                 <AvatarFallback className="bg-primary text-xs font-extrabold text-white">
                   {INITIALE_UTILIZATOR}
                 </AvatarFallback>

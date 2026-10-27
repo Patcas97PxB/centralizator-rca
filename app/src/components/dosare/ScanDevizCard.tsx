@@ -1,29 +1,16 @@
-import { useEffect, useRef, useState, type DragEvent } from 'react'
-import { AlertTriangle, Check, FileSearch, X } from 'lucide-react'
+import { useRef, useState, type DragEvent } from 'react'
+import { AlertTriangle, FileSearch, Loader2 } from 'lucide-react'
 import { useDevizScan } from '@/hooks/useDevizScan'
 import type { AnalizaDeviz } from '@/lib/deviz-analiza'
+import { BTN_PRIMAR, BTN_SECUNDAR, FereastraAntet } from '@/components/ui/fereastra'
 import { cn } from '@/lib/utils'
 
-const TILE_BY_STAGE = {
-  idle: { border: 'color-mix(in srgb, var(--accent-tx) 28%, transparent)', color: 'var(--accent-tx)' },
-  scanning: { border: 'color-mix(in srgb, var(--accent-tx) 70%, transparent)', color: 'var(--accent-tx)' },
-  done: { border: 'color-mix(in srgb, var(--st-green) 55%, transparent)', color: 'var(--st-green)' },
-  error: { border: 'color-mix(in srgb, var(--st-red) 70%, transparent)', color: 'var(--st-red)' },
-} as const
-
-export function ScanDevizCard({ onApply }: { onApply: (an: AnalizaDeviz) => void }) {
+// „Zile din deviz” ca fereastră (redesign): zona de încărcare, apoi rezultatul mare și butoanele jos.
+// Se deschide din meniul lateral (Unelte) sau din bara de jos de pe telefon.
+export function ScanDevizCard({ onApply, onClose }: { onApply: (an: AnalizaDeviz) => void; onClose: () => void }) {
   const { stage, result, errorMsg, fileName, progres, run, reset } = useDevizScan()
   const inputRef = useRef<HTMLInputElement>(null)
   const [dragOver, setDragOver] = useState(false)
-  const tile = TILE_BY_STAGE[stage]
-
-  // Dupa un rezultat (sau o eroare), cardul revine singur la starea initiala in 10 secunde.
-  useEffect(() => {
-    if (stage !== 'done' && stage !== 'error') return
-    const t = setTimeout(reset, 10_000)
-    return () => clearTimeout(t)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [stage])
 
   function pick() {
     if (stage === 'scanning') return
@@ -37,112 +24,83 @@ export function ScanDevizCard({ onApply }: { onApply: (an: AnalizaDeviz) => void
   }
 
   return (
-    <div
-      className={cn(
-        'card-speech relative flex flex-col gap-3 overflow-hidden p-3.5',
-        stage === 'error' && 'animate-[devizShake_.45s_ease-in-out_both]',
-      )}
-      style={{
-        border: '1px solid var(--border)',
-        background: 'var(--card)',
-        outline: dragOver ? '2px dashed color-mix(in srgb, var(--accent-tx) 80%, transparent)' : undefined,
-        outlineOffset: -6,
-      }}
-      onDragOver={(e) => {
-        e.preventDefault()
-        setDragOver(true)
-      }}
-      onDragLeave={() => setDragOver(false)}
-      onDrop={onDrop}
-    >
+    <>
+      <FereastraAntet titlu="Zile din deviz" subtitlu="(ore manoperă + ore vopsitorie) ÷ 4, rotunjit" onClose={onClose} />
 
-      <div className="relative flex items-center justify-between gap-2">
-        <span className="whitespace-nowrap text-[13px] font-extrabold text-foreground">Zile din deviz</span>
-        <span
-          className="shrink-0 rounded-full bg-primary px-[7px] py-0.5 text-[9.5px] font-extrabold text-white"
-        >
-          NOU
-        </span>
-      </div>
-
-      <div className="relative flex items-center gap-3">
-        <button
-          type="button"
-          onClick={pick}
-          disabled={stage === 'scanning'}
-          aria-label="Alege un deviz de scanat"
-          className="relative flex h-16 w-[54px] shrink-0 items-center justify-center overflow-hidden rounded-xl border transition-[border-color,box-shadow] duration-300"
-          style={{ borderColor: tile.border, color: tile.color, background: 'var(--background)' }}
-        >
-          {stage === 'done' ? (
-            <Check className="size-6 animate-[devizPopIn_.4s_cubic-bezier(.2,.9,.2,1)_both]" aria-hidden="true" />
-          ) : stage === 'error' ? (
-            <X className="size-6 animate-[devizPopIn_.4s_cubic-bezier(.2,.9,.2,1)_both]" aria-hidden="true" />
-          ) : (
-            <FileSearch className="size-6" aria-hidden="true" />
-          )}
-          {stage === 'scanning' && (
-            <span
-              aria-hidden
-              className="absolute inset-x-0 h-[18px] animate-[devizBeam_1s_ease-in-out_infinite_alternate]"
-              style={{ background: 'linear-gradient(180deg, transparent, color-mix(in srgb, var(--accent-tx) 85%, transparent), transparent)' }}
-            />
-          )}
-        </button>
-
-        <div className="min-w-0 flex-1">
-          {stage === 'idle' && (
-            <>
-              <div className="text-[12.5px] font-extrabold text-foreground">Încarcă devizul</div>
-              <div className="text-[10.5px] text-tx-3">PDF sau poze (toate paginile)</div>
-            </>
-          )}
-          {stage === 'scanning' && (
-            <>
-              <div className="truncate text-sm font-bold" style={{ color: 'var(--accent-tx)' }}>Scanez devizul…</div>
-              <div className="truncate text-xs text-muted-foreground">{progres || fileName}</div>
-              <div className="mt-2 h-1 overflow-hidden rounded-full bg-white/10">
-                <div
-                  className="h-full origin-left rounded-full animate-[devizProgress_2.6s_cubic-bezier(.4,0,.2,1)_both]"
-                  style={{ background: 'var(--primary)' }}
-                />
-              </div>
-            </>
-          )}
-          {stage === 'done' && result && (
-            <div className="animate-[devizPopIn_.4s_cubic-bezier(.2,.9,.2,1)_both]">
-              <div className="flex items-baseline gap-1.5">
-                <span className="text-2xl font-extrabold" style={{ color: 'var(--st-green)' }}>
-                  {result.total}
-                </span>
-                <span className="text-xs font-bold" style={{ color: 'var(--st-green)' }}>ZILE</span>
-              </div>
-              {result.incomplet ? (
-                <div className="text-[11px] font-bold leading-snug" style={{ color: 'var(--warning)' }}>
-                  Vopsitoria nu s-a putut citi — verifică
-                </div>
-              ) : (
-                <div className="text-xs text-muted-foreground">reies din deviz</div>
-              )}
+      <div className="px-5 py-4">
+        {stage === 'done' && result ? (
+          <div className="rounded-[14px] border border-st-green/35 bg-st-green/[.07] px-4 py-4">
+            <div className="flex items-baseline gap-2">
+              <span className="text-[34px] font-extrabold leading-none text-st-green">{result.total}</span>
+              <span className="text-[15px] font-bold text-st-green">{result.total === 1 ? 'zi de reparație' : 'zile de reparație'}</span>
             </div>
-          )}
-          {stage === 'error' && (
-            <>
-              <div className="flex items-center gap-1 text-xs font-bold" style={{ color: 'var(--danger-strong)' }}>
-                <AlertTriangle className="size-3.5" aria-hidden="true" /> Nu am putut citi devizul
-              </div>
-              <div className="text-[11px] leading-snug text-muted-foreground">{errorMsg}</div>
-            </>
-          )}
-        </div>
+            <p className="mt-2 text-[12.5px] text-tx-2">{result.formulaCalcul}</p>
+            {result.incomplet && (
+              <p className="mt-2 flex items-start gap-1.5 text-[12.5px] font-bold text-st-amber-tx">
+                <AlertTriangle className="mt-px size-4 shrink-0" aria-hidden="true" />
+                Vopsitoria nu s-a putut citi — verifică
+              </p>
+            )}
+            {fileName && <p className="mt-1.5 truncate text-[11.5px] text-tx-3">{fileName}</p>}
+          </div>
+        ) : stage === 'error' ? (
+          <div className={cn('rounded-[14px] border border-st-red/40 bg-st-red/[.07] px-4 py-4', 'animate-[devizShake_.45s_ease-in-out_both]')} role="alert">
+            <p className="flex items-center gap-1.5 text-[14px] font-bold text-st-red">
+              <AlertTriangle className="size-4 shrink-0" aria-hidden="true" />
+              Nu am putut citi devizul
+            </p>
+            <p className="mt-1.5 text-[12.5px] leading-snug text-tx-2">{errorMsg}</p>
+          </div>
+        ) : (
+          <button
+            type="button"
+            onClick={pick}
+            disabled={stage === 'scanning'}
+            onDragOver={(e) => {
+              e.preventDefault()
+              setDragOver(true)
+            }}
+            onDragLeave={() => setDragOver(false)}
+            onDrop={onDrop}
+            className={cn(
+              'flex w-full flex-col items-center justify-center gap-2 rounded-[14px] border-[1.5px] border-dashed px-4 py-8 text-center transition-colors',
+              dragOver ? 'border-accent-tx bg-primary/10' : 'border-border-strong bg-background hover:bg-surface-hover/50',
+              stage === 'scanning' && 'cursor-wait',
+            )}
+          >
+            {stage === 'scanning' ? (
+              <>
+                <Loader2 className="size-7 animate-spin text-accent-tx" aria-hidden="true" />
+                <span className="text-[14px] font-bold text-foreground">Citesc devizul…</span>
+                <span className="max-w-full truncate text-[12px] text-tx-3">{progres || fileName}</span>
+              </>
+            ) : (
+              <>
+                <FileSearch className="size-7 text-accent-tx" aria-hidden="true" />
+                <span className="text-[14px] font-bold text-foreground">Trage devizul aici sau click pentru a alege</span>
+                <span className="text-[12px] text-tx-3">PDF sau poze — poți alege toate paginile odată</span>
+              </>
+            )}
+          </button>
+        )}
       </div>
 
       {(stage === 'done' || stage === 'error') && (
-        <div className="relative mt-3 flex gap-2">
+        <div className="flex justify-end gap-2 border-t border-border px-5 py-3.5">
+          <button
+            type="button"
+            className={BTN_SECUNDAR}
+            onClick={() => {
+              reset()
+              inputRef.current?.click()
+            }}
+          >
+            {stage === 'error' ? 'Alt document' : 'Alt deviz'}
+          </button>
           {stage === 'done' && result && (
             <button
               type="button"
-              className="btn-brand-gradient flex-1 rounded-lg px-3 py-1.5 text-xs font-bold"
+              className={BTN_PRIMAR}
               onClick={() => {
                 onApply(result)
                 reset()
@@ -151,16 +109,6 @@ export function ScanDevizCard({ onApply }: { onApply: (an: AnalizaDeviz) => void
               Aplică pe dosar nou
             </button>
           )}
-          <button
-            type="button"
-            className="rounded-lg border border-border bg-secondary px-3 py-1.5 text-xs font-semibold text-foreground hover:bg-accent"
-            onClick={() => {
-              reset()
-              inputRef.current?.click()
-            }}
-          >
-            {stage === 'error' ? 'Alt document' : 'Rescanează'}
-          </button>
         </div>
       )}
 
@@ -175,6 +123,6 @@ export function ScanDevizCard({ onApply }: { onApply: (an: AnalizaDeviz) => void
           e.target.value = ''
         }}
       />
-    </div>
+    </>
   )
 }

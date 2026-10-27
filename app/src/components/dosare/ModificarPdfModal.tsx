@@ -4,18 +4,17 @@ import {
   ChevronLeft,
   ChevronRight,
   Download,
-  FileEdit,
   FileText,
   Files,
   Loader2,
   ScrollText,
   Undo2,
   Upload,
-  X,
 } from 'lucide-react'
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import { Dialog, DialogContent } from '@/components/ui/dialog'
 import { aplicaModificare, extragePagini, randeazaPagina, type Cuvant, type PaginaRandata } from '@/lib/pdf-editor'
 import { cn } from '@/lib/utils'
+import { FEREASTRA_MARE, FereastraAntet } from '@/components/ui/fereastra'
 
 interface IntrareJurnal {
   pagina: number
@@ -255,27 +254,9 @@ export function ModificarPdfModal({ open, onClose }: { open: boolean; onClose: (
     <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
       <DialogContent
         showCloseButton={false}
-        className="max-h-[92vh] grid-cols-[minmax(0,1fr)] gap-0 overflow-x-hidden overflow-y-auto rounded-[22px] border border-border-strong bg-card bg-none p-0 shadow-[0_40px_90px_-30px_#000] sm:max-w-[1060px]"
+        className={cn(FEREASTRA_MARE, 'max-h-[92vh] sm:max-w-[1060px]')}
       >
-        <DialogHeader className="sticky top-0 z-[5] flex-row items-center gap-3 rounded-t-[22px] border-b border-border bg-card px-[22px] py-[18px]">
-          <span className="flex size-9 shrink-0 items-center justify-center rounded-[11px] border border-primary/45 bg-primary/[.16] text-accent-tx">
-            <FileEdit className="size-[18px]" aria-hidden="true" />
-          </span>
-          <div className="min-w-0 flex-1">
-            <DialogTitle className="text-[17px] font-extrabold leading-tight text-foreground">Modificare PDF</DialogTitle>
-            <p className="mt-0.5 truncate text-[12.5px] text-tx-3">
-              {numeFisier || 'Alege un PDF: schimbă text sau separă paginile într-un PDF nou'}
-            </p>
-          </div>
-          <button
-            type="button"
-            aria-label="Închide"
-            onClick={onClose}
-            className="flex size-[34px] shrink-0 items-center justify-center rounded-[10px] border border-border bg-border/[.28] text-tx-2 transition-colors hover:bg-border/60 hover:text-white"
-          >
-            <X className="size-4" strokeWidth={2.5} aria-hidden="true" />
-          </button>
-        </DialogHeader>
+        <FereastraAntet titlu="Modificare PDF" subtitlu={numeFisier || 'Alege un PDF: schimbă text sau separă paginile într-un PDF nou'} onClose={onClose} />
 
         <input
           ref={inputRef}

@@ -172,7 +172,7 @@ export function DosarCard({
               type="button"
               onClick={stop}
               title={meta.label + (dosar.amintesteMi ? ` · Amintește-mi ${textCand(dosar.amintesteLa)}${dosar.amintesteNota ? ': ' + dosar.amintesteNota : ''}` : '')}
-              className="flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full bg-surface-2 px-2 py-1 text-[11.5px] sm:px-2.5 font-bold text-tx-2 transition-colors hover:bg-surface-hover hover:text-foreground"
+              className="flex min-h-8 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full bg-surface-2 px-2.5 py-1 text-[11.5px] font-bold text-tx-2 transition-colors hover:bg-surface-hover hover:text-foreground"
             >
               <span className="size-[7px] rounded-full" style={{ background: meta.color }} />
               {meta.label.charAt(0) + meta.label.slice(1).toLowerCase()}

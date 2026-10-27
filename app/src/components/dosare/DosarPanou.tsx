@@ -117,7 +117,7 @@ export function DosarPanou({
             type="button"
             onClick={onClose}
             aria-label="Închide"
-            className="flex size-9 shrink-0 items-center justify-center rounded-lg border border-border text-tx-2 transition-colors hover:bg-surface-hover hover:text-foreground"
+            className="flex size-10 shrink-0 items-center justify-center rounded-lg border border-border text-tx-2 md:size-9 transition-colors hover:bg-surface-hover hover:text-foreground"
           >
             <X className="size-4" aria-hidden="true" />
           </button>
@@ -257,7 +257,7 @@ export function DosarPanou({
             <button
               type="button"
               onClick={() => onEditeaza(dosar.id)}
-              className="inline-flex h-10 items-center gap-1.5 rounded-lg border border-border-strong px-4 text-[13.5px] font-bold text-foreground transition-colors hover:bg-surface-hover"
+              className="inline-flex h-11 items-center gap-1.5 rounded-lg border border-border-strong px-4 text-[13.5px] md:h-10 font-bold text-foreground transition-colors hover:bg-surface-hover"
             >
               <Pencil className="size-4" aria-hidden="true" />
               Editează
@@ -266,7 +266,7 @@ export function DosarPanou({
               <button
                 type="button"
                 onClick={faPasul}
-                className="inline-flex h-10 items-center rounded-lg bg-primary px-4 text-[13.5px] font-bold text-primary-foreground transition-colors hover:bg-primary/90"
+                className="inline-flex h-11 items-center rounded-lg bg-primary px-4 md:h-10 text-[13.5px] font-bold text-primary-foreground transition-colors hover:bg-primary/90"
               >
                 {pas.eticheta}
               </button>

@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState, type DragEvent } from 'react'
-import { AlertTriangle, ArrowLeftRight, Check, FolderPlus, Laptop, RefreshCw, Trash2, Upload, X } from 'lucide-react'
+import { AlertTriangle, ArrowLeftRight, Check, Laptop, RefreshCw, Trash2, Upload } from 'lucide-react'
 import { cheiLocale, fisiereLocale, useFolderLocal, type FisierLocal } from '@/lib/folder-local'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import { Dialog, DialogContent } from '@/components/ui/dialog'
 import {
   DOCUMENT_LABELS,
   DOCUMENT_LABELS_NUMARATE,
@@ -19,6 +19,7 @@ import { formatCanonic, majuscule } from '@/lib/majuscule'
 import { stergeDocumentStocare } from '@/lib/documente-storage'
 import type { Dosar, DocumentDosar } from '@/lib/types'
 import { cn } from '@/lib/utils'
+import { FEREASTRA_MARE, FereastraAntet, FereastraSubsol, BTN_PRIMAR } from '@/components/ui/fereastra'
 
 // Butonul mic de langa fiecare fisier: il muti in alta categorie (cand numele a fost ghicit gresit).
 function MutaCategoria({ curent, nume, onAlege }: { curent: string; nume: string; onAlege: (key: string) => void }) {
@@ -232,27 +233,11 @@ export function DocumenteModal({
     <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
       <DialogContent
         showCloseButton={false}
-        className="max-h-[90vh] grid-cols-[minmax(0,1fr)] gap-0 overflow-x-hidden overflow-y-auto rounded-[22px] border border-border-strong bg-card bg-none p-0 shadow-[0_40px_90px_-30px_#000] sm:max-w-[620px]"
+        className={cn(FEREASTRA_MARE, 'sm:max-w-[620px]')}
       >
-        <DialogHeader className="sticky top-0 z-[5] flex-row items-center gap-3 rounded-t-[22px] border-b border-border bg-card px-[22px] py-[18px]">
-          <span className="flex size-9 shrink-0 items-center justify-center rounded-[11px] border border-primary/45 bg-primary/[.16] text-accent-tx">
-            <FolderPlus className="size-[18px]" aria-hidden="true" />
-          </span>
-          <div className="min-w-0 flex-1">
-            <DialogTitle className="text-[17px] font-extrabold leading-tight text-foreground">Documente dosar</DialogTitle>
-            {subtitlu && <p className="mt-0.5 truncate text-[12.5px] text-tx-3">{subtitlu}</p>}
-          </div>
-          <button
-            type="button"
-            aria-label="Închide"
-            onClick={onClose}
-            className="flex size-[34px] shrink-0 items-center justify-center rounded-[10px] border border-border bg-border/[.28] text-tx-2 transition-colors hover:bg-border/60 hover:text-white"
-          >
-            <X className="size-4" strokeWidth={2.5} aria-hidden="true" />
-          </button>
-        </DialogHeader>
+        <FereastraAntet titlu="Documente" subtitlu={subtitlu || undefined} onClose={onClose} />
 
-        <div className="flex flex-col gap-3.5 px-[22px] py-[18px]">
+        <div className="flex flex-col gap-3.5 px-5 py-4">
           <div className="flex flex-col gap-1.5">
             <div className="flex items-baseline justify-between gap-2.5">
               <span className="text-[12.5px] font-bold text-tx-2">Progres documente</span>
@@ -430,7 +415,7 @@ export function DocumenteModal({
           </div>
         </div>
 
-        <div className="sticky bottom-0 z-[5] flex items-center justify-between gap-3 rounded-b-[22px] border-t border-border bg-card px-[22px] py-3.5">
+        <FereastraSubsol className="gap-3">
           <span
             className="flex min-w-0 items-center gap-2 text-[13px] font-bold"
             style={{ color: lipsuri.length === 0 ? 'var(--st-green)' : 'var(--st-amber)' }}
@@ -443,11 +428,11 @@ export function DocumenteModal({
           <button
             type="button"
             onClick={onClose}
-            className="h-9 shrink-0 rounded-[10px] border border-primary bg-primary px-[18px] text-[12.5px] font-extrabold text-white transition-colors hover:bg-primary/90"
+            className={cn(BTN_PRIMAR, 'shrink-0')}
           >
             Gata
           </button>
-        </div>
+        </FereastraSubsol>
       </DialogContent>
     </Dialog>
   )
