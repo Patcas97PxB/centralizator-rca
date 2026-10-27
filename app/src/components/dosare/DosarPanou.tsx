@@ -11,6 +11,7 @@ import { ETAPA_META, type Dosar, type Etapa, type StatusDosar } from '@/lib/type
 import { STARE } from '@/lib/culori'
 import { cn } from '@/lib/utils'
 import { ReminderModal } from './ReminderModal'
+import { majuscule } from '@/lib/majuscule'
 
 const RANK_COLOR = [STARE.rosu, STARE.galben, STARE.verde, STARE.albastru, STARE.gri]
 const ETAPE: Etapa[] = ['rezervat', 'la_client', 'de_trimis', 'finalizat']
@@ -54,6 +55,18 @@ export function DosarPanou({
   const [reminderDeschis, setReminderDeschis] = useState(false)
   const [blocat, setBlocat] = useState<string | null>(null)
   useEffect(() => setBlocat(null), [dosar?.id])
+  // Observațiile (câmpul Note) se scriu direct aici; se salvează la ieșirea din câmp, cu MAJUSCULE ca în formular.
+  const [nota, setNota] = useState(dosar?.notes ?? '')
+  const [notaSalvata, setNotaSalvata] = useState(false)
+  useEffect(() => setNota(dosar?.notes ?? ''), [dosar?.id, dosar?.notes])
+  useEffect(() => setNotaSalvata(false), [dosar?.id])
+  function salveazaNota() {
+    if (!dosar) return
+    const noua = majuscule({ notes: nota.trim() }).notes ?? ''
+    if (noua === (dosar.notes ?? '')) return
+    onPatch(dosar.id, { notes: noua })
+    setNotaSalvata(true)
+  }
 
   if (!dosar) return <Sheet open={false} onOpenChange={(o) => !o && onClose()} />
 
@@ -208,8 +221,29 @@ export function DosarPanou({
               <Rand eticheta="Rezervare" valoare={dosar.nrRezervare} />
               <Rand eticheta="Clasă auto" valoare={dosar.clasaAuto} />
               <Rand eticheta="Zile din deviz" valoare={dosar.zileDeviz ? `${dosar.zileDeviz}${rca.dataPreluare ? ' · preluare ' + fmtDate(rca.dataPreluare) : ''}` : ''} />
-              <Rand eticheta="Note" valoare={dosar.notes} />
             </dl>
+          </Sectiune>
+
+          <Sectiune titlu="Observații">
+            <textarea
+              value={nota}
+              onChange={(e) => {
+                setNota(e.target.value)
+                setNotaSalvata(false)
+              }}
+              onBlur={salveazaNota}
+              rows={3}
+              placeholder="Scrie aici notițele tale despre dosar…"
+              className="w-full resize-y rounded-lg border border-border-strong bg-background px-3 py-2 text-[13.5px] uppercase leading-snug text-foreground placeholder:normal-case placeholder:text-tx-3 focus-visible:border-primary focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-primary/25"
+            />
+            <div className="mt-1.5 flex items-center justify-between gap-2 text-[12px] text-tx-3">
+              <span>{notaSalvata ? 'Salvat' : 'Se salvează când ieși din câmp'}</span>
+              {nota !== (dosar.notes ?? '') && (
+                <button type="button" onClick={salveazaNota} className="font-bold text-accent-tx hover:underline">
+                  Salvează acum
+                </button>
+              )}
+            </div>
           </Sectiune>
 
           <Sectiune titlu="Amintește-mi">
