@@ -277,7 +277,7 @@ export function NotitaNoua() {
             } else if (meniu.tip === 'schimba') setPrinClick(false)
           }}
           rows={4}
-          placeholder="Ce ai vorbit cu clientul? Ex.: BH52LCA - posibil gata joi, se așteaptă bara spate. Scrie și doar o bucată din nr. auto („DCM”) și alege din listă."
+          aria-label="Notiță nouă"
           className={cn(
             'relative block w-full resize-y rounded-lg border border-border-strong bg-transparent text-foreground placeholder:text-tx-3 focus:border-accent-tx focus:outline-none',
             CAMP,
