@@ -59,6 +59,12 @@ export function lipsuriFinalizare(d: DocInput, locale: string[] = []): string[] 
   return docStatus(d, locale).missing.map(docLabelText)
 }
 
+// Numele scurt al unui tip: „Cesiune creanță (CC)" → „CC", „Documente păgubit (permis/…)" → „Documente păgubit".
+export function numeScurtDoc(key: string): string {
+  const l = docLabelText(key)
+  return l.match(/\(([A-Z]{2,3})\)$/)?.[1] ?? l.replace(/\s*\(.*\)$/, '')
+}
+
 export function docLabelText(key: string): string {
   const l = DOCUMENT_LABELS.find((x) => x.key === key)
   return l ? l.label : key

@@ -8,6 +8,7 @@ import {
   DOCUMENT_LABELS_NUMARATE,
   detectAllDocLabels,
   docLabelText,
+  numeScurtDoc,
   docStatus,
   lipsuriFinalizare,
 } from '@/lib/documente'
@@ -48,12 +49,6 @@ function MutaCategoria({ curent, nume, onAlege }: { curent: string; nume: string
 // Modalul dedicat "Documente dosar": incarci fisiere (se sorteaza automat dupa nume sau le
 // pui pe un anumit tip), vezi ce lipseste si marchezi ce nu se aplica. Salvarea e automata —
 // fiecare schimbare se scrie imediat in dosar, "Gata" doar inchide.
-// Numele scurt din subsol: „Cesiune creanță (CC)" → „CC", „Documente păgubit (permis/…)" → „Documente păgubit".
-function numeScurt(key: string): string {
-  const l = docLabelText(key)
-  return l.match(/\(([A-Z]{2,3})\)$/)?.[1] ?? l.replace(/\s*\(.*\)$/, '')
-}
-
 export function DocumenteModal({
   open,
   dosar,
@@ -442,7 +437,7 @@ export function DocumenteModal({
           >
             {lipsuri.length === 0 ? <Check className="size-4 shrink-0" strokeWidth={2.6} aria-hidden="true" /> : <AlertTriangle className="size-4 shrink-0" aria-hidden="true" />}
             <span className="line-clamp-2 leading-snug" title={lipsuri.join(', ') || undefined}>
-              {lipsuri.length === 0 ? 'Dosar complet — poate fi finalizat' : `Lipsesc: ${st.missing.map(numeScurt).join(', ')}`}
+              {lipsuri.length === 0 ? 'Dosar complet — poate fi finalizat' : `Lipsesc: ${st.missing.map(numeScurtDoc).join(', ')}`}
             </span>
           </span>
           <button

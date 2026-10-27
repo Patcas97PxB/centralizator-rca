@@ -1,7 +1,7 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { Plus, X } from 'lucide-react'
 import { useDosareContext } from '@/contexts/DosareContext'
-import { filtreImplicite } from '@/lib/dosare-filter'
+import { filtreImplicite, numaraEtape } from '@/lib/dosare-filter'
 import { remindere } from '@/lib/reminder'
 import { mergiLaCardDosar } from '@/lib/mergi-la-dosar'
 import { exportDosareXlsx } from '@/lib/xlsx-export'
@@ -15,6 +15,9 @@ import { FilterBar } from './FilterBar'
 import { DosarCard } from './DosarCard'
 import { DosarFormModal } from './DosarFormModal'
 import { DocumenteModal } from './DocumenteModal'
+import { DosarPanou } from './DosarPanou'
+import { DeFacutAzi } from './DeFacutAzi'
+import { EtapeTabs } from './EtapeTabs'
 import { ScanDevizCard } from './ScanDevizCard'
 import { ModificarPdfCard } from './ModificarPdfCard'
 import { ActivitateRecenta } from '../panel/ActivitateRecenta'
@@ -26,12 +29,25 @@ export type ActiuneRapida = { id: number; tip: 'nou' } | { id: number; tip: 'dev
 export function DosarePage({ actiune }: { actiune?: ActiuneRapida | null }) {
   const {
     dosare, filtrate, servicii, loading, error, filtre, setFiltre,
-    salveazaDosar, salveazaRapid, stergeDosar,
+    salveazaDosar, salveazaRapid, stergeDosar, deSunat,
   } = useDosareContext()
   const [modalDeschis, setModalDeschis] = useState(false)
   const [dosarActiv, setDosarActiv] = useState<Dosar | null>(null)
   const [initialDraft, setInitialDraft] = useState<Partial<Dosar> | null>(null)
   const [docsId, setDocsId] = useState<string | null>(null)
+  // Panoul lateral al dosarului (click pe card). Când din panou deschizi Editează/Documente, panoul se închide
+  // și revine după ce închizi fereastra (două ferestre suprapuse se încurcă la click).
+  const [panouId, setPanouId] = useState<string | null>(null)
+  const [panouRevenire, setPanouRevenire] = useState<string | null>(null)
+  function revinoLaPanou() {
+    if (panouRevenire) setPanouId(panouRevenire)
+    setPanouRevenire(null)
+  }
+  function dinPanou(id: string, deschide: (id: string) => void) {
+    setPanouRevenire(id)
+    setPanouId(null)
+    deschide(id)
+  }
 
   // Un dosar tocmai finalizat ramane pe loc cat dureaza animatia de finalizare (~2,3 s), apoi
   // coboara direct jos. Pana atunci se sorteaza cu statusul de dinainte.
@@ -145,6 +161,15 @@ export function DosarePage({ actiune }: { actiune?: ActiuneRapida | null }) {
             <FilterBar filtre={filtre} onChange={setFiltre} servicii={servicii} onExport={() => exportDosareXlsx(filtrate)} nrAleMele={remindere(dosare).length} />
           </div>
 
+          <DeFacutAzi
+            dosare={dosare}
+            deSunat={deSunat}
+            activ={filtre.deFacut}
+            onAlege={(deFacut) => setFiltre({ ...filtre, deFacut })}
+          />
+
+          <EtapeTabs activ={filtre.status} numar={numaraEtape(dosare, filtre)} onAlege={(status) => setFiltre({ ...filtre, status })} />
+
           {filtre.doarAmintite && (
             <div className="flex items-center justify-between rounded-xl border border-st-orange/40 bg-st-orange/10 px-3 py-2 text-sm text-st-orange">
               <span>Arăt doar dosarele marcate „Amintește-mi”.</span>
@@ -185,7 +210,7 @@ export function DosarePage({ actiune }: { actiune?: ActiuneRapida | null }) {
                     else carduri.current.delete(d.id)
                   }}
                   id={`dosar-${d.id}`} className="animate-fade-up min-w-0 rounded-[18px]" style={staggerDelay(i)}>
-                  <DosarCard dosar={d} onStatusChange={onStatusChange} onDeschide={deschideEditare} onPatch={onPatch} onDocumente={setDocsId} />
+                  <DosarCard dosar={d} selectat={panouId === d.id} onStatusChange={onStatusChange} onDeschide={setPanouId} onPatch={onPatch} />
                 </div>
               ))}
             </div>
@@ -225,8 +250,20 @@ export function DosarePage({ actiune }: { actiune?: ActiuneRapida | null }) {
       <DocumenteModal
         open={docsId !== null}
         dosar={dosare.find((x) => x.id === docsId) ?? null}
-        onClose={() => setDocsId(null)}
+        onClose={() => {
+          setDocsId(null)
+          revinoLaPanou()
+        }}
         onSave={salveazaDosar}
+      />
+
+      <DosarPanou
+        dosar={dosare.find((x) => x.id === panouId) ?? null}
+        onClose={() => setPanouId(null)}
+        onPatch={onPatch}
+        onStatusChange={onStatusChange}
+        onEditeaza={(id) => dinPanou(id, deschideEditare)}
+        onDocumente={(id) => dinPanou(id, setDocsId)}
       />
 
       <DosarFormModal
@@ -234,7 +271,10 @@ export function DosarePage({ actiune }: { actiune?: ActiuneRapida | null }) {
         dosar={dosarActiv}
         initialDraft={initialDraft}
         servicii={servicii}
-        onClose={() => setModalDeschis(false)}
+        onClose={() => {
+          setModalDeschis(false)
+          revinoLaPanou()
+        }}
         onSave={salveazaDosar}
         onDelete={stergeDosar}
       />

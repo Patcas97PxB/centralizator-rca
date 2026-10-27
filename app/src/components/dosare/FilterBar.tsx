@@ -11,7 +11,6 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import type { DosareFiltre } from '@/lib/dosare-filter'
-import { ETAPA_META } from '@/lib/types'
 import type { Serviciu } from '@/lib/types'
 import { cn } from '@/lib/utils'
 import { LegendaButton } from './LegendaCulori'
@@ -40,11 +39,10 @@ export function FilterBar({
     filtre.perioada !== 'toate' ||
     filtre.sortare !== 'actualizare'
   )
-  const statusColor = filtre.status === 'toate' ? 'var(--tx-3)' : (ETAPA_META[filtre.status]?.color ?? 'var(--tx-3)')
 
   return (
     <div className="flex flex-wrap items-center gap-2.5">
-      <div className="relative w-full sm:w-auto sm:min-w-[140px] sm:flex-1">
+      <div className="relative min-w-0 flex-1 sm:min-w-[140px]">
         <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-tx-3" aria-hidden="true" />
         <Input
           value={filtre.search}
@@ -54,25 +52,6 @@ export function FilterBar({
         />
       </div>
 
-      <Select value={filtre.status} onValueChange={(v) => onChange({ ...filtre, status: v as DosareFiltre['status'] })}>
-        <SelectTrigger className={cn(CONTROL, 'min-w-0 flex-1 gap-2 px-2.5 sm:w-[168px] sm:flex-none')}>
-          <span
-            className="size-2 shrink-0 rounded-full"
-            style={{ background: statusColor }}
-          />
-          <span className="min-w-0 flex-1 truncate text-left">
-            <SelectValue placeholder="Status" />
-          </span>
-        </SelectTrigger>
-        <SelectContent>
-          <SelectItem value="toate">Toate etapele</SelectItem>
-          {Object.entries(ETAPA_META).map(([key, meta]) => (
-            <SelectItem key={key} value={key}>
-              {meta.label}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
 
       <Popover>
         <PopoverTrigger asChild>

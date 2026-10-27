@@ -392,40 +392,42 @@ export function zileLaTermen(d: Dosar): number | null {
 // netrimis — preluat de ZILE_AVIZ+ zile, dar nefinalizat (documente/drive/mail);
 // deviz — la client de ZILE_AVIZ+ zile fara zile din deviz (suna service-ul);
 // manual — „Amintește-mi" (de la ziua aleasa; primul, are prioritate).
-export function dosareDeSunat(dosare: Dosar[]): DeSunat[] {
-  const out: DeSunat[] = []
-  for (const dosar of dosare) {
-    const etapa = etapaDosar(dosar)
-    if (etapa === 'finalizat') continue
-    // reminderul tau, din ziua aleasa, are prioritate (pana atunci raman avizele automate)
-    if (dosar.amintesteMi && (!dosar.amintesteLa || dosar.amintesteLa <= todayStr())) {
-      out.push({ dosar, tip: 'manual', zile: null })
-      continue
-    }
-    if (etapa === 'la_client') {
-      const zile = zileLaTermen(dosar)
-      if (zile !== null && zile <= 2) {
-        out.push({ dosar, tip: 'termen', zile })
-        continue
-      }
-      const scurse = zileScurseDeLaPredare(dosar.start)
-      if (!dosar.dte && !Number(dosar.zileDeviz) && scurse !== null && scurse >= ZILE_AVIZ) {
-        out.push({ dosar, tip: 'deviz', zile: scurse })
-        continue
-      }
-    }
-    if (etapa === 'de_trimis') {
-      const deCand = zileScurseDeLaPredare(dosar.preluatLa || dosar.end)
-      if (deCand !== null && deCand >= ZILE_AVIZ) {
-        out.push({ dosar, tip: 'netrimis', zile: deCand })
-        continue
-      }
+/** Avizul dosarului din clopoțel (cel mult unul), sau null. */
+export function avizDosar(dosar: Dosar): DeSunat | null {
+  const etapa = etapaDosar(dosar)
+  if (etapa === 'finalizat') return null
+  // reminderul tau, din ziua aleasa, are prioritate (pana atunci raman avizele automate)
+  if (dosar.amintesteMi && (!dosar.amintesteLa || dosar.amintesteLa <= todayStr())) {
+    return { dosar, tip: 'manual', zile: null }
+  }
+  if (etapa === 'la_client') {
+    const zile = zileLaTermen(dosar)
+    if (zile !== null && zile <= 2) return { dosar, tip: 'termen', zile }
+    const scurse = zileScurseDeLaPredare(dosar.start)
+    if (!dosar.dte && !Number(dosar.zileDeviz) && scurse !== null && scurse >= ZILE_AVIZ) {
+      return { dosar, tip: 'deviz', zile: scurse }
     }
   }
+  if (etapa === 'de_trimis') {
+    const deCand = zileScurseDeLaPredare(dosar.preluatLa || dosar.end)
+    if (deCand !== null && deCand >= ZILE_AVIZ) return { dosar, tip: 'netrimis', zile: deCand }
+  }
+  return null
+}
+
+export function dosareDeSunat(dosare: Dosar[]): DeSunat[] {
+  const out = dosare.map(avizDosar).filter((a): a is DeSunat => a !== null)
   const ordine: Record<TipAviz, number> = { manual: 0, termen: 1, netrimis: 2, deviz: 3 }
   return out.sort((a, b) =>
     ordine[a.tip] - ordine[b.tip] || (a.tip === 'termen' ? (a.zile ?? 99) - (b.zile ?? 99) : (b.zile ?? 0) - (a.zile ?? 0)),
   )
+}
+
+/** Mașina se predă azi sau mâine (etapa REZERVAT) — pentru rândul „De făcut azi". */
+export function predareCurand(d: Dosar): boolean {
+  if (etapaDosar(d) !== 'rezervat' || !d.start) return false
+  const z = zileRamase(d.start)
+  return z !== null && z >= 0 && z <= 1
 }
 
 // Ordinea implicita a cardurilor: 0 rosu, 1 galben, 2 verde, 3 albastru, 4 finalizat (jos).

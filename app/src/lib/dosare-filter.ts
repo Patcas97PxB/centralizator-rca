@@ -1,4 +1,4 @@
-import { calculRCA, etapaDosar, urgentaDosar, zileRamase } from './rca-calc'
+import { avizDosar, calculRCA, etapaDosar, predareCurand, urgentaDosar, zileRamase, type TipAviz } from './rca-calc'
 import type { Dosar, Etapa } from './types'
 
 export interface DosareFiltre {
@@ -14,6 +14,8 @@ export interface DosareFiltre {
   doarDepasite: boolean
   /** Doar dosarele marcate „Amintește-mi" (butonul „Ale mele" din bara de filtre). */
   doarAmintite: boolean
+  /** Un chip din rândul „De făcut azi": dosarele cu avizul respectiv (sau predările de azi/mâine). */
+  deFacut: TipAviz | 'predare' | null
 }
 
 export const filtreImplicite: DosareFiltre = {
@@ -26,6 +28,7 @@ export const filtreImplicite: DosareFiltre = {
   startTo: '',
   doarDepasite: false,
   doarAmintite: false,
+  deFacut: null,
 }
 
 const fara = (s: string) => s.replace(/[\s\-./]/g, '')
@@ -49,6 +52,18 @@ function corespundePerioadei(d: Dosar, perioada: DosareFiltre['perioada']): bool
   return new Date(d.start + 'T00:00:00') >= limita
 }
 
+function corespundeDeFacut(d: Dosar, tip: TipAviz | 'predare'): boolean {
+  return tip === 'predare' ? predareCurand(d) : avizDosar(d)?.tip === tip
+}
+
+/** Câte dosare are fiecare etapă, cu celelalte filtre aplicate (pentru tab-urile de deasupra cardurilor). */
+export function numaraEtape(dosare: Dosar[], f: DosareFiltre): Record<Etapa | 'toate', number> {
+  const toate = filtreazaSiSorteazaDosare(dosare, { ...f, status: 'toate' })
+  const n: Record<Etapa | 'toate', number> = { toate: toate.length, rezervat: 0, la_client: 0, de_trimis: 0, finalizat: 0 }
+  for (const d of toate) n[etapaDosar(d)]++
+  return n
+}
+
 export function filtreazaSiSorteazaDosare(dosare: Dosar[], f: DosareFiltre): Dosar[] {
   const filtrate = dosare.filter((d) => {
     if (!corespundeCautarii(d, f.search)) return false
@@ -59,6 +74,7 @@ export function filtreazaSiSorteazaDosare(dosare: Dosar[], f: DosareFiltre): Dos
     if (f.startTo && (!d.start || d.start > f.startTo)) return false
     if (f.doarDepasite && !urgentaDosar(d).depasit) return false
     if (f.doarAmintite && !(d.amintesteMi && d.status !== 'finalizat')) return false
+    if (f.deFacut && !corespundeDeFacut(d, f.deFacut)) return false
     return true
   })
 
