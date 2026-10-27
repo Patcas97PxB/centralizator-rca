@@ -103,7 +103,7 @@ export function StatisticiRapide({ dosare }: { dosare: Dosar[] }) {
         <div className="flex items-center gap-3">
           <div className="flex h-[52px] w-[76px] shrink-0 items-center justify-center">
             {pozaVI ? (
-              <img src={pozaVI} alt={topVI.nume} loading="lazy" className="size-full object-contain drop-shadow-[0_6px_10px_rgba(0,0,0,.6)]" />
+              <img src={pozaVI} alt={topVI.nume} loading="lazy" className="poza-masina size-full object-contain drop-shadow-[0_6px_10px_rgba(0,0,0,.6)]" />
             ) : (
               <ImageIcon className="size-5 text-st-blue/60" aria-hidden="true" />
             )}

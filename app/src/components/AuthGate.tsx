@@ -84,7 +84,8 @@ export function AuthGate({ children }: { children: ReactNode }) {
           className="rounded-[20px] border border-border bg-card p-7 shadow-[var(--shadow-ambient)] sm:p-9"
         >
           <div className="relative mb-7 flex flex-col items-center gap-3 text-center">
-            <img src={assetUrl('/icons/logo.png')} alt="Centralizator RCA" className="h-14 w-auto" />
+            <img src={assetUrl('/icons/logo.png')} alt="Centralizator RCA" className="h-14 w-auto light:hidden" />
+            <img src={assetUrl('/icons/logo-light.png')} alt="Centralizator RCA" className="hidden h-14 w-auto light:block" />
             <div>
               <h1 className="text-xl font-extrabold tracking-[-.01em] text-foreground">Bine ai revenit</h1>
               <p className="mt-1 text-[13px] text-tx-3">

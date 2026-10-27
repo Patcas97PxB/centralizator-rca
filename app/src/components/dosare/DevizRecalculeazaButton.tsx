@@ -101,7 +101,7 @@ export function DevizRecalculeazaButton({
               <>
                 <div className="truncate text-sm font-bold" style={{ color: 'var(--accent-tx)' }}>Calculez zilele din deviz…</div>
                 <div className="truncate text-xs text-muted-foreground">{progres || fileName}</div>
-                <div className="mt-2 h-1 overflow-hidden rounded-full bg-white/10">
+                <div className="mt-2 h-1 overflow-hidden rounded-full bg-foreground/10">
                   <div
                     className="h-full origin-left rounded-full animate-[devizProgress_2.6s_cubic-bezier(.4,0,.2,1)_both]"
                     style={{ background: 'var(--primary)' }}

@@ -1,5 +1,7 @@
+/** Culoarea cu transparență („66” = 40%); merge și cu variabile CSS (color-mix). */
 export function hex(color: string, alphaHex: string): string {
-  return color + alphaHex
+  const p = Math.round((parseInt(alphaHex, 16) / 255) * 100)
+  return `color-mix(in srgb, ${color} ${p}%, transparent)`
 }
 
 export const ALPHA = {

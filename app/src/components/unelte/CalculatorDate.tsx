@@ -5,6 +5,7 @@ import { KNOWN_INSURERS } from '@/lib/asiguratori'
 import { calculRCA, todayStr, zileDecontabileReale, zileRamase } from '@/lib/rca-calc'
 import { dosarGol, type Vehicul } from '@/lib/types'
 import { cn } from '@/lib/utils'
+import { Lista } from '@/components/ui/lista'
 import { CampData } from '@/components/ui/camp-data'
 
 // Unealta „Calculator de date” (meniul lateral → Unelte): pentru clientul care întreabă la telefon,
@@ -76,21 +77,22 @@ export function CalculatorDate({ open, onClose }: { open: boolean; onClose: () =
                 <span className={ETICHETA}>Zile din deviz</span>
                 <input type="number" min={1} inputMode="numeric" value={zile} onChange={(e) => setZile(e.target.value)} className={CAMP} />
               </label>
-              <label>
+              <div>
                 <span className={ETICHETA}>Asigurator</span>
-                <select value={asig} onChange={(e) => setAsig(e.target.value)} className={CAMP}>
-                  {KNOWN_INSURERS.map((a) => (
-                    <option key={a}>{a}</option>
-                  ))}
-                </select>
-              </label>
-              <label>
+                <Lista aria-label="Asigurator" value={asig} optiuni={[...KNOWN_INSURERS]} onChange={setAsig} />
+              </div>
+              <div>
                 <span className={ETICHETA}>Mașina păgubită</span>
-                <select value={vehicul} onChange={(e) => setVehicul(e.target.value as Vehicul)} className={CAMP}>
-                  <option value="deplasabil">deplasabilă</option>
-                  <option value="nedeplasabil">nedeplasabilă</option>
-                </select>
-              </label>
+                <Lista
+                  aria-label="Mașina păgubită"
+                  value={vehicul}
+                  optiuni={[
+                    { value: 'deplasabil', label: 'deplasabilă' },
+                    { value: 'nedeplasabil', label: 'nedeplasabilă' },
+                  ]}
+                  onChange={(v) => setVehicul(v as Vehicul)}
+                />
+              </div>
             </div>
             {rez.dataPreluare ? (
               <div className="rounded-[14px] border border-border bg-surface-2 px-4 py-3.5">

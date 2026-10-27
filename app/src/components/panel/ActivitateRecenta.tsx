@@ -47,7 +47,7 @@ export function ActivitateRecenta({
                   type="button"
                   onClick={() => onAlege?.(d.id)}
                   title="Mergi la dosar"
-                  className="-mx-2 flex w-[calc(100%+1rem)] items-start gap-2.5 rounded-[10px] px-2 py-1 text-left text-[11.5px] transition-colors hover:bg-white/[.05] focus-visible:bg-white/[.05] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary"
+                  className="-mx-2 flex w-[calc(100%+1rem)] items-start gap-2.5 rounded-[10px] px-2 py-1 text-left text-[11.5px] transition-colors hover:bg-foreground/[.05] focus-visible:bg-foreground/[.05] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary"
                 >
                   <span
                     className="mt-[5px] size-2 shrink-0 rounded-full"

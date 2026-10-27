@@ -134,7 +134,7 @@ export function DosarCard({
       <div className="flex min-w-0 items-start gap-3">
         <div className="flex h-[60px] w-[104px] shrink-0 items-center justify-center">
           {poza ? (
-            <img src={poza} alt={dosar.marcaModelInlocuire} loading="lazy" className="size-full object-contain" />
+            <img src={poza} alt={dosar.marcaModelInlocuire} loading="lazy" className="poza-masina size-full object-contain" />
           ) : (
             <ImageIcon className="size-5 text-tx-3" aria-hidden="true" />
           )}

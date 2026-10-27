@@ -37,7 +37,7 @@ export function LegendaButton() {
           type="button"
           aria-label="Legendă culori"
           title="Legendă culori"
-          className="flex size-10 shrink-0 md:size-[34px] items-center justify-center rounded-[11px] border border-border bg-border/[.24] text-tx-3 transition-colors hover:bg-border/50 hover:text-white"
+          className="flex size-10 shrink-0 md:size-[34px] items-center justify-center rounded-[11px] border border-border bg-border/[.24] text-tx-3 transition-colors hover:bg-border/50 hover:text-foreground"
         >
           <Info className="size-4" aria-hidden="true" />
         </button>

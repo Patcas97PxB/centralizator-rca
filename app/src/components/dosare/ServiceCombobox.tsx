@@ -87,7 +87,7 @@ export function ServiceCombobox({
         tabIndex={-1}
         aria-label={deschis ? 'Închide lista de service-uri' : 'Alege service'}
         onClick={() => setDeschis((d) => !d)}
-        className="absolute right-1.5 top-1/2 flex size-7 -translate-y-1/2 items-center justify-center rounded-lg text-tx-3 transition-colors hover:bg-white/5 hover:text-white"
+        className="absolute right-1.5 top-1/2 flex size-7 -translate-y-1/2 items-center justify-center rounded-lg text-tx-3 transition-colors hover:bg-foreground/5 hover:text-foreground"
       >
         <ChevronDown className={cn('size-4 transition-transform', deschis && 'rotate-180')} aria-hidden="true" />
       </button>
@@ -116,7 +116,7 @@ export function ServiceCombobox({
                   onClick={() => alege(s)}
                   className={cn(
                     'flex w-full items-center gap-3 rounded-lg px-2.5 py-2 text-left transition-colors',
-                    i === activ ? 'bg-white/[.06]' : 'hover:bg-white/5',
+                    i === activ ? 'bg-foreground/[.06]' : 'hover:bg-foreground/5',
                   )}
                 >
                   <span className="flex size-8 shrink-0 items-center justify-center rounded-[10px] border border-border bg-border/30 text-tx-3">

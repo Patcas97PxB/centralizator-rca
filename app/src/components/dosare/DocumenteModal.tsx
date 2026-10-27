@@ -30,7 +30,7 @@ function MutaCategoria({ curent, nume, onAlege }: { curent: string; nume: string
           type="button"
           aria-label={'Schimbă categoria pentru ' + nume}
           title="Schimbă categoria"
-          className="flex size-6 shrink-0 items-center justify-center rounded-md text-tx-3 transition-colors hover:bg-white/10 hover:text-white"
+          className="flex size-6 shrink-0 items-center justify-center rounded-md text-tx-3 transition-colors hover:bg-foreground/10 hover:text-foreground"
         >
           <ArrowLeftRight className="size-3.5" aria-hidden="true" />
         </button>
@@ -320,7 +320,7 @@ export function DocumenteModal({
                   className={cn(
                     // pe telefon butoanele trec sub nume, ca numele sa se vada intreg
                     'flex flex-wrap items-center gap-x-[11px] gap-y-2 rounded-[13px] border px-3 py-2.5 transition-colors sm:flex-nowrap',
-                    are ? 'border-st-green/35 bg-st-green/[.06]' : optional ? 'border-border bg-white/[.02] opacity-70' : 'border-border-strong bg-white/[.02]',
+                    are ? 'border-st-green/35 bg-st-green/[.06]' : optional ? 'border-border bg-foreground/[.02] opacity-70' : 'border-border-strong bg-foreground/[.02]',
                   )}
                 >
                   <span
@@ -355,7 +355,7 @@ export function DocumenteModal({
                                 disabled={seIncarca}
                                 aria-label={'Citește din nou ' + f.nume}
                                 title="Citește din nou contractul (zile, valoare, tarif)"
-                                className="flex size-6 shrink-0 items-center justify-center rounded-md text-accent-tx transition-colors hover:bg-white/10 hover:text-white disabled:opacity-40"
+                                className="flex size-6 shrink-0 items-center justify-center rounded-md text-accent-tx transition-colors hover:bg-foreground/10 hover:text-foreground disabled:opacity-40"
                               >
                                 <RefreshCw className={cn('size-3.5', seIncarca && 'animate-spin')} aria-hidden="true" />
                               </button>

@@ -1,5 +1,5 @@
 import { useRef, useState, type ReactNode } from 'react'
-import { AlertTriangle, Download, FolderOpen, History, Laptop, RefreshCw, Sparkles, Unlink, Upload } from 'lucide-react'
+import { AlertTriangle, Download, FolderOpen, History, Laptop, Moon, RefreshCw, Sparkles, Sun, Unlink, Upload } from 'lucide-react'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -16,6 +16,7 @@ import { useAtentieSetari } from '@/lib/atentie-setari'
 import { exportaBackup, parseazaBackup } from '@/lib/backup'
 import { alegeFolder, deconecteaza, permiteCitirea, rescaneaza, useFolderLocal } from '@/lib/folder-local'
 import { setMotionPref, useMotionPref } from '@/lib/motion-pref'
+import { setTema, useTema } from '@/lib/tema'
 import { cn } from '@/lib/utils'
 
 const BTN =
@@ -46,6 +47,7 @@ export function SetariPage() {
   const f = useFolderLocal()
   const atentie = useAtentieSetari()
   const motion = useMotionPref()
+  const tema = useTema()
   const { dosare, servicii, importaBackup } = useDosareContext()
   const inputRef = useRef<HTMLInputElement>(null)
   const [pending, setPending] = useState<{ dosare: number; servicii: number; deSters: number; noi: number; run: () => void } | null>(null)
@@ -168,6 +170,33 @@ export function SetariPage() {
           <button type="button" className={BTN} onClick={() => setRecuperare(true)}>
             <History className="size-4" aria-hidden="true" /> Deschide recuperarea
           </button>
+        </div>
+      </Card>
+
+      <Card icon={tema === 'light' ? <Sun className="size-4" aria-hidden="true" /> : <Moon className="size-4" aria-hidden="true" />} titlu="Aspect">
+        <p className="text-[13px] leading-relaxed text-tx-2">Tema se ține minte în acest browser.</p>
+        <div className="mt-3.5 inline-flex rounded-lg border border-border-strong p-1" role="radiogroup" aria-label="Tema">
+          {(
+            [
+              ['dark', 'Dark', Moon],
+              ['light', 'Light', Sun],
+            ] as const
+          ).map(([k, t, Icon]) => (
+            <button
+              key={k}
+              type="button"
+              role="radio"
+              aria-checked={tema === k}
+              onClick={() => setTema(k)}
+              className={cn(
+                'inline-flex h-8 items-center gap-1.5 rounded-md px-3.5 text-[13px] font-bold transition-colors',
+                tema === k ? 'bg-primary text-primary-foreground' : 'text-tx-2 hover:bg-surface-hover hover:text-foreground',
+              )}
+            >
+              <Icon className="size-4" aria-hidden="true" />
+              {t}
+            </button>
+          ))}
         </div>
       </Card>
 

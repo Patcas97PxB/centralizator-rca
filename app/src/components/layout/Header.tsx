@@ -19,6 +19,7 @@ import { useDosareContext } from '@/contexts/DosareContext'
 import { faraReminder, fmtZi, peste, remindere, reminderScadent, textCand } from '@/lib/reminder'
 import { cn } from '@/lib/utils'
 import { STARE } from '@/lib/culori'
+import { hex } from '@/lib/color'
 
 type Tab = 'toate' | 'ale_mele'
 const CHEIE_TAB = 'rca-clopotel-tab'
@@ -124,7 +125,8 @@ export function Header({
         className="pointer-events-none absolute inset-x-0 bottom-0 h-px"
         style={{ background: 'var(--border)' }}
       />
-      <img src={assetUrl('/icons/logo.png')} alt="Centralizator RCA" className="h-8 w-auto md:hidden" />
+      <img src={assetUrl('/icons/logo.png')} alt="Centralizator RCA" className="h-8 w-auto md:hidden light:hidden" />
+      <img src={assetUrl('/icons/logo-light.png')} alt="Centralizator RCA" className="hidden h-8 w-auto light:block light:md:hidden" />
 
       <div className="hidden min-w-0 md:block">
         <h1 className="truncate text-[19px] font-extrabold tracking-[-.015em] text-foreground">{title}</h1>
@@ -167,7 +169,7 @@ export function Header({
           <PopoverTrigger asChild>
             <button
               type="button"
-              className="relative flex size-10 items-center justify-center rounded-[10px] border border-border bg-border/[.28] md:size-[34px] text-tx-2 transition-colors hover:bg-border/60 hover:text-white"
+              className="relative flex size-10 items-center justify-center rounded-[10px] border border-border bg-border/[.28] md:size-[34px] text-tx-2 transition-colors hover:bg-border/60 hover:text-foreground"
               aria-label={deSunat.length > 0 ? `${deSunat.length} ${deSunat.length === 1 ? "aviz" : "avize"}` : 'Notificări'}
             >
               <Bell className="size-4" aria-hidden="true" />
@@ -197,7 +199,7 @@ export function Header({
                     onClick={() => setTab(k)}
                     className={cn(
                       'rounded-full px-2.5 py-1 transition-colors',
-                      tab === k ? (k === 'ale_mele' ? 'bg-st-orange/20 text-st-orange' : 'bg-border text-white') : 'text-tx-3 hover:text-tx-2',
+                      tab === k ? (k === 'ale_mele' ? 'bg-st-orange/20 text-st-orange' : 'bg-border text-foreground') : 'text-tx-3 hover:text-tx-2',
                     )}
                   >
                     {label} {n}
@@ -220,7 +222,7 @@ export function Header({
                             setDeschis(false)
                             onAlegeDosar(dosar.id)
                           }}
-                          className="flex w-full items-center gap-3 rounded-xl px-2.5 py-2 text-left transition-colors hover:bg-white/5"
+                          className="flex w-full items-center gap-3 rounded-xl px-2.5 py-2 text-left transition-colors hover:bg-foreground/5"
                         >
                           <span className="size-2 shrink-0 rounded-full" style={{ background: culoare }} />
                           <span className="min-w-0 flex-1">
@@ -232,7 +234,7 @@ export function Header({
                           </span>
                           <span
                             className="shrink-0 rounded-full border px-2 py-0.5 text-[10px] font-extrabold uppercase"
-                            style={{ color: culoare, borderColor: `${culoare}66`, background: `${culoare}1f` }}
+                            style={{ color: culoare, borderColor: hex(culoare, '66'), background: hex(culoare, '1f') }}
                           >
                             {eticheta}
                           </span>
@@ -254,7 +256,7 @@ export function Header({
                   const scadent = reminderScadent(dosar)
                   const culoare = scadent ? STARE.portocaliu : STARE.gri
                   return (
-                    <li key={dosar.id} className="flex items-center gap-1 rounded-xl pr-1 transition-colors hover:bg-white/5">
+                    <li key={dosar.id} className="flex items-center gap-1 rounded-xl pr-1 transition-colors hover:bg-foreground/5">
                       <button
                         type="button"
                         onClick={() => {
@@ -276,7 +278,7 @@ export function Header({
                         </span>
                         <span
                           className="shrink-0 rounded-full border px-2 py-0.5 text-[10px] font-extrabold uppercase"
-                          style={{ color: culoare, borderColor: `${culoare}66`, background: `${culoare}1f` }}
+                          style={{ color: culoare, borderColor: hex(culoare, '66'), background: hex(culoare, '1f') }}
                         >
                           {textCand(dosar.amintesteLa)}
                         </span>
@@ -292,7 +294,7 @@ export function Header({
                           const p = (x: number) => String(x).padStart(2, '0')
                           void salveazaRapid({ ...dosar, amintesteLa: `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}` })
                         }}
-                        className="shrink-0 rounded-lg px-1.5 py-1 text-[10.5px] font-extrabold text-tx-3 transition-colors hover:bg-white/10 hover:text-white"
+                        className="shrink-0 rounded-lg px-1.5 py-1 text-[10.5px] font-extrabold text-tx-3 transition-colors hover:bg-foreground/10 hover:text-foreground"
                       >
                         +1 zi
                       </button>
@@ -315,7 +317,7 @@ export function Header({
 
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <button type="button" className="flex items-center gap-[9px] rounded-xl py-[5px] pl-[5px] pr-2 transition-colors hover:bg-white/5">
+            <button type="button" className="flex items-center gap-[9px] rounded-xl py-[5px] pl-[5px] pr-2 transition-colors hover:bg-foreground/5">
               <Avatar className="size-10 ring-1 ring-accent-tx/45 md:size-[34px]">
                 <AvatarFallback className="bg-primary text-xs font-extrabold text-white">
                   {INITIALE_UTILIZATOR}

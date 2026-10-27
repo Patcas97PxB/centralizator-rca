@@ -4,6 +4,8 @@
 @import "@fontsource-variable/plus-jakarta-sans";
 
 @custom-variant dark (&:is(.dark *));
+/* light: — doar în tema deschisă (Setări → Aspect; data-theme pe <html>, lib/tema.ts) */
+@custom-variant light (&:where([data-theme=light], [data-theme=light] *));
 
 @theme inline {
     --font-heading: var(--font-sans);
@@ -144,6 +146,58 @@
     --overlay-blur-bg: rgba(3, 6, 12, 0.8);
 }
 
+/*
+  Tema deschisă (Setări → Aspect → Light; aprobată în master plan ca „comutator light” opțional).
+  Aceleași roluri, alte valori: fundal gri foarte deschis, carduri albe, text închis. Culorile de stare
+  sunt mai închise decât în dark, ca textul colorat să aibă contrast ≥ 4,5:1 pe alb.
+*/
+:root[data-theme='light'] {
+    color-scheme: light;
+
+    --background: #f3f5f9;
+    --foreground: #0f172a;
+    --card: #ffffff;
+    --card-foreground: #0f172a;
+    --popover: #ffffff;
+    --popover-foreground: #0f172a;
+
+    --secondary: #eef1f6;
+    --secondary-foreground: #0f172a;
+    --muted: #eef1f6;
+    --muted-foreground: #5b6578;
+    --accent: #eef1f6;
+    --accent-foreground: #0f172a;
+
+    --border: #e1e6ee;
+    --input: #e1e6ee;
+    --ring: #2563eb;
+
+    --sidebar: #ffffff;
+    --sidebar-foreground: #0f172a;
+    --sidebar-accent: #eef1f6;
+    --sidebar-accent-foreground: #0f172a;
+    --sidebar-border: #e1e6ee;
+    --sidebar-ring: #2563eb;
+
+    --surface-2: #f1f4f8;
+    --surface-hover: #e7ecf3;
+    --border-strong: #cdd5e1;
+    --tx-2: #475569;
+    --tx-3: #64748b;
+    --accent-tx: #1d4ed8;
+    --st-red: #dc2626;    --st-red-bg: rgba(220, 38, 38, .09);   --st-red-tx: #b91c1c;
+    --st-amber: #d97706;  --st-amber-bg: rgba(217, 119, 6, .1);  --st-amber-tx: #a16207;
+    --st-green: #059669;  --st-green-bg: rgba(5, 150, 105, .09); --st-green-tx: #047857;
+    --st-blue: #2563eb;   --st-blue-bg: rgba(37, 99, 235, .09);  --st-blue-tx: #1d4ed8;
+    --st-gray: #64748b;   --st-gray-bg: rgba(100, 116, 139, .1); --st-gray-tx: #475569;
+    --st-violet: #7c3aed; --st-violet-tx: #6d28d9;
+    --st-orange: #ea580c; --st-orange-tx: #c2410c;
+
+    --danger-strong: #dc2626;
+    --shadow-ambient: 0 18px 40px -18px rgba(15, 23, 42, 0.25);
+    --overlay-blur-bg: rgba(15, 23, 42, 0.35);
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;
@@ -212,4 +266,10 @@
     background: var(--border-strong);
     border-radius: 999px;
   }
+}
+
+/* Pozele mașinilor (multe albe, fără fundal): în tema light primesc un contur fin de umbră, altfel
+   o mașină albă dispare pe cardul alb. */
+:root[data-theme='light'] .poza-masina {
+  filter: drop-shadow(0 0 1px rgb(15 23 42 / 0.55)) drop-shadow(0 2px 3px rgb(15 23 42 / 0.18));
 }

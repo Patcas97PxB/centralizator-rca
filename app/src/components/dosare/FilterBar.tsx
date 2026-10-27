@@ -62,8 +62,8 @@ export function FilterBar({
             className={cn(
               CONTROL,
               // pe telefon doar iconitele (Filtre, Ale mele), ca filtrul de etape sa ramana lizibil
-              'flex shrink-0 items-center justify-center gap-2 whitespace-nowrap border px-2.5 text-tx-2 hover:text-white sm:w-[142px] sm:px-3',
-              activeFiltreAvansate && 'border-primary bg-primary/20 text-white',
+              'flex shrink-0 items-center justify-center gap-2 whitespace-nowrap border px-2.5 text-tx-2 hover:text-foreground sm:w-[142px] sm:px-3',
+              activeFiltreAvansate && 'border-primary bg-primary/20 text-foreground',
             )}
           >
             <SlidersHorizontal className="size-4" aria-hidden="true" />
@@ -153,7 +153,7 @@ export function FilterBar({
         aria-label="Ale mele"
         className={cn(
           CONTROL,
-          'flex shrink-0 items-center gap-1.5 whitespace-nowrap border px-2.5 text-tx-2 hover:text-white sm:px-3',
+          'flex shrink-0 items-center gap-1.5 whitespace-nowrap border px-2.5 text-tx-2 hover:text-foreground sm:px-3',
           filtre.doarAmintite && 'border-st-orange bg-st-orange/15 text-st-orange hover:bg-st-orange/25 hover:text-st-orange',
         )}
       >

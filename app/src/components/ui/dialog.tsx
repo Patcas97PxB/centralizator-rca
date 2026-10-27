@@ -50,7 +50,7 @@ function DialogOverlay({
 // Calendarul (CampData) și alte liste se deschid într-un strat separat (portal); un click acolo nu
 // înseamnă „în afara ferestrei” — altfel alegerea unei zile închidea toată fereastra.
 const inStratSeparat = (t: EventTarget | null) =>
-  t instanceof Element && !!t.closest('[data-slot=popover-content]')
+  t instanceof Element && !!t.closest('[data-slot=popover-content],[data-slot=select-content]')
 
 function DialogContent({
   className,

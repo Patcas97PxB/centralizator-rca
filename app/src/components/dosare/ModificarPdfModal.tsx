@@ -441,7 +441,7 @@ export function ModificarPdfModal({ open, onClose }: { open: boolean; onClose: (
                           'flex items-center justify-between gap-2 rounded-lg border px-2.5 py-1.5 text-left transition-colors',
                           alese.join() === ch.cuvinte.map((c) => c.id).join()
                             ? 'border-st-amber/60 bg-st-amber/10'
-                            : 'border-border bg-white/[.02] hover:bg-white/[.06]',
+                            : 'border-border bg-foreground/[.02] hover:bg-foreground/[.06]',
                         )}
                       >
                         <span className="truncate text-[11px] text-tx-3">{ch.eticheta}</span>
@@ -479,7 +479,7 @@ export function ModificarPdfModal({ open, onClose }: { open: boolean; onClose: (
                             'h-8 min-w-8 rounded-[9px] border px-2 text-[12.5px] font-bold tabular-nums transition-colors disabled:opacity-50',
                             bifata
                               ? 'border-st-green/70 bg-st-green/20 text-st-green'
-                              : 'border-border bg-white/[.02] text-tx-2 hover:bg-white/[.06]',
+                              : 'border-border bg-foreground/[.02] text-tx-2 hover:bg-foreground/[.06]',
                             i === pagina && !bifata && 'border-accent-tx/70',
                           )}
                         >
@@ -527,7 +527,7 @@ export function ModificarPdfModal({ open, onClose }: { open: boolean; onClose: (
                 ) : (
                   <ol className="flex max-h-[130px] flex-col gap-1 overflow-y-auto text-xs">
                     {jurnal.map((j, i) => (
-                      <li key={i} className="rounded-lg border border-border bg-white/[.02] px-2.5 py-1.5 text-tx-2">
+                      <li key={i} className="rounded-lg border border-border bg-foreground/[.02] px-2.5 py-1.5 text-tx-2">
                         <span className="text-tx-3">p.{j.pagina} · </span>
                         <span className="text-st-amber-tx">{j.din}</span> → <span className="font-bold text-st-green">{j.in}</span>
                       </li>

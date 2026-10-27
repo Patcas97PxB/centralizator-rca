@@ -80,7 +80,8 @@ export function AppSidebar({
   return (
     <Sidebar collapsible="offcanvas" className="border-border [&_[data-sidebar=sidebar]]:bg-[var(--sidebar)]">
       <SidebarHeader className="flex-row items-center px-5 pb-4 pt-5">
-        <img src={assetUrl('/icons/logo.png')} alt="Centralizator RCA" className="block h-10 w-auto max-w-full" />
+        <img src={assetUrl('/icons/logo.png')} alt="Centralizator RCA" className="block h-10 w-auto max-w-full light:hidden" />
+        <img src={assetUrl('/icons/logo-light.png')} alt="Centralizator RCA" className="hidden h-10 w-auto max-w-full light:block" />
       </SidebarHeader>
       <SidebarContent className="gap-0 px-2.5">
         <nav className="flex flex-col gap-0.5">

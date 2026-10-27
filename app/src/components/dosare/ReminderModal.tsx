@@ -18,7 +18,7 @@ const ZILE = [
 ]
 
 const CHIP =
-  'rounded-full border px-3 py-1 text-xs font-bold transition-colors border-border-strong bg-surface-2 text-tx-2 hover:border-border-strong hover:text-white'
+  'rounded-full border px-3 py-1 text-xs font-bold transition-colors border-border-strong bg-surface-2 text-tx-2 hover:border-border-strong hover:text-foreground'
 const CHIP_ACTIV = 'border-st-orange bg-st-orange/15 text-st-orange hover:border-st-orange hover:text-st-orange'
 
 // „Amintește-mi…" din meniul pastilei de pe card: ziua din care dosarul apare in clopotel + ce ai de facut.

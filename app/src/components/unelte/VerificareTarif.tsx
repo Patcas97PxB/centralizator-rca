@@ -8,6 +8,7 @@ import { formatSuma, parseSuma, type Moneda } from '@/lib/financiar'
 import { calculRCA } from '@/lib/rca-calc'
 import { ALLIANZ_GROUPS, GROUPAMA_TARIFE, TARIFE_GRID, calcTarifGrila } from '@/lib/tarife-grid'
 import { cn } from '@/lib/utils'
+import { Lista } from '@/components/ui/lista'
 import { corespundeCautarii } from '@/lib/dosare-filter'
 import type { Dosar } from '@/lib/types'
 
@@ -158,31 +159,23 @@ export function VerificareTarif({ open, onClose }: { open: boolean; onClose: () 
             <AlegeDosar dosare={deschise} ales={dosarId} onAlege={dinDosar} />
           </div>
           <div className="grid grid-cols-[1.4fr_1fr_0.8fr] gap-2.5">
-            <label>
+            <div>
               <span className={ETICHETA}>Asigurator</span>
-              <select
+              <Lista
+                aria-label="Asigurator"
                 value={asig}
-                onChange={(e) => {
-                  setAsig(e.target.value)
-                  const c = claseAsigurator(e.target.value)
+                optiuni={[...KNOWN_INSURERS]}
+                onChange={(v) => {
+                  setAsig(v)
+                  const c = claseAsigurator(v)
                   if (!c.includes(clasa)) setClasa(c[0])
                 }}
-                className={CAMP}
-              >
-                {KNOWN_INSURERS.map((a) => (
-                  <option key={a}>{a}</option>
-                ))}
-              </select>
-            </label>
-            <label>
+              />
+            </div>
+            <div>
               <span className={ETICHETA}>Clasă</span>
-              <select value={clasa} onChange={(e) => setClasa(e.target.value)} className={CAMP}>
-                {!clase.includes(clasa) && <option value={clasa}>{clasa}</option>}
-                {clase.map((c) => (
-                  <option key={c}>{c}</option>
-                ))}
-              </select>
-            </label>
+              <Lista aria-label="Clasă" value={clasa} optiuni={clase.includes(clasa) ? clase : [clasa, ...clase]} onChange={setClasa} />
+            </div>
             <label>
               <span className={ETICHETA}>Zile</span>
               <input type="number" min={1} inputMode="numeric" value={zile} onChange={(e) => setZile(e.target.value)} className={CAMP} />

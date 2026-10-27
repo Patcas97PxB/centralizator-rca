@@ -23,7 +23,7 @@ import { CampData } from '@/components/ui/camp-data'
 const LABEL = 'mb-1.5 block text-[12.5px] font-semibold text-tx-2'
 const FIELD = 'h-[38px] rounded-[11px] border-border bg-border/[.24] text-[13.5px] text-foreground'
 const EXPORT_BTN =
-  'flex h-[38px] items-center gap-[7px] rounded-[11px] border border-border bg-border/[.24] px-3.5 text-[13.5px] font-semibold text-tx-2 transition-colors hover:bg-border/60 hover:text-white'
+  'flex h-[38px] items-center gap-[7px] rounded-[11px] border border-border bg-border/[.24] px-3.5 text-[13.5px] font-semibold text-tx-2 transition-colors hover:bg-border/60 hover:text-foreground'
 const TD = 'whitespace-nowrap px-3 py-[9px] text-tx-2'
 const HEADERS: [string, boolean][] = [
   ['Status', false],
@@ -155,7 +155,7 @@ export function RapoartePage({ onAlegeDosar }: { onAlegeDosar?: (id: string) => 
                   <tbody>
                     {g.randuri.map((r) => (
                       <Fragment key={r.dosar.id}>
-                        <tr className={cn('border-t border-border transition-colors hover:bg-white/[.03]', !r.finalizat && 'opacity-[.82]')}>
+                        <tr className={cn('border-t border-border transition-colors hover:bg-foreground/[.03]', !r.finalizat && 'opacity-[.82]')}>
                           <td className={cn('whitespace-nowrap px-3 py-[9px] font-extrabold', r.finalizat ? 'text-st-green' : 'text-tx-2')}>
                             {r.finalizat ? 'finalizat' : 'în curs'}
                           </td>

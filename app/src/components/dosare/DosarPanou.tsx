@@ -110,7 +110,7 @@ export function DosarPanou({
       <SheetContent side="right" showCloseButton={false} className="gap-0 border-border bg-card p-0 data-[side=right]:w-full data-[side=right]:sm:max-w-[440px]">
         <div className="flex items-start gap-3 border-b border-border px-5 py-4">
           <div className="flex h-[72px] w-[124px] shrink-0 items-center justify-center">
-            {poza ? <img src={poza} alt="" className="size-full object-contain" /> : <ImageIcon className="size-5 text-tx-3" aria-hidden="true" />}
+            {poza ? <img src={poza} alt="" className="poza-masina size-full object-contain" /> : <ImageIcon className="size-5 text-tx-3" aria-hidden="true" />}
           </div>
           <div className="min-w-0 flex-1">
             <SheetTitle className="flex min-w-0 items-baseline gap-1.5 text-[16px] font-extrabold text-foreground">
