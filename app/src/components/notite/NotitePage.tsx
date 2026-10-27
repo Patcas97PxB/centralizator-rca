@@ -1,5 +1,5 @@
-import { useEffect, useMemo, useState } from 'react'
-import { Bell, Check, Link2, Loader2, Pencil, Plus, Search, Trash2, X } from 'lucide-react'
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
+import { Bell, Check, Link2, Loader2, Pencil, Search, Trash2, X } from 'lucide-react'
 import { useDosareContext } from '@/contexts/DosareContext'
 import { initiale, numeDinEmail } from '@/lib/autentificare'
 import { majuscule } from '@/lib/majuscule'
@@ -7,7 +7,10 @@ import {
   adaugaNotita,
   cand,
   dosareDinText,
-  dosarePartiale,
+  alteVariante,
+  completareLaCursor,
+  numereInText,
+  type NrInText,
   dosareNotita,
   modificaNotita,
   notitaCuAmintire,
@@ -88,8 +91,40 @@ export function DosareLegate({ dosare, onAlege, adaugate }: { dosare: Dosar[]; o
   )
 }
 
-/** Câmpul de scris o notiță nouă. Dacă textul pomenește un dosar (nr. auto, nr. dosar, RBH), notița se
- * adaugă și la Observațiile lui (cererea utilizatorului: „BH52LCA - posibil gata joi” → la dosar). */
+/** Fundalul de sub câmp: același text, transparent, cu numerele de dosar încadrate și un reper la poziția
+ * meniului (ca să știm unde să-l arătăm). Trebuie să aibă exact aceleași dimensiuni ca textarea. */
+function Fundal({ text, numere, reper, reperRef }: { text: string; numere: NrInText[]; reper: number | null; reperRef: React.RefObject<HTMLSpanElement | null> }) {
+  const parti: { a: number; b: number; nr: boolean }[] = []
+  let i = 0
+  for (const r of numere) {
+    if (r.start > i) parti.push({ a: i, b: r.start, nr: false })
+    parti.push({ a: r.start, b: r.end, nr: true })
+    i = r.end
+  }
+  if (i < text.length) parti.push({ a: i, b: text.length, nr: false })
+  const semn = <span key="reper" ref={reperRef} />
+  const bucati: React.ReactNode[] = []
+  for (const p of parti) {
+    if (p.nr) {
+      if (reper === p.a) bucati.push(semn)
+      bucati.push(
+        <mark key={p.a} className="rounded-[4px] bg-primary/25 text-transparent shadow-[0_0_0_1px_var(--accent-tx)]">
+          {text.slice(p.a, p.b)}
+        </mark>,
+      )
+    } else if (reper !== null && reper >= p.a && reper < p.b) bucati.push(text.slice(p.a, reper), semn, text.slice(reper, p.b))
+    else bucati.push(text.slice(p.a, p.b))
+  }
+  if (reper === text.length) bucati.push(semn)
+  return <>{bucati}{'\n'}</>
+}
+
+const CAMP = 'px-3 py-2.5 text-[14px] leading-relaxed whitespace-pre-wrap break-words'
+
+/** Câmpul de scris o notiță nouă, cu auto-completarea nr. auto: scrii „DCM” → lista cu variantele (dosare
+ * nefinalizate) → Enter/click pune numărul întreg („BH44DCM”), încadrat; click pe un număr încadrat = îl
+ * schimbi sau îl scoți. Dosarele legate vin doar din ce e scris (ștergi numărul → se dezleagă). La salvare,
+ * notița se adaugă și la Observațiile dosarelor legate. */
 export function NotitaNoua() {
   const { dosare, salveazaRapid } = useDosareContext()
   const [text, setText] = useState('')
@@ -98,33 +133,20 @@ export function NotitaNoua() {
   const [salvez, setSalvez] = useState(false)
   const [eroare, setEroare] = useState('')
   const [mesaj, setMesaj] = useState('')
-  // Din pop-up: dosarele alese de mână (potriviri parțiale) și cele închise cu ×.
-  const [alesePartial, setAlesePartial] = useState<Set<string>>(new Set())
-  // × ascunde lista doar pentru ce se găsește acum; dacă scrii altceva și se găsesc alte dosare, reapare.
-  const [inchisPentru, setInchisPentru] = useState('')
+  const [cursor, setCursor] = useState(0)
+  const [prinClick, setPrinClick] = useState(false)
+  const [ascunsPentru, setAscunsPentru] = useState('')
+  const [activ, setActiv] = useState(0)
+  const [poz, setPoz] = useState<{ top: number; left: number } | null>(null)
+  const campRef = useRef<HTMLTextAreaElement>(null)
+  const fundalRef = useRef<HTMLDivElement>(null)
+  const reperRef = useRef<HTMLSpanElement>(null)
+  const cursorNou = useRef<number | null>(null)
+
+  const numere = useMemo(() => numereInText(text, dosare), [text, dosare])
   const legate = useMemo(() => dosareDinText(text, dosare), [text, dosare])
-  const partiale = useMemo(() => dosarePartiale(text, dosare).filter((d) => !legate.includes(d)), [text, dosare, legate])
-  const dinPopup = dosare.filter((d) => alesePartial.has(d.id) && !legate.includes(d))
-  const deAles = partiale.filter((d) => !alesePartial.has(d.id))
-  const cheiePopup = deAles.map((d) => d.id).join(',')
-  const popup = cheiePopup === inchisPentru ? [] : deAles
-  // când nu se mai găsește nimic (ai șters textul), × se uită — la următoarea potrivire lista reapare
-  useEffect(() => {
-    if (!cheiePopup) setInchisPentru('')
-  }, [cheiePopup])
-  const candidati = [...legate, ...dinPopup]
-  // Un singur dosar găsit exact → bifat singur; mai multe → alegi tu pe care. Cele din pop-up sunt alese.
-  const alese = [
-    ...legate.filter((d) => (legate.length === 1 ? !comutate.has(d.id) : comutate.has(d.id))),
-    ...dinPopup,
-  ]
-  const comutaPartial = (id: string) =>
-    setAlesePartial((c) => {
-      const n = new Set(c)
-      if (n.has(id)) n.delete(id)
-      else n.add(id)
-      return n
-    })
+  // Un singur dosar → bifat singur; mai multe → alegi tu pe care.
+  const alese = legate.filter((d) => (legate.length === 1 ? !comutate.has(d.id) : comutate.has(d.id)))
   const comuta = (id: string) =>
     setComutate((c) => {
       const n = new Set(c)
@@ -132,6 +154,55 @@ export function NotitaNoua() {
       else n.add(id)
       return n
     })
+
+  // Meniul: „schimbă” când ai dat click pe un număr încadrat, altfel auto-completarea bucății de la cursor.
+  const meniu = useMemo(() => {
+    const nr = numere.find((r) => cursor > r.start && cursor <= r.end)
+    if (nr) {
+      if (!prinClick) return null
+      return { tip: 'schimba' as const, start: nr.start, end: nr.end, variante: alteVariante(nr, dosare), nr, cheie: `s${nr.start}${nr.nr}` }
+    }
+    const c = completareLaCursor(text, cursor, dosare, numere)
+    return c ? { tip: 'completare' as const, ...c, nr: null, cheie: `c${c.start}${c.bucata}` } : null
+  }, [numere, cursor, prinClick, text, dosare])
+  const deschis = !!meniu && meniu.cheie !== ascunsPentru
+  const optiuni = meniu ? meniu.variante.length + (meniu.tip === 'schimba' ? 1 : 0) : 0
+
+  useEffect(() => setActiv(0), [meniu?.cheie])
+
+  // poziția meniului: sub bucata scrisă (reperul din fundal), fără să iasă din câmp
+  useLayoutEffect(() => {
+    const r = reperRef.current
+    const f = fundalRef.current
+    if (!deschis || !r || !f) return setPoz(null)
+    const lat = f.clientWidth
+    setPoz({ top: r.offsetTop - f.scrollTop + 24, left: Math.max(4, Math.min(r.offsetLeft - 8, lat - 324)) })
+  }, [deschis, text, cursor, meniu?.cheie])
+
+  // după o alegere, cursorul trece după numărul pus
+  useLayoutEffect(() => {
+    const c = cursorNou.current
+    if (c === null || !campRef.current) return
+    cursorNou.current = null
+    campRef.current.focus()
+    campRef.current.setSelectionRange(c, c)
+    setCursor(c)
+  }, [text])
+
+  function inlocuieste(start: number, end: number, cu: string) {
+    const dupa = text.slice(end)
+    const spatiu = cu && !/^[\s.,;:!?)]/.test(dupa) ? ' ' : ''
+    const nou = text.slice(0, start) + cu + spatiu + dupa
+    cursorNou.current = start + cu.length + spatiu.length
+    setPrinClick(false)
+    setText(nou)
+    setMesaj('')
+  }
+  function alege(k: number) {
+    if (!meniu) return
+    if (k < meniu.variante.length) inlocuieste(meniu.start, meniu.end, meniu.variante[k].nr)
+    else inlocuieste(meniu.start, meniu.end, '') // „Scoate numărul”
+  }
 
   async function salveaza() {
     if (!text.trim() || salvez) return
@@ -149,8 +220,7 @@ export function NotitaNoua() {
       setText('')
       setZi('')
       setComutate(new Set())
-      setAlesePartial(new Set())
-      setInchisPentru('')
+      setAscunsPentru('')
     } catch (e) {
       setEroare(e instanceof Error ? e.message : 'Nu s-a putut salva.')
     } finally {
@@ -158,75 +228,140 @@ export function NotitaNoua() {
     }
   }
 
+  const reper = deschis && meniu ? meniu.start : null
+
   return (
     <div className="flex flex-col gap-3 rounded-[14px] border border-border bg-card p-4">
       <div className="relative">
+        <div
+          ref={fundalRef}
+          aria-hidden="true"
+          className={cn('pointer-events-none absolute inset-0 overflow-hidden rounded-lg border border-transparent bg-background text-transparent', CAMP)}
+        >
+          <Fundal text={text} numere={numere} reper={reper} reperRef={reperRef} />
+        </div>
         <textarea
+          ref={campRef}
           value={text}
+          role="combobox"
+          aria-expanded={deschis}
+          aria-autocomplete="list"
           onChange={(e) => {
             setText(e.target.value)
+            setCursor(e.target.selectionStart)
+            setPrinClick(false)
             setMesaj('')
           }}
+          onSelect={(e) => setCursor(e.currentTarget.selectionStart)}
+          onMouseUp={(e) => {
+            setCursor(e.currentTarget.selectionStart)
+            setPrinClick(true)
+            setAscunsPentru('')
+          }}
+          onScroll={(e) => {
+            if (fundalRef.current) fundalRef.current.scrollTop = e.currentTarget.scrollTop
+          }}
+          onBlur={() => setTimeout(() => setPrinClick(false), 150)}
           onKeyDown={(e) => {
-            if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) void salveaza()
+            if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) return void salveaza()
+            if (!deschis || !meniu || !optiuni) return
+            if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+              e.preventDefault()
+              setActiv((a) => (a + (e.key === 'ArrowDown' ? 1 : optiuni - 1)) % optiuni)
+            } else if (e.key === 'Enter' || e.key === 'Tab') {
+              e.preventDefault()
+              alege(activ)
+            } else if (e.key === 'Escape') {
+              e.preventDefault()
+              setAscunsPentru(meniu.cheie)
+            } else if (meniu.tip === 'schimba') setPrinClick(false)
           }}
           rows={4}
-          placeholder="Ce ai vorbit cu clientul? Ex.: BH52LCA - posibil gata joi, se așteaptă bara spate. Cu nr. auto sau RBH, se adaugă singură la observațiile dosarului."
-          className="w-full resize-y rounded-lg border border-border-strong bg-background px-3 py-2.5 text-[14px] leading-relaxed text-foreground placeholder:text-tx-3 focus:border-accent-tx focus:outline-none"
+          placeholder="Ce ai vorbit cu clientul? Ex.: BH52LCA - posibil gata joi, se așteaptă bara spate. Scrie și doar o bucată din nr. auto („DCM”) și alege din listă."
+          className={cn(
+            'relative block w-full resize-y rounded-lg border border-border-strong bg-transparent text-foreground placeholder:text-tx-3 focus:border-accent-tx focus:outline-none',
+            CAMP,
+          )}
         />
-        {popup.length > 0 && (
+        {deschis && meniu && poz && (
           <div
             role="listbox"
-            aria-label="Dosare găsite"
-            className="absolute left-2 right-2 top-[calc(100%-6px)] z-20 max-w-[460px] rounded-xl border border-border-strong bg-surface-2 p-1.5 shadow-lg shadow-black/40"
+            aria-label={meniu.tip === 'schimba' ? 'Schimbă dosarul' : 'Dosare găsite'}
+            style={{ top: poz.top, left: poz.left }}
+            className="absolute z-20 w-[320px] max-w-[calc(100%-8px)] rounded-xl border border-border-strong bg-surface-2 p-1.5 shadow-lg shadow-black/40"
           >
-            <div className="flex items-center justify-between px-2 pb-1 pt-0.5 text-[12px] font-semibold text-tx-3">
-              <span>{popup.length === 1 ? 'Am găsit un dosar — adaug notița la el?' : `Am găsit ${popup.length} dosare — alege unde se salvează`}</span>
+            <div className="flex items-center justify-between gap-2 px-2 pb-1 pt-0.5 text-[12px] font-semibold text-tx-3">
+              <span className="truncate">
+                {meniu.tip === 'schimba'
+                  ? meniu.variante.length
+                    ? `Schimbă ${meniu.nr?.nr} cu:`
+                    : 'Niciun alt dosar cu aceleași litere'
+                  : 'Alege dosarul (Enter sau click)'}
+              </span>
               <button
                 type="button"
                 aria-label="Închide"
-                onClick={() => setInchisPentru(cheiePopup)}
-                className="flex size-6 items-center justify-center rounded-md hover:bg-surface-hover hover:text-foreground"
+                onMouseDown={(e) => e.preventDefault()}
+                onClick={() => setAscunsPentru(meniu.cheie)}
+                className="flex size-6 shrink-0 items-center justify-center rounded-md hover:bg-surface-hover hover:text-foreground"
               >
                 <X className="size-3.5" aria-hidden="true" />
               </button>
             </div>
-            {popup.map((d) => (
+            {meniu.variante.map((v, k) => (
               <button
-                key={d.id}
+                key={v.dosar.id}
                 type="button"
                 role="option"
-                aria-selected={false}
-                onClick={() => comutaPartial(d.id)}
-                className="flex w-full items-center gap-2.5 rounded-lg px-2 py-1.5 text-left transition-colors hover:bg-surface-hover"
+                aria-selected={k === activ}
+                onMouseDown={(e) => e.preventDefault()}
+                onMouseEnter={() => setActiv(k)}
+                onClick={() => alege(k)}
+                className={cn('flex w-full items-center gap-2.5 rounded-lg px-2 py-1.5 text-left', k === activ && 'bg-surface-hover')}
               >
-                <Plus className="size-4 shrink-0 text-accent-tx" aria-hidden="true" />
                 <span className="min-w-0 flex-1">
                   <span className="block truncate text-[13px] font-bold text-foreground">
-                    {d.nrAutoPagubit || '–'}
-                    {d.nrAutoInlocuire && <span className="font-medium text-tx-3"> → </span>}
-                    {d.nrAutoInlocuire && <span className="text-tx-2">{d.nrAutoInlocuire}</span>}
+                    {v.dosar.nrAutoPagubit || '–'}
+                    {v.dosar.nrAutoInlocuire && <span className="font-medium text-tx-3"> → </span>}
+                    {v.dosar.nrAutoInlocuire && <span className="text-tx-2">{v.dosar.nrAutoInlocuire}</span>}
                   </span>
                   <span className="block truncate text-[12px] text-tx-3">
-                    {[d.asigurator, d.marcaModel, d.numeClient].filter(Boolean).join(' · ')}
+                    {[v.dosar.asigurator, v.dosar.marcaModel, v.dosar.numeClient].filter(Boolean).join(' · ')}
                   </span>
                 </span>
               </button>
             ))}
+            {meniu.tip === 'schimba' && (
+              <button
+                type="button"
+                role="option"
+                aria-selected={activ === meniu.variante.length}
+                onMouseDown={(e) => e.preventDefault()}
+                onMouseEnter={() => setActiv(meniu.variante.length)}
+                onClick={() => alege(meniu.variante.length)}
+                className={cn(
+                  'mt-0.5 flex w-full items-center gap-2 rounded-lg border-t border-border px-2 py-1.5 text-left text-[12.5px] font-semibold text-tx-2',
+                  activ === meniu.variante.length && 'bg-surface-hover',
+                )}
+              >
+                <Trash2 className="size-3.5" aria-hidden="true" />
+                Scoate numărul din text
+              </button>
+            )}
           </div>
         )}
       </div>
-      {candidati.length > 0 && (
+      {legate.length > 0 && (
         <div className="flex flex-wrap items-center gap-1.5 text-[12.5px] text-tx-3">
-          <span className="mr-1">{candidati.length === 1 || legate.length <= 1 ? 'Se adaugă la observațiile dosarului:' : 'Am găsit mai multe dosare — alege la care se adaugă:'}</span>
-          {candidati.map((d) => {
+          <span className="mr-1">{legate.length === 1 ? 'Se adaugă la observațiile dosarului:' : 'Am găsit mai multe dosare — alege la care se adaugă:'}</span>
+          {legate.map((d) => {
             const on = alese.includes(d)
             return (
               <button
                 key={d.id}
                 type="button"
                 aria-pressed={on}
-                onClick={() => (legate.includes(d) ? comuta(d.id) : comutaPartial(d.id))}
+                onClick={() => comuta(d.id)}
                 className={cn(
                   'inline-flex h-8 items-center gap-1.5 rounded-md border px-2 text-[12.5px] font-bold transition-colors',
                   on ? 'border-accent-tx/60 bg-primary/15 text-foreground' : 'border-border-strong text-tx-2 hover:bg-surface-hover',

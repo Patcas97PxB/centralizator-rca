@@ -161,34 +161,103 @@ export function dosareDinText(text: string, dosare: Dosar[]): Dosar[] {
   })
 }
 
-/**
- * Potriviri parțiale pentru pop-up-ul de sub câmp (cererea utilizatorului: „LCA” sau „212 NOM” → îți
- * arată dosarul): doar dosarele **nefinalizate**, după nr. auto păgubit sau de înlocuire. Bucăți din text
- * (un cuvânt sau două lipite): doar litere → finalul numărului („LCA”); cu cifre → oriunde în număr
- * („212”, „212NOM”, „52LCA”). Minimum 3 caractere. Rămân doar potrivirile cele mai lungi.
- */
-export function dosarePartiale(text: string, dosare: Dosar[], max = 6): Dosar[] {
-  const cuv = (text.match(/[\p{L}\p{N}]+/gu) ?? []).map(normAuto).filter(Boolean)
-  const bucati = new Set<string>()
-  cuv.forEach((c, i) => {
-    bucati.add(c)
-    if (i + 1 < cuv.length) bucati.add(c + cuv[i + 1])
-  })
-  const scor = new Map<Dosar, number>()
+// ---- Auto-completarea nr. auto (câmpul de notiță nouă) ----------------------------------------
+// Cererea utilizatorului: scrii „DCM” → lista cu variantele → alegi → în text apare numărul întreg
+// („BH44DCM”), încadrat; click pe el = îl schimbi. Legătura cu dosarul vine doar din ce e scris.
+
+export interface NrInText {
+  start: number
+  end: number
+  nr: string
+  dosar: Dosar
+}
+
+/** Numerele de dosar scrise în text (oricum: „bh 44 dcm”), cu poziția lor — pentru încadrare și click. */
+export function numereInText(text: string, dosare: Dosar[]): NrInText[] {
+  let compact = ''
+  const poz: number[] = []
+  for (let i = 0; i < text.length; i++) {
+    const c = normAuto(text[i])
+    for (const ch of c) {
+      compact += ch
+      poz.push(i)
+    }
+  }
+  const gasite: NrInText[] = []
+  for (const d of dosare) {
+    const nr: [string | undefined, boolean][] = [
+      [d.nrAutoPagubit, true],
+      [d.nrAutoInlocuire, d.status !== 'finalizat'],
+    ]
+    for (const [raw, ok] of nr) {
+      const n = normAuto(raw || '')
+      if (!ok || n.length < 5) continue
+      for (let p = compact.indexOf(n); p >= 0; p = compact.indexOf(n, p + 1))
+        gasite.push({ start: poz[p], end: poz[p + n.length - 1] + 1, nr: raw!, dosar: d })
+    }
+  }
+  // fără suprapuneri: primul, apoi cel mai lung
+  gasite.sort((a, b) => a.start - b.start || b.end - a.end)
+  const out: NrInText[] = []
+  for (const g of gasite) if (!out.length || g.start >= out[out.length - 1].end) out.push(g)
+  return out
+}
+
+export interface Varianta {
+  dosar: Dosar
+  /** Numărul care se pune în text (păgubit sau, dacă s-a potrivit acela, de înlocuire). */
+  nr: string
+}
+
+/** Dosarele nefinalizate al căror nr. auto se potrivește cu bucata scrisă: doar litere → finalul („DCM”),
+ * cu cifre → oriunde („44”, „44DCM”). Minimum 3 caractere. Nr. păgubite primele. */
+export function variantePentru(bucata: string, dosare: Dosar[], max = 8): Varianta[] {
+  const f = normAuto(bucata)
+  if (f.length < 3) return []
+  const cuCifre = /\d/.test(f)
+  const sePotriveste = (raw?: string) => {
+    const n = normAuto(raw || '')
+    return n.length >= 5 && n !== f && (cuCifre ? n.includes(f) : n.endsWith(f))
+  }
+  const pag: Varianta[] = []
+  const inl: Varianta[] = []
   for (const d of dosare) {
     if (d.status === 'finalizat') continue
-    const nr = [normAuto(d.nrAutoPagubit || ''), normAuto(d.nrAutoInlocuire || '')].filter((x) => x.length >= 5)
-    let best = 0
-    for (const b of bucati) {
-      if (b.length < 3) continue
-      const cuCifre = /\d/.test(b)
-      if (nr.some((x) => (cuCifre ? x.includes(b) : x.endsWith(b)))) best = Math.max(best, b.length)
-    }
-    if (best) scor.set(d, best)
+    if (sePotriveste(d.nrAutoPagubit)) pag.push({ dosar: d, nr: d.nrAutoPagubit })
+    else if (sePotriveste(d.nrAutoInlocuire)) inl.push({ dosar: d, nr: d.nrAutoInlocuire! })
   }
-  // doar cele mai bune: „212 NOM” → doar B212NOM, nu toate mașinile de înlocuire terminate în NOM
-  const top = Math.max(0, ...scor.values())
-  return [...scor.entries()].filter(([, v]) => v === top).slice(0, max).map(([d]) => d)
+  return [...pag, ...inl].slice(0, max)
+}
+
+/** Bucata scrisă chiar înaintea cursorului (un cuvânt, sau două — „212 nom”) și variantele ei. */
+export function completareLaCursor(
+  text: string,
+  cursor: number,
+  dosare: Dosar[],
+  numere: NrInText[],
+): { start: number; end: number; bucata: string; variante: Varianta[] } | null {
+  if (/[\p{L}\p{N}]/u.test(text[cursor] ?? '')) return null // în mijlocul unui cuvânt
+  const inainte = text.slice(0, cursor)
+  const m = inainte.match(/(?:([\p{L}\p{N}]+)[ \-]+)?([\p{L}\p{N}]+)$/u)
+  if (!m) return null
+  const inNumar = (i: number) => numere.some((r) => i >= r.start && i < r.end)
+  const startUnu = cursor - m[2].length
+  if (inNumar(startUnu)) return null
+  if (m[1]) {
+    const startDoi = cursor - m[0].length
+    if (!inNumar(startDoi)) {
+      const v = variantePentru(m[0], dosare)
+      if (v.length) return { start: startDoi, end: cursor, bucata: m[0], variante: v }
+    }
+  }
+  const v = variantePentru(m[2], dosare)
+  return v.length ? { start: startUnu, end: cursor, bucata: m[2], variante: v } : null
+}
+
+/** Variantele pentru un număr deja scris (click pe el): aceleași litere de la final, alt dosar. */
+export function alteVariante(nr: NrInText, dosare: Dosar[]): Varianta[] {
+  const litere = normAuto(nr.nr).match(/[A-Z]+$/)?.[0] ?? ''
+  return variantePentru(litere, dosare).filter((v) => v.dosar.id !== nr.dosar.id)
 }
 
 /** Legate de mână + pomenite în text, fără dubluri. */
