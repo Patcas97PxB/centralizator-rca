@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Bell, Check, Link2, Loader2, Pencil, Plus, Search, Trash2, X } from 'lucide-react'
 import { useDosareContext } from '@/contexts/DosareContext'
 import { initiale, numeDinEmail } from '@/lib/autentificare'
@@ -100,11 +100,18 @@ export function NotitaNoua() {
   const [mesaj, setMesaj] = useState('')
   // Din pop-up: dosarele alese de mână (potriviri parțiale) și cele închise cu ×.
   const [alesePartial, setAlesePartial] = useState<Set<string>>(new Set())
-  const [inchise, setInchise] = useState<Set<string>>(new Set())
+  // × ascunde lista doar pentru ce se găsește acum; dacă scrii altceva și se găsesc alte dosare, reapare.
+  const [inchisPentru, setInchisPentru] = useState('')
   const legate = useMemo(() => dosareDinText(text, dosare), [text, dosare])
   const partiale = useMemo(() => dosarePartiale(text, dosare).filter((d) => !legate.includes(d)), [text, dosare, legate])
   const dinPopup = dosare.filter((d) => alesePartial.has(d.id) && !legate.includes(d))
-  const popup = partiale.filter((d) => !alesePartial.has(d.id) && !inchise.has(d.id))
+  const deAles = partiale.filter((d) => !alesePartial.has(d.id))
+  const cheiePopup = deAles.map((d) => d.id).join(',')
+  const popup = cheiePopup === inchisPentru ? [] : deAles
+  // când nu se mai găsește nimic (ai șters textul), × se uită — la următoarea potrivire lista reapare
+  useEffect(() => {
+    if (!cheiePopup) setInchisPentru('')
+  }, [cheiePopup])
   const candidati = [...legate, ...dinPopup]
   // Un singur dosar găsit exact → bifat singur; mai multe → alegi tu pe care. Cele din pop-up sunt alese.
   const alese = [
@@ -143,7 +150,7 @@ export function NotitaNoua() {
       setZi('')
       setComutate(new Set())
       setAlesePartial(new Set())
-      setInchise(new Set())
+      setInchisPentru('')
     } catch (e) {
       setEroare(e instanceof Error ? e.message : 'Nu s-a putut salva.')
     } finally {
@@ -178,7 +185,7 @@ export function NotitaNoua() {
               <button
                 type="button"
                 aria-label="Închide"
-                onClick={() => setInchise((c) => new Set([...c, ...popup.map((d) => d.id)]))}
+                onClick={() => setInchisPentru(cheiePopup)}
                 className="flex size-6 items-center justify-center rounded-md hover:bg-surface-hover hover:text-foreground"
               >
                 <X className="size-3.5" aria-hidden="true" />
