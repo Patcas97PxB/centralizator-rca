@@ -39,7 +39,8 @@ export function AlegeDosar({ dosare, ales, onAlege }: { dosare: Dosar[]; ales: s
   const listaRef = useRef<HTMLDivElement>(null)
   const d = dosare.find((x) => x.id === ales)
   const lista = q.trim() ? dosare.filter((x) => corespundeCautarii(x, q.trim())) : dosare
-  const eticheta = (x: Dosar) => [x.asigurator, x.clasaAuto && `clasa ${x.clasaAuto}`].filter(Boolean).join(' · ')
+  const eticheta = (x: Dosar) =>
+    [x.asigurator, x.clasaAuto && `clasa ${x.clasaAuto}`, x.status === 'finalizat' && 'finalizat'].filter(Boolean).join(' · ')
 
   function alege(x: Dosar) {
     onAlege(x.id)
@@ -125,8 +126,14 @@ export function VerificareTarif({ open, onClose }: { open: boolean; onClose: () 
   const [zile, setZile] = useState('5')
   const [valoare, setValoare] = useState('')
 
-  const deschise = useMemo(
-    () => dosare.filter((d) => d.status !== 'finalizat').sort((a, b) => (a.nrAutoPagubit || '').localeCompare(b.nrAutoPagubit || '')),
+  // Toate dosarele (și cele finalizate — cererea utilizatorului, 28.10.2026): întâi cele listaDosare, apoi finalizatele.
+  const listaDosare = useMemo(
+    () =>
+      [...dosare].sort(
+        (a, b) =>
+          Number(a.status === 'finalizat') - Number(b.status === 'finalizat') ||
+          (a.nrAutoPagubit || '').localeCompare(b.nrAutoPagubit || ''),
+      ),
     [dosare],
   )
   const clase = claseAsigurator(asig)
@@ -156,7 +163,7 @@ export function VerificareTarif({ open, onClose }: { open: boolean; onClose: () 
         <div className="flex flex-col gap-3.5 px-5 py-4">
           <div>
             <span className={ETICHETA}>Din dosar (opțional)</span>
-            <AlegeDosar dosare={deschise} ales={dosarId} onAlege={dinDosar} />
+            <AlegeDosar dosare={listaDosare} ales={dosarId} onAlege={dinDosar} />
           </div>
           <div className="grid grid-cols-[1.4fr_1fr_0.8fr] gap-2.5">
             <div>
