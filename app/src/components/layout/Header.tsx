@@ -46,7 +46,7 @@ function descriereAviz(tip: TipAviz, zile: number | null, d: Dosar): { culoare: 
       }
     case 'deviz':
       return {
-        culoare: STARE.albastru,
+        culoare: STARE.cyan,
         eticheta: 'fără deviz',
         detaliu: `Sună service-ul după deviz${d.telService ? `: ${d.telService}` : ''} · predată de ${zileText(zile ?? 0)}`,
       }

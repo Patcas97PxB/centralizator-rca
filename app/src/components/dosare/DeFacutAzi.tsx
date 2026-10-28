@@ -9,7 +9,7 @@ type Cheie = TipAviz | 'predare'
 const CHIPURI: { cheie: Cheie; text: (n: number) => string; culoare: string }[] = [
   { cheie: 'termen', text: () => 'de sunat', culoare: 'var(--st-red)' },
   { cheie: 'netrimis', text: () => 'de trimis', culoare: 'var(--st-violet)' },
-  { cheie: 'deviz', text: () => 'fără deviz', culoare: 'var(--st-blue)' },
+  { cheie: 'deviz', text: () => 'fără deviz', culoare: 'var(--st-cyan)' },
   { cheie: 'predare', text: (n) => (n === 1 ? 'predare azi/mâine' : 'predări azi/mâine'), culoare: 'var(--st-amber)' },
   { cheie: 'manual', text: (n) => (n === 1 ? 'amintire' : 'amintiri'), culoare: 'var(--st-orange)' },
 ]

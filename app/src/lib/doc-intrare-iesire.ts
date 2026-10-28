@@ -38,7 +38,7 @@ export function dateDinDosar(d: Dosar): DateIntrareIesire {
   return {
     nrComanda: d.nrDosar ?? '',
     dataComanda: '',
-    client: d.numeClient ?? '',
+    client: d.numeClient || d.proprietarPagubit || '',
     tipAuto: (d.marcaModel ?? '').toLocaleUpperCase('ro-RO'),
     nrAuto: formatNrAuto(d.nrAutoPagubit ?? ''),
     // datele reale din contractul final, altfel cele din dosar
@@ -151,8 +151,9 @@ export function construiesteOdt(x: DateIntrareIesire): Blob {
 }
 
 export function numeFisier(x: DateIntrareIesire): string {
-  const nr = x.nrAuto.replace(/[\s\-–]/g, '').toLocaleUpperCase('ro-RO') || 'dosar'
-  return `Document intrare iesire - ${nr}.odt`
+  // „- de semnat”: documentul descărcat încă nu e semnat de service (cererea utilizatorului)
+  const nr = x.nrAuto.replace(/[\s\-–]/g, '').replace(/[\\/:*?"<>|]/g, '').toLocaleUpperCase('ro-RO')
+  return `Document intrare iesire ${nr ? nr + ' ' : ''}- de semnat.odt`
 }
 
 export function descarcaOdt(x: DateIntrareIesire) {

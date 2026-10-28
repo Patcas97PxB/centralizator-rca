@@ -65,6 +65,8 @@ export interface Dosar {
   telClient: string
   /** Numele clientului (proprietarul mașinii păgubite) — completat în „Document intrare/ieșire”. */
   numeClient?: string
+  /** Proprietarul auto păgubit, așa cum apare pe NC/PV (citit la PRELUARE DATE sau scris de mână). */
+  proprietarPagubit?: string
   /** Din contractul final: data reală a plecării clientului cu mașina / a predării ei înapoi (YYYY-MM-DD). */
   dataPlecareContract?: string
   dataPredareContract?: string

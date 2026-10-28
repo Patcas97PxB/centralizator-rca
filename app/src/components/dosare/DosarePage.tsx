@@ -20,7 +20,7 @@ import { EtapeTabs } from './EtapeTabs'
 /** Actiune ceruta din bara de jos de pe mobil (id nou la fiecare apasare). */
 export type ActiuneRapida = { id: number; tip: 'nou' } | { id: number; tip: 'deviz'; an: AnalizaDeviz }
 
-export function DosarePage({ actiune }: { actiune?: ActiuneRapida | null }) {
+export function DosarePage({ actiune, onActiuneFolosita }: { actiune?: ActiuneRapida | null; onActiuneFolosita?: () => void }) {
   const {
     dosare, filtrate, servicii, loading, error, filtre, setFiltre,
     salveazaDosar, salveazaRapid, stergeDosar, deSunat,
@@ -116,13 +116,15 @@ export function DosarePage({ actiune }: { actiune?: ActiuneRapida | null }) {
     setInitialDraft({ zileDeviz: String(an.total), zileDevizExplicatie: an.explicatie, zileDevizFormula: an.formulaCalcul })
     setModalDeschis(true)
   }
-  // Actiunile din bara de jos de pe mobil (App → aici): se executa o singura data pe id.
+  // Actiunile din bara de jos de pe mobil (App → aici): se executa o singura data pe id, apoi App o sterge —
+  // altfel, la revenirea pe Dosare (pagina se monteaza din nou), „Dosar nou” se deschidea iar singur.
   const ultimaActiune = useRef<number | null>(null)
   useEffect(() => {
     if (!actiune || ultimaActiune.current === actiune.id) return
     ultimaActiune.current = actiune.id
     if (actiune.tip === 'nou') deschideNou()
     else onDevizScanat(actiune.an)
+    onActiuneFolosita?.()
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [actiune])
 

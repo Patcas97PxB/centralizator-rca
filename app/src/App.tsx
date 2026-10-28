@@ -1,5 +1,5 @@
 import { Suspense, lazy, useEffect, useState } from 'react'
-import { Calculator, CalendarClock, Coins, FilePen, NotebookPen } from 'lucide-react'
+import { Calculator, CalendarClock, Coins, FilePen, FileText, NotebookPen } from 'lucide-react'
 import type { AnalizaDeviz } from '@/lib/deviz-analiza'
 import { filtreImplicite } from '@/lib/dosare-filter'
 import { mergiLaCardDosar } from '@/lib/mergi-la-dosar'
@@ -20,6 +20,7 @@ import type { ActiuneRapida } from '@/components/dosare/DosarePage'
 import { VerificareTarif } from '@/components/unelte/VerificareTarif'
 import { CalculatorDate } from '@/components/unelte/CalculatorDate'
 import { CautareRapida, type ComandaRapida } from '@/components/unelte/CautareRapida'
+import { DocIntrareIesireModal } from '@/components/dosare/DocIntrareIesireModal'
 
 // Editorul PDF (MuPDF + pdf-lib) e mare — se incarca doar cand e deschis.
 const ModificarPdfModal = lazy(() => import('@/components/dosare/ModificarPdfModal').then((m) => ({ default: m.ModificarPdfModal })))
@@ -49,6 +50,7 @@ function AppContent() {
   const [tarifDeschis, setTarifDeschis] = useState(false)
   const [dateDeschis, setDateDeschis] = useState(false)
   const [cautareDeschisa, setCautareDeschisa] = useState(false)
+  const [docIIDeschis, setDocIIDeschis] = useState(false)
   const deschidePdf = () => {
     setPdfIncarcat(true)
     setPdfDeschis(true)
@@ -72,6 +74,7 @@ function AppContent() {
     { cheie: 'pdf', titlu: 'Modificare PDF', icon: <FilePen className={ICON} />, actiune: deschidePdf },
     { cheie: 'tarif', titlu: 'Verificare tarif', icon: <Coins className={ICON} />, actiune: () => setTarifDeschis(true) },
     { cheie: 'date', titlu: 'Calculator de date', icon: <CalendarClock className={ICON} />, actiune: () => setDateDeschis(true) },
+    { cheie: 'intrare-iesire', titlu: 'Document intrare/ieșire', icon: <FileText className={ICON} />, actiune: () => setDocIIDeschis(true) },
   ]
   function porneste(a: { tip: 'nou' } | { tip: 'deviz'; an: AnalizaDeviz }) {
     setActive('dosare')
@@ -97,9 +100,10 @@ function AppContent() {
       onPdf={deschidePdf}
       onTarif={() => setTarifDeschis(true)}
       onDate={() => setDateDeschis(true)}
+      onDocII={() => setDocIIDeschis(true)}
       onCautare={() => setCautareDeschisa(true)}
     >
-      {active === 'dosare' && <DosarePage actiune={actiune} />}
+      {active === 'dosare' && <DosarePage actiune={actiune} onActiuneFolosita={() => setActiune(null)} />}
       {active === 'rapoarte' && <RapoartePage onAlegeDosar={alegeDosar} />}
       {active === 'notite' && <NotitePage onAlegeDosar={alegeDosar} />}
       {active === 'setari' && <SetariPage />}
@@ -122,6 +126,7 @@ function AppContent() {
 
       <VerificareTarif open={tarifDeschis} onClose={() => setTarifDeschis(false)} />
       <CalculatorDate open={dateDeschis} onClose={() => setDateDeschis(false)} />
+      <DocIntrareIesireModal dosar={null} open={docIIDeschis} onClose={() => setDocIIDeschis(false)} />
       <CautareRapida open={cautareDeschisa} onClose={() => setCautareDeschisa(false)} onAlegeDosar={alegeDosar} comenzi={comenzi} />
 
       {pdfIncarcat && (

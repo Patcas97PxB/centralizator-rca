@@ -64,6 +64,7 @@ export function PreluareDateSection({
     if (found.nrDosar && !draft.nrDosar) patch.nrDosar = found.nrDosar
     if (found.nrAuto && !draft.nrAutoPagubit) patch.nrAutoPagubit = found.nrAuto
     if (found.marcaModel && !draft.marcaModel) patch.marcaModel = found.marcaModel
+    if (found.proprietar && !draft.proprietarPagubit) patch.proprietarPagubit = found.proprietar.toLocaleUpperCase('ro-RO')
     if (found.marcaModel && !draft.clasaAuto) {
       const guess = suggestClasaFromModel(found.marcaModel)
       if (guess) patch.clasaAuto = guess

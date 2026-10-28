@@ -8,7 +8,9 @@ const CULOARE_CARD = [
   { color: STARE.galben, nume: 'Atenție', detaliu: '1–2 zile rămase' },
   { color: STARE.verde, nume: 'În termen', detaliu: '3+ zile rămase' },
   { color: STARE.albastru, nume: 'Programare', detaliu: 'înainte de predare' },
-  { color: STARE.gri, nume: 'Finalizat', detaliu: 'jos, în arhivă' },
+  { color: STARE.cyan, nume: 'Fără deviz', detaliu: 'la client, fără zile din deviz' },
+  { color: STARE.mov, nume: 'De trimis', detaliu: 'preluată, închide contractul' },
+  { color: STARE.stins, nume: 'Finalizat', detaliu: 'jos, card stins' },
 ]
 const STATUS = Object.values(ETAPA_META).map((m) => ({
   color: m.color,

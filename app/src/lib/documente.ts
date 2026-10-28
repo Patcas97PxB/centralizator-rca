@@ -92,7 +92,8 @@ export function detectAllDocLabels(nume: string): string[] {
   if (/cerere.*despagub/.test(nLower)) found.add('cerere_despagubire')
   if (/pv.*predare|predare.*primire|predare.*preluare|(proces.*verbal)(?!.*politie)/.test(nLower)) found.add('pv_predare')
   if (/contract/.test(nLower)) found.add('contract')
-  if (/\bdoc\b.*iesire|iesire.*intrare|intrare.*iesire/.test(nLower)) found.add('intrare_iesire')
+  // „… - de semnat” = documentul generat de aplicație, încă nesemnat de service → nu contează ca prezent
+  if (/\bdoc\b.*iesire|iesire.*intrare|intrare.*iesire/.test(nLower) && !/de semnat/.test(nLower)) found.add('intrare_iesire')
   // Documente de identitate/talon — permis, buletin, pasaport, talon (fara sa fie deja RCA) — pe pagubit sau vinovat.
   const identitateSauTalon = /permis|buletin|pasaport|\btalon\b|\bci\b|certificat?\w* (de )?(inregistr|inmatricul)/.test(nLower)
   const ziceVinovat = /vinovat/.test(nLower)

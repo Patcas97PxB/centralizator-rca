@@ -221,6 +221,15 @@ export function DosarFormModal({
               onChange={(e) => onMarcaModelChange(e.target.value)}
             />
           </div>
+          <div className="space-y-1.5 sm:col-span-2">
+            <Label htmlFor="fProprietar">Proprietar auto păgubit</Label>
+            <Input
+              id="fProprietar"
+              value={draft.proprietarPagubit ?? ''}
+              placeholder="se citește din NC/PV la Preluare date"
+              onChange={(e) => set('proprietarPagubit', e.target.value)}
+            />
+          </div>
           <div className="space-y-1.5">
             <Label htmlFor="fClasaAuto">Clasă auto</Label>
             <Select value={draft.clasaAuto || '__none__'} onValueChange={(v) => {

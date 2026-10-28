@@ -4,16 +4,14 @@ import { Sheet, SheetContent, SheetDescription, SheetTitle } from '@/components/
 import { imagineMasina } from '@/lib/cars'
 import { cheiLocale, useFolderLocal } from '@/lib/folder-local'
 import { DOCUMENT_LABELS_NUMARATE, docLabelText, docStatus, lipsuriFinalizare } from '@/lib/documente'
-import { calculRCA, etapaDosar, fmtDate, prioritateDosar } from '@/lib/rca-calc'
-import { anulareUltimulPas, dateDosar, pasUrmator, textTermen } from '@/lib/pas-urmator'
+import { calculRCA, etapaDosar, fmtDate } from '@/lib/rca-calc'
+import { anulareUltimulPas, culoareCard, dateDosar, pasUrmator, textTermen } from '@/lib/pas-urmator'
 import { faraReminder, fmtZi, textCand } from '@/lib/reminder'
 import { ETAPA_META, type Dosar, type Etapa, type StatusDosar } from '@/lib/types'
-import { STARE } from '@/lib/culori'
 import { cn } from '@/lib/utils'
 import { ReminderModal } from './ReminderModal'
 import { majuscule } from '@/lib/majuscule'
 
-const RANK_COLOR = [STARE.rosu, STARE.galben, STARE.verde, STARE.albastru, STARE.gri]
 const ETAPE: Etapa[] = ['rezervat', 'la_client', 'de_trimis', 'finalizat']
 
 function Sectiune({ titlu, children }: { titlu: string; children: React.ReactNode }) {
@@ -76,7 +74,7 @@ export function DosarPanou({
   const dst = docStatus(dosar, docLocale)
   const termen = textTermen(dosar)
   const date = dateDosar(dosar)
-  const culoare = RANK_COLOR[prioritateDosar(dosar)]
+  const culoare = culoareCard(dosar)
   const pas = pasUrmator(dosar)
   const anulare = anulareUltimulPas(dosar)
   const rca = calculRCA(dosar)
@@ -208,6 +206,7 @@ export function DosarPanou({
 
           <Sectiune titlu="Client și service">
             <dl>
+              <Rand eticheta="Proprietar" valoare={dosar.proprietarPagubit} />
               <Rand eticheta="Telefon client" valoare={dosar.telClient} />
               <Rand eticheta="Service" valoare={dosar.service} />
               <Rand eticheta="Telefon service" valoare={dosar.telService} />

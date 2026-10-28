@@ -9,6 +9,8 @@ import { citesteContractFinal } from '@/lib/contract-final-import'
 import { fisiereLocale, useFolderLocal } from '@/lib/folder-local'
 import { fmtDate } from '@/lib/rca-calc'
 import type { Dosar } from '@/lib/types'
+import { useDosareContext } from '@/contexts/DosareContext'
+import { AlegeDosar } from '@/components/unelte/VerificareTarif'
 
 const CAMPURI: { k: keyof DateIntrareIesire; label: string; placeholder?: string; lat?: boolean }[] = [
   { k: 'nrComanda', label: 'Comanda nr.' },
@@ -20,37 +22,60 @@ const CAMPURI: { k: keyof DateIntrareIesire; label: string; placeholder?: string
   { k: 'dataIesire', label: 'Data ieșire reparație', placeholder: 'zz.ll.aaaa' },
 ]
 
+const GOL: DateIntrareIesire = { nrComanda: '', dataComanda: '', client: '', tipAuto: '', nrAuto: '', dataIntrare: '', dataIesire: '' }
+
 // Fereastra butonului „Document intrare/ieșire" din Editează (sectiunea Contract final): campurile vin din dosar, se pot corecta,
-// apoi se descarca documentul .odt (sablonul service-ului). Numele clientului se tine in dosar.
+// apoi se descarca documentul (sablonul service-ului). Numele clientului se tine in dosar.
+// Fara `dosar` (Unelte → „Document intrare/ieșire”): campurile pornesc goale si se completeaza de mana,
+// sau se alege optional un dosar care le completeaza.
 export function DocIntrareIesireModal({
-  dosar,
+  dosar: dosarDat,
   open,
   onClose,
-  onPatch,
+  onPatch: onPatchDat,
 }: {
-  dosar: Dosar
+  dosar: Dosar | null
   open: boolean
   onClose: () => void
-  onPatch: (patch: Partial<Dosar>) => void
+  onPatch?: (patch: Partial<Dosar>) => void
 }) {
-  const [date, setDate] = useState<DateIntrareIesire>(() => dateDinDosar(dosar))
+  const manual = !dosarDat
+  const { dosare, salveazaRapid } = useDosareContext()
+  const [alesId, setAlesId] = useState('')
+  const ales = manual ? (dosare.find((x) => x.id === alesId) ?? null) : null
+  const dosar = dosarDat ?? ales
+  const onPatch = (patch: Partial<Dosar>) => {
+    if (onPatchDat) onPatchDat(patch)
+    else if (ales) void salveazaRapid({ ...ales, ...patch })
+  }
+  const [date, setDate] = useState<DateIntrareIesire>(() => (dosar ? dateDinDosar(dosar) : GOL))
 
   useEffect(() => {
-    if (open) setDate(dateDinDosar(dosar))
+    if (!open) return
+    if (manual) setAlesId('')
+    setDate(dosarDat ? dateDinDosar(dosarDat) : GOL)
     // doar la deschidere — altfel o salvare in fundal ar sterge ce scrie utilizatorul
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open])
+
+  function alegeDosar(id: string) {
+    setAlesId(id)
+    const d = dosare.find((x) => x.id === id)
+    setDate(d ? dateDinDosar(d) : GOL)
+    setCitire(null)
+  }
 
   const [seFace, setSeFace] = useState(false)
   const [eroare, setEroare] = useState('')
   const [citire, setCitire] = useState<{ text: string; eroare: boolean } | null>(null)
   const inputRef = useRef<HTMLInputElement>(null)
   const folder = useFolderLocal()
-  const contractLaptop = fisiereLocale(folder, dosar).find((x) => x.deschide && x.chei.includes('contract'))
+  const contractLaptop = dosar ? fisiereLocale(folder, dosar).find((x) => x.deschide && x.chei.includes('contract')) : undefined
 
   // Clientul (si datele reale) direct din contract: din folderul de pe laptop sau dintr-un fisier ales.
   // Nu mai depinde de citirea din fundal sau de cand a fost incarcat contractul.
   async function citesteDinContract(file?: File) {
+    if (!dosar) return
     setCitire({ text: 'Se citește contractul…', eroare: false })
     try {
       const f = file ?? (contractLaptop ? await contractLaptop.deschide!() : null)
@@ -86,11 +111,12 @@ export function DocIntrareIesireModal({
   // la deschidere, fara client: incearca singur contractul de pe laptop
   useEffect(() => {
     setCitire(null)
-    if (open && !dosar.numeClient && contractLaptop) void citesteDinContract()
+    if (open && dosar && !dosar.numeClient && contractLaptop) void citesteDinContract()
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open])
 
   function tineMinteClient() {
+    if (!dosar) return
     const client = date.client.trim().toLocaleUpperCase('ro-RO')
     if (client !== (dosar.numeClient ?? '')) onPatch({ numeClient: client })
   }
@@ -122,8 +148,18 @@ export function DocIntrareIesireModal({
       <DialogContent className="sm:max-w-[460px]">
         <DialogHeader>
           <DialogTitle>Document intrare/ieșire service</DialogTitle>
-          <DialogDescription>Verifică datele luate din contract și din dosar, apoi descarcă documentul PDF.</DialogDescription>
+          <DialogDescription>
+            {manual
+              ? 'Completează câmpurile de mână sau alege un dosar, apoi descarcă documentul PDF.'
+              : 'Verifică datele luate din contract și din dosar, apoi descarcă documentul PDF.'}
+          </DialogDescription>
         </DialogHeader>
+        {manual && (
+          <div className="grid gap-1">
+            <Label className="text-xs">Din dosar (opțional)</Label>
+            <AlegeDosar dosare={dosare} ales={alesId} onAlege={alegeDosar} />
+          </div>
+        )}
         <form
           className="grid grid-cols-2 gap-x-3 gap-y-2.5"
           onSubmit={(e) => {
@@ -135,7 +171,7 @@ export function DocIntrareIesireModal({
             <div key={c.k} className={c.lat ? 'col-span-2 grid gap-1' : 'grid gap-1'}>
               <div className="flex items-center justify-between gap-2">
                 <Label htmlFor={`ii-${c.k}`} className="text-xs">{c.label}</Label>
-                {c.k === 'client' && (
+                {c.k === 'client' && dosar && (
                   <button
                     type="button"
                     onClick={() => void citesteDinContract()}

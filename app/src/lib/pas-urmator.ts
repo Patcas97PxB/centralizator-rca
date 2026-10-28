@@ -1,5 +1,20 @@
-import { calculRCA, etapaDosar, fmtDate, todayStr, urgentaDosar, zileScurseDeLaPredare } from './rca-calc'
+import { calculRCA, etapaDosar, fmtDate, prioritateDosar, todayStr, urgentaDosar, zileScurseDeLaPredare } from './rca-calc'
 import type { Dosar } from './types'
+import { STARE } from './culori'
+
+const RANK_COLOR = [STARE.rosu, STARE.galben, STARE.verde, STARE.albastru, STARE.stins]
+
+/** Culoarea cardului (dunga, termenul, bara). Pe lângă termen (roșu/galben/verde), cele 3 stări care
+ * înainte ieșeau toate albăstrui (cererea utilizatorului, 28.10.2026) au culori proprii:
+ * albastru = programare (nepredată), cyan = la client fără zile din deviz, mov = preluată (de trimis,
+ * ca pastila etapei), gri neutru = finalizat (și cardul e mai stins). Ordinea cardurilor nu se schimbă. */
+export function culoareCard(d: Dosar): string {
+  if (d.status === 'finalizat') return STARE.stins
+  const etapa = etapaDosar(d)
+  if (etapa === 'de_trimis') return STARE.mov
+  if (etapa === 'la_client' && calculRCA(d).zile === null && !d.dte) return STARE.cyan
+  return RANK_COLOR[prioritateDosar(d)]
+}
 
 // Un singur pas următor pe card, dedus din etapă (redesign F3): predat → preluat → finalizează.
 // La dosarele vechi (predarea trecută fără bifă = deja LA CLIENT), „Marchează preluat” pune și bifa Predat.

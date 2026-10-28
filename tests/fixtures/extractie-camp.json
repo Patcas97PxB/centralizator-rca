@@ -7,7 +7,8 @@
       "nrDosar": "U21201994394",
       "nrAuto": "BH88MDW",
       "marcaModel": "Mercedes-Benz GLS",
-      "asigurator": "Groupama"
+      "asigurator": "Groupama",
+      "proprietar": "UNICREDIT LEASING CORPORATION IFN SA - GRADINASPECT"
     }
   },
   {
@@ -94,7 +95,8 @@
       "nrDosar": "33220739",
       "nrAuto": "B181DRV",
       "marcaModel": "",
-      "asigurator": "Asirom"
+      "asigurator": "Asirom",
+      "proprietar": "RCI LEASING ROMANIA IFN SA"
     }
   },
   {
@@ -105,7 +107,8 @@
       "nrDosar": "BH26R04017",
       "nrAuto": "BH77MFE",
       "marcaModel": "Dacia Logan",
-      "asigurator": "Axeria"
+      "asigurator": "Axeria",
+      "proprietar": "XXXX"
     }
   },
   {
@@ -116,7 +119,8 @@
       "nrDosar": "BH-10-00-026490-2025",
       "nrAuto": "BH18JVH",
       "marcaModel": "VOLVO XC40",
-      "asigurator": "Grawe"
+      "asigurator": "Grawe",
+      "proprietar": "XXXX"
     }
   },
   {
@@ -127,7 +131,8 @@
       "nrDosar": "EZ-RCA-B-9323-2026",
       "nrAuto": "BH32WAV",
       "marcaModel": "VOLKSWAGEN PASSAT",
-      "asigurator": "EazyInsure"
+      "asigurator": "EazyInsure",
+      "proprietar": "XXXX"
     }
   },
   {
@@ -138,7 +143,8 @@
       "nrDosar": "BU/ZB422640",
       "nrAuto": "BH05MRC",
       "marcaModel": "Dacia Logan",
-      "asigurator": "Allianz"
+      "asigurator": "Allianz",
+      "proprietar": "XXXX"
     }
   },
   {
@@ -148,7 +154,8 @@
     "expected": {
       "nrAuto": "B126UTI",
       "marcaModel": "DACIA",
-      "asigurator": "Allianz"
+      "asigurator": "Allianz",
+      "proprietar": "AUTONOM SERVICES SA"
     }
   },
   {
@@ -159,7 +166,8 @@
       "nrDosar": "ZB856348",
       "nrAuto": "BH11JPE",
       "marcaModel": "Bmw X5",
-      "asigurator": "Allianz"
+      "asigurator": "Allianz",
+      "proprietar": "Bt Leasing Transilvania Ifn Sa"
     }
   },
   {
@@ -170,7 +178,8 @@
       "nrDosar": "RA23/BH/26/33219865",
       "nrAuto": "BH62CRL",
       "marcaModel": "BYD SEAL 5DM",
-      "asigurator": "Asirom"
+      "asigurator": "Asirom",
+      "proprietar": "XXXX"
     }
   },
   {
@@ -181,7 +190,8 @@
       "nrDosar": "EZ-RCA-B-9325-2026",
       "nrAuto": "B104SMM",
       "marcaModel": "Dacia DUSTER",
-      "asigurator": "EazyInsure"
+      "asigurator": "EazyInsure",
+      "proprietar": "JRCILEASING ROMANIA IFN SA"
     }
   },
   {
@@ -214,7 +224,8 @@
       "nrDosar": "HDR 121926",
       "nrAuto": "BH88PMP",
       "marcaModel": "Dacia Logan",
-      "asigurator": "Hellas"
+      "asigurator": "Hellas",
+      "proprietar": "XXXX"
     }
   },
   {
@@ -225,7 +236,8 @@
       "nrDosar": "HDR 122920",
       "nrAuto": "B165ALK",
       "marcaModel": "Renault Master",
-      "asigurator": "Hellas"
+      "asigurator": "Hellas",
+      "proprietar": "AUTONOMSERVICESSA"
     }
   },
   {
@@ -236,7 +248,8 @@
       "nrDosar": "U21202045911",
       "nrAuto": "BH19SNI",
       "marcaModel": "Volvo XC60",
-      "asigurator": "Groupama"
+      "asigurator": "Groupama",
+      "proprietar": "XXXX"
     }
   },
   {
@@ -247,7 +260,8 @@
       "nrDosar": "CJ/CR988911",
       "nrAuto": "B126UTI",
       "marcaModel": "DACIA",
-      "asigurator": "Allianz"
+      "asigurator": "Allianz",
+      "proprietar": "AUTONOMSERVICESSA"
     }
   },
   {
@@ -258,7 +272,8 @@
       "nrDosar": "U21201973468",
       "nrAuto": "B83ATM",
       "marcaModel": "Audi A4",
-      "asigurator": "Groupama"
+      "asigurator": "Groupama",
+      "proprietar": "BCR LEASING IFN SA - AUTONOM SERVICES SA"
     }
   },
   {
@@ -269,7 +284,8 @@
       "nrDosar": "EZ-RCA-B-8102-2026",
       "nrAuto": "SV15DJB",
       "marcaModel": "Mercedes-Benz ML",
-      "asigurator": "EazyInsure"
+      "asigurator": "EazyInsure",
+      "proprietar": "XXXX"
     }
   },
   {
@@ -280,7 +296,8 @@
       "nrDosar": "BH26R04797",
       "nrAuto": "B768SBG",
       "marcaModel": "VW ID.4",
-      "asigurator": "Axeria"
+      "asigurator": "Axeria",
+      "proprietar": "XXXX"
     }
   },
   {
@@ -291,7 +308,8 @@
       "nrDosar": "ZB816872",
       "nrAuto": "BH89TAX",
       "marcaModel": "Volvo S90",
-      "asigurator": "Allianz"
+      "asigurator": "Allianz",
+      "proprietar": "Tax Back Consulting Srl"
     }
   },
   {
@@ -302,7 +320,8 @@
       "nrDosar": "ZB837932",
       "nrAuto": "B107TPZ",
       "marcaModel": "Dacia Jogger",
-      "asigurator": "Allianz"
+      "asigurator": "Allianz",
+      "proprietar": "Autonom Services S.A."
     }
   },
   {
@@ -313,7 +332,8 @@
       "nrDosar": "EZ-RCA-B-5571-2026",
       "nrAuto": "B280BMM",
       "marcaModel": "Dacia DUSTER",
-      "asigurator": "EazyInsure"
+      "asigurator": "EazyInsure",
+      "proprietar": "AUTONOM SERVICES S.A."
     }
   },
   {
@@ -346,7 +366,8 @@
       "nrDosar": "BH/20261950354-C",
       "nrAuto": "BH17HAZ",
       "marcaModel": "SKODA OCTAVIA",
-      "asigurator": "Generali"
+      "asigurator": "Generali",
+      "proprietar": "XXXX"
     }
   },
   {
@@ -368,7 +389,8 @@
       "nrDosar": "HDR 122920",
       "nrAuto": "B165ALK",
       "marcaModel": "Renault Master",
-      "asigurator": "Hellas"
+      "asigurator": "Hellas",
+      "proprietar": "XXXX"
     }
   },
   {
@@ -413,6 +435,26 @@
       "nrAuto": "BH17HAZ",
       "marcaModel": "SKODA OCTAVIA",
       "asigurator": "Generali"
+    }
+  },
+  {
+    "id": "sintetic-eazy-pvc-pagubit-persoana",
+    "descriere": "Eazy PVC: Păgubit = persoană fizică cu cratimă în prenume, valoarea pe același rând (date inventate)",
+    "text": "eazy.insure\nPROCES VERBAL DE CONSTATARE DAUNE\nNr. dosar: EZ-RCA-B-10000-2026 Data: 12/10/2026\nDate privind identificarea autovehiculului:\nPăgubit ANA-MARIA POPESCU\nAdresă / Telefon Str. EXEMPLU Nr. 1, ORADEA, BIHOR, / 0700000000\nMarcă, model DACIA, SANDERO\nNr. înmatriculare BH00AAA\nSerie Sașiu XXXXXXXXXXXXXXXXX",
+    "expected": {
+      "proprietar": "ANA-MARIA POPESCU"
+    }
+  },
+  {
+    "id": "eazy-pvc-poza-bh17pwy-tesseract",
+    "descriere": "Eazy PVC fotografiat, Tesseract eng: „Păgubit” citit „[Pasubie”, nr. auto cu bordura „IBH17PWY.” (anonimizat)",
+    "text": "eazy.insure\n\nCK Pr oces versa be constarane oaune\n\nINr. dosar: EZ-RCA-B-11152-2026 Data:\n\n12/10/2026\ninspector Daune: XXXX Locul constataril: BUCURESIT\nData avizarii\n\nData constatai\n\noe Pees at nine wac5,\n\n12/10/2026\n\nData producerii accidentulul: 06/10/2026 ora 13:30\nlLocul producerii accidentulul: ROMANIA , BIHOR , ORADEA\n(Culpa comuna: Da 0 Nu 2\n\neS Date privind identificarea autovehiculului:\n\n[Pasubie [ANA-MARIA POPESCU.\nx |Str. XXXX Nr. 1 , ORADEA, BIHOR, /\nlad:\nresa / Telefon Fereancayns\nMarca, model IDACIA, SANDERO \\\nNr. inmatriculare IBH17PWY. |\nSerie Sasiu |XXXXXXXXXXXXXXXXX\n\nINumar Km. (inregistrati la data constatarii,\ncititi sau estimati)\n\nStare de intretinere (foarte proasta,\nProasta, satisfacatoare, medie, buna,\nfoarte buna)\n\nEchipament suplimentar\n\n@ Au fost constatate urmatoarele repere avariate\n\nSolutia\ntehnologica\n\nLegenda: INL = de inlocuit | IP = de inlocuit ee\nC = de centrat | RV = de vopsit | RV1 = de vopsit\n\nAvarii preexistente:\n\nrile conser\n\nSunt/Nu sunt de acord cu aval\n\nverbal\n\n",
+    "expected": {
+      "nrDosar": "EZ-RCA-B-11152-2026",
+      "nrAuto": "BH17PWY",
+      "marcaModel": "Dacia SANDERO",
+      "asigurator": "EazyInsure",
+      "proprietar": "ANA-MARIA POPESCU"
     }
   }
 ]

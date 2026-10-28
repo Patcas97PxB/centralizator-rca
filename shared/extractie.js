@@ -13,15 +13,17 @@ function plateDinOcr(s) {
   const t = s.toUpperCase().replace(/[^A-Z0-9]/g, '');
   const LIT = { '0': 'O', '1': 'I', '2': 'Z', '4': 'A', '5': 'S', '6': 'G', '8': 'B' };
   const CIF = { 'O': '0', 'Q': '0', 'D': '0', 'I': '1', 'L': '1', 'Z': '2', 'S': '5', 'B': '8' };
+  // bordura tabelului citita ca „I” lipit de numar („IBH17PWY” = BH17PWY), doar daca altfel nu iese nr. valid
+  const faraBordura = () => (/^[IL1]/.test(t) && t.length >= 7 ? plateDinOcr(t.slice(1)) : '');
   const m = t.match(/^([A-Z]{1,2})([0-9A-Z]{2,3})([0-9A-Z]{3})$/);
-  if (!m) return '';
+  if (!m) return faraBordura();
   const judet = m[1];
-  if (!JUDETE.includes(judet)) return '';
+  if (!JUDETE.includes(judet)) return faraBordura();
   // Bucuresti are 2-3 cifre; celelalte judete 2 cifre.
   if (judet !== 'B' && m[2].length !== 2) return '';
   const cifre = m[2].split('').map(c => CIF[c] || c).join('');
   const litere = m[3].split('').map(c => LIT[c] || c).join('');
-  if (!/^\d+$/.test(cifre) || !/^[A-Z]{3}$/.test(litere)) return '';
+  if (!/^\d+$/.test(cifre) || !/^[A-Z]{3}$/.test(litere)) return faraBordura();
   return judet + cifre + litere;
 }
 
@@ -48,9 +50,67 @@ function marcaAproximativa(norm, brands, modelAlt) {
   return '';
 }
 
+// Proprietarul / păgubitul mașinii avariate, din NC/PV (cererea utilizatorului, 28.10.2026).
+// Etichetele diferă pe asigurator: „Păgubit” (Eazy, Allianz — valoarea pe același rând sau pe următorul),
+// „Proprietar/Utilizator:” (Groupama, Axeria, Asirom, Grawe), „Proprietar auto:” (Asirom),
+// „Persoana PAGUBITA:” (Hellas), „Asigurat/Pagubit:” (Generali); „Proprietar / Imputernicit:”
+// (semnătura Eazy/Grawe) doar ca ultimă variantă. Valoarea se taie la nr. auto / VIN / dată /
+// eticheta următoare și se respinge dacă arată a marcă, adresă sau text de formular. '' = negăsit.
+const ETICHETE_PROPRIETAR = [
+  /\bproprietar\s*\/?\s*ut[il]{1,3}z?[a-z]*\s*:?/i,
+  /\bproprietar\s+auto\s*:?/i,
+  /\bpersoana\s*p[aă]gubit[aă]\s*:?/i,
+  /(?:^|\s{2,})[|\s]*p[aă]gubit(?![\w\/ăîâșşțţ])\s*:?/i,
+  /\basigurat\s*\/\s*p[aă]gubit\s*:/i,
+  /(?:^|[^a-z\/])p[aă]gubit[aă]\s*:/i,
+  // „Păgubit” stricat de OCR la început de rând, într-un tabel („[Pasubie [NUME”)
+  /^[|\[\s]*p[aă4][gsq9][uv][bh][i1l!][te]\b[\s|\[\]:]*/i,
+  /\bproprietar\s*\/\s*[iî]mputernicit\s*:?/i,
+];
+const MARCI_PROPRIETAR = /\b(dacia|renault|ford|opel|volkswagen|vw|skoda|toyota|hyundai|kia|mercedes|bmw|audi|volvo|peugeot|citroen|fiat|nissan|mazda|suzuki|seat|cupra|honda|mitsubishi|jeep|lexus|tesla|byd|mg|cat\.?\s*[mn]\d)\b/i;
+function curataProprietar(v) {
+  let t = (v || '').replace(/^[\s|:;.\-–\[\]]+/, '');
+  // eticheta urmatoare pe acelasi rand
+  t = t.split(/\s(?:nr\.?\s*[îi]nmatricul|serie|tip vehicul|marc[aă]|adres[aă]|data\b|auto\s*marc|call center|specialist|inspector|date identificare)/i)[0];
+  // nr. auto RO, VIN, data, telefon -> se taie acolo
+  t = t.split(/\s(?=[A-Z]{1,2}[\s-]?\d{2,3}[\s-]?[A-Z]{3}\b)|\s(?=[A-HJ-NPR-Z0-9X]{17}\b)|\s(?=\d{1,2}[.\/-]\w{2,3}[.\/-]\d{4})|\s(?=\d{4}-\d{2}-\d{2})|\s(?=0\d{9}\b)/)[0];
+  t = t.replace(/\s+punct\s+de\s+lucru.*$/i, '');
+  t = t.replace(/\s+/g, ' ').replace(/[\s|,;:\-–]+$/, '').replace(/(?<!\.[A-Za-z])\.$/, '').trim();
+  // un fragment OCR de 1 litera la final („…IFN SA E”)
+  t = t.replace(/^(.{6,}?)\s+[A-Za-z]$/, '$1');
+  return t;
+}
+function arataANume(t) {
+  if (!t || t.length < 3 || t.length > 90) return false;
+  if ((t.match(/[A-Za-zĂÂÎȘŞȚŢăâîșşțţ]/g) || []).length < 3) return false;
+  if (/\d{3,}/.test(t)) return false;
+  if (MARCI_PROPRIETAR.test(t)) return false;
+  if (/\b(str|strada|jud|loc|bl|ap|nr)\b\.?/i.test(t) && /,/.test(t)) return false;
+  if (/(adres|telefon|marc[aă]|model|poate|obligat|dosar|reprezentant|imputernicit|semn[aă]tur|utilizator|denumire|cererea|factur|deviz)/i.test(t)) return false;
+  return true;
+}
+function proprietarDinText(text) {
+  const randuri = (text || '').split(/\r?\n/);
+  for (const re of ETICHETE_PROPRIETAR) {
+    for (let i = 0; i < randuri.length; i++) {
+      const m = re.exec(randuri[i]);
+      if (!m) continue;
+      let v = curataProprietar(randuri[i].slice(m.index + m[0].length));
+      if (!v) {
+        // valoarea pe randul urmator (tabel citit pe coloane)
+        let j = i + 1;
+        while (j < randuri.length && !randuri[j].trim()) j++;
+        if (j < randuri.length) v = curataProprietar(randuri[j]);
+      }
+      if (arataANume(v)) return v;
+    }
+  }
+  return '';
+}
+
 function extractFromText(text) {
   const norm = text.replace(/\s+/g, ' ');
-  const result = { nrDosar: '', nrAuto: '', marcaModel: '', asigurator: '', extraPlates: [], extraDates: [], extraPhones: [] };
+  const result = { nrDosar: '', nrAuto: '', marcaModel: '', asigurator: '', proprietar: proprietarDinText(text), extraPlates: [], extraDates: [], extraPhones: [] };
 
   // Asigurator: cautam denumirile cunoscute oriunde in document (antet, "Date asigurator", e-mail lichidatori)
   const ALIASE = {

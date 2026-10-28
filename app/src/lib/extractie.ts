@@ -6,6 +6,8 @@ export interface RezultatExtractie {
   nrAuto: string
   marcaModel: string
   asigurator: string
+  /** Proprietarul / păgubitul de pe NC-PV ('' dacă nu s-a găsit). */
+  proprietar: string
   extraPlates: string[]
   extraDates: string[]
   extraPhones: string[]

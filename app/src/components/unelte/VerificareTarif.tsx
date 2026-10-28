@@ -32,7 +32,7 @@ const ETICHETA = 'mb-1 block text-[12.5px] font-semibold text-tx-2'
 
 /** Alegerea dosarului, în tema aplicației (în locul listei native a browserului): scrii o bucată din nr.
  * auto / RBH / nr. dosar, iar dedesubt apare o listă scurtă, derulabilă, cu ↑↓ + Enter. */
-function AlegeDosar({ dosare, ales, onAlege }: { dosare: Dosar[]; ales: string; onAlege: (id: string) => void }) {
+export function AlegeDosar({ dosare, ales, onAlege }: { dosare: Dosar[]; ales: string; onAlege: (id: string) => void }) {
   const [q, setQ] = useState('')
   const [deschis, setDeschis] = useState(false)
   const [activ, setActiv] = useState(0)

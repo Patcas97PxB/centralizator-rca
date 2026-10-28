@@ -9,4 +9,7 @@ export const STARE = {
   gri: 'var(--st-gray)',
   mov: 'var(--st-violet)',
   portocaliu: 'var(--st-orange)',
+  cyan: 'var(--st-cyan)',
+  /** Finalizat: gri neutru (fără nuanța albăstruie a --st-gray), ca să nu semene cu albastrul. */
+  stins: 'var(--tx-3)',
 } as const

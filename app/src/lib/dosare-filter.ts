@@ -37,7 +37,7 @@ const fara = (s: string) => s.replace(/[\s\-./]/g, '')
 export function corespundeCautarii(d: Dosar, search: string): boolean {
   if (!search) return true
   const hay = [d.nrDosar, d.nrRezervare, d.nrAutoPagubit, d.marcaModel, d.nrAutoInlocuire,
-    d.asigurator, d.service, d.telClient, d.telService, d.notes]
+    d.asigurator, d.service, d.telClient, d.telService, d.notes, d.proprietarPagubit]
     .join(' ')
     .toLowerCase()
   const s = search.toLowerCase()

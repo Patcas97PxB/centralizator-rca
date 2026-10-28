@@ -23,6 +23,7 @@ export function AppShell({
   onPdf,
   onTarif,
   onDate,
+  onDocII,
   onCautare,
   children,
 }: {
@@ -37,12 +38,13 @@ export function AppShell({
   onPdf: () => void
   onTarif: () => void
   onDate: () => void
+  onDocII: () => void
   onCautare: () => void
   children: ReactNode
 }) {
   return (
     <SidebarProvider style={{ '--sidebar-width': '245px' } as CSSProperties}>
-      <AppSidebar active={active} onSelect={onSelect} badgeDosare={deSunat.length} onDeviz={onDeviz} onPdf={onPdf} onTarif={onTarif} onDate={onDate} />
+      <AppSidebar active={active} onSelect={onSelect} badgeDosare={deSunat.length} onDeviz={onDeviz} onPdf={onPdf} onTarif={onTarif} onDate={onDate} onDocII={onDocII} />
       <SidebarInset>
         {ESTE_DEMO && <DemoBanner />}
         <Header

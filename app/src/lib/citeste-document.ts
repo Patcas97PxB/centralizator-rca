@@ -10,7 +10,7 @@ import { paddleDisponibil, paddleIncarcat, paddleText } from './paddle-ocr'
 // - Zilele din deviz raman pe Tesseract (citesteDeviz): regulile de devize sunt reglate pe textul lui.
 //   Tesseract ruleaza doar daca documentul pare deviz, ca la NC-uri sa nu se piarda timp.
 
-const CAMPURI = ['nrDosar', 'nrAuto', 'marcaModel', 'asigurator'] as const
+const CAMPURI = ['nrDosar', 'nrAuto', 'marcaModel', 'asigurator', 'proprietar'] as const
 const PARE_DEVIZ = /manoper|vopsitor|audatex|gt\s*estimate|total\s*cl\b/i
 
 export interface DocumentCitit {

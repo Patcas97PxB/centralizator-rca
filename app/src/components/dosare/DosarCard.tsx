@@ -3,8 +3,8 @@ import { AlertTriangle, Bell, BellOff, Check, ChevronDown, ImageIcon, StickyNote
 import { imagineMasina } from '@/lib/cars'
 import { cheiLocale, useFolderLocal } from '@/lib/folder-local'
 import { docStatus, lipsuriFinalizare, numeScurtDoc } from '@/lib/documente'
-import { etapaDosar, prioritateDosar } from '@/lib/rca-calc'
-import { dateDosar, pasUrmator, textTermen } from '@/lib/pas-urmator'
+import { etapaDosar } from '@/lib/rca-calc'
+import { culoareCard, dateDosar, pasUrmator, textTermen } from '@/lib/pas-urmator'
 import { ETAPA_META, type Dosar, type Etapa, type StatusDosar } from '@/lib/types'
 import { cn } from '@/lib/utils'
 import { faraReminder, fmtZi, textCand } from '@/lib/reminder'
@@ -15,10 +15,8 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import { STARE } from '@/lib/culori'
 
-// Culoarea cardului urmeaza termenul (0 rosu, 1 galben, 2 verde, 3 albastru, 4 finalizat), nu statusul.
-const RANK_COLOR = [STARE.rosu, STARE.galben, STARE.verde, STARE.albastru, STARE.gri]
+// Culoarea cardului: `culoareCard` (termenul + programare / fără deviz / de trimis / finalizat).
 const ETAPE: Etapa[] = ['rezervat', 'la_client', 'de_trimis', 'finalizat']
 
 // Clicurile pe butoanele din card nu deschid panoul.
@@ -44,7 +42,7 @@ export function DosarCard({
   const folder = useFolderLocal()
   const docLocale = cheiLocale(folder, dosar)
   const dst = docStatus(dosar, docLocale)
-  const cardColor = RANK_COLOR[prioritateDosar(dosar)]
+  const cardColor = culoareCard(dosar)
   const poza = imagineMasina(dosar.marcaModelInlocuire ?? '')
   const termen = textTermen(dosar)
   const date = dateDosar(dosar)
@@ -111,6 +109,8 @@ export function DosarCard({
       className={cn(
         'relative flex min-w-0 cursor-pointer flex-col gap-2.5 rounded-[14px] border bg-card py-3 pl-[18px] pr-3.5 text-left outline-none transition-colors duration-150 hover:bg-surface-hover/40 focus-visible:ring-2 focus-visible:ring-ring',
         selectat ? 'border-primary' : 'border-border',
+        // finalizat = card stins, ca să nu semene cu cele încă în lucru
+        dosar.status === 'finalizat' && !celebrating && !selectat && 'opacity-[.62] hover:opacity-100 focus-visible:opacity-100',
         shaking && 'animate-[devizShake_.45s_ease-in-out_both]',
       )}
     >
