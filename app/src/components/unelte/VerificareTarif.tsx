@@ -118,6 +118,48 @@ export function AlegeDosar({ dosare, ales, onAlege }: { dosare: Dosar[]; ales: s
   )
 }
 
+// Explicația când valoarea de pe contract nu corespunde grilei (cererea utilizatorului, 28.10.2026: „Diferă de
+// grilă cu 427,52” nu se înțelegea). Se deduce cum a fost calculat contractul:
+// - preț/zi diferit (ex. GP 139,50 = tariful 1–20 zile, aplicat pe 49 zile în loc de 122,50) → „Tarif greșit pe contract”;
+// - același preț/zi, alt număr de zile → „Alt număr de zile pe contract”.
+// Contractul poate fi cu sau fără TVA: se alege varianta în care prețul/zi iese „rotund” (tarifele sunt din 0,50 în 0,50).
+function explicaDiferenta(v: number, zile: number, t: NonNullable<ReturnType<typeof calcTarifGrila>>) {
+  if (!zile) return null
+  const m = t.moneda as Moneda
+  const bani = (x: number) => formatSuma(x, m)
+  const pret = (x: number) => formatSuma(x, m) + '/zi'
+  const rotund = (x: number) => Math.abs(x * 2 - Math.round(x * 2)) < 0.02
+  const cuTva = !rotund(v / zile) && rotund(v / (1 + TVA) / zile)
+  const baza = cuTva ? v / (1 + TVA) : v
+  const nota = cuTva ? ' (fără TVA)' : ''
+  // Allianz: intern sau extern — cel mai apropiat de contract
+  const pretGrila =
+    t.totalExtern != null && Math.abs(t.totalExtern / zile - baza / zile) < Math.abs(t.pretZi - baza / zile) ? t.totalExtern / zile : t.pretZi
+  const corectTotal = pretGrila * zile
+  const palier = t.palier && t.palier !== t.sursa ? t.palier : ''
+  const corect = `${pret(pretGrila)} × ${zile} zile = ${bani(corectTotal)}${nota}`
+  const dif = baza - corectTotal
+  const diferenta = `${bani(Math.abs(dif))}${nota} ${dif > 0 ? 'în plus' : 'în minus'}`
+  const zileContract = baza / pretGrila
+  if (Math.abs(zileContract - Math.round(zileContract)) < 0.01 && Math.round(zileContract) !== zile) {
+    const n = Math.round(zileContract)
+    return {
+      titlu: 'Alt număr de zile pe contract',
+      contract: `${pret(pretGrila)} × ${n} zile = ${bani(baza)}${nota}`,
+      corect,
+      palier: '',
+      diferenta,
+    }
+  }
+  return {
+    titlu: 'Tarif greșit pe contract',
+    contract: `${pret(baza / zile)} × ${zile} zile = ${bani(baza)}${nota}`,
+    corect,
+    palier,
+    diferenta,
+  }
+}
+
 export function VerificareTarif({ open, onClose }: { open: boolean; onClose: () => void }) {
   const { dosare } = useDosareContext()
   const [dosarId, setDosarId] = useState('')
@@ -155,6 +197,7 @@ export function VerificareTarif({ open, onClose }: { open: boolean; onClose: () 
   const v = parseSuma(valoare)
   const sume = tarif ? [tarif.total, tarif.total * (1 + TVA), ...(tarif.totalExtern != null ? [tarif.totalExtern, tarif.totalExtern * (1 + TVA)] : [])] : []
   const potrivit = v > 0 && sume.some((s) => Math.abs(s - v) <= 1)
+  const explicatie = v > 0 && !potrivit && tarif ? explicaDiferenta(v, nZile, tarif) : null
 
   return (
     <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
@@ -224,13 +267,27 @@ export function VerificareTarif({ open, onClose }: { open: boolean; onClose: () 
                 placeholder={`ex. ${formatSuma(tarif.total, moneda).replace(' ' + moneda, '')}`}
                 className={CAMP}
               />
-              {v > 0 && (
-                <span className={cn('mt-1.5 flex items-center gap-1.5 text-[13px] font-semibold', potrivit ? 'text-st-green-tx' : 'text-st-amber-tx')}>
-                  {potrivit ? <CheckCircle2 className="size-4" aria-hidden="true" /> : <AlertTriangle className="size-4" aria-hidden="true" />}
-                  {potrivit
-                    ? 'Corespunde grilei'
-                    : `Diferă de grilă cu ${formatSuma(Math.min(...sume.map((s) => Math.abs(s - v))), moneda)}`}
+              {v > 0 && potrivit && (
+                <span className="mt-1.5 flex items-center gap-1.5 text-[13px] font-semibold text-st-green-tx">
+                  <CheckCircle2 className="size-4" aria-hidden="true" />
+                  Corespunde grilei
                 </span>
+              )}
+              {explicatie && (
+                <div className="mt-2 rounded-xl border border-st-amber/40 bg-st-amber/10 px-3.5 py-2.5 text-[13px]">
+                  <p className="flex items-center gap-1.5 font-bold text-st-amber-tx">
+                    <AlertTriangle className="size-4" aria-hidden="true" />
+                    {explicatie.titlu}
+                  </p>
+                  <dl className="mt-1.5 grid grid-cols-[auto_1fr] gap-x-3 gap-y-0.5 tabular-nums">
+                    <dt className="text-tx-3">Pe contract</dt>
+                    <dd className="text-foreground">{explicatie.contract}</dd>
+                    <dt className="text-tx-3">Corect{explicatie.palier ? ` (${explicatie.palier})` : ''}</dt>
+                    <dd className="font-semibold text-foreground">{explicatie.corect}</dd>
+                    <dt className="text-tx-3">Diferență</dt>
+                    <dd className="font-semibold text-st-amber-tx">{explicatie.diferenta}</dd>
+                  </dl>
+                </div>
               )}
             </label>
           )}
