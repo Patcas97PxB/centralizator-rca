@@ -65,6 +65,9 @@ export interface Dosar {
   telClient: string
   /** Numele clientului (proprietarul mașinii păgubite) — completat în „Document intrare/ieșire”. */
   numeClient?: string
+  /** Data preluării (`end`) a fost scrisă de mână → ea e termenul de pe card, nu cea calculată din deviz/contract.
+   * Se stinge când se schimbă zilele din deviz (data se recalculează). */
+  endManual?: boolean
   /** Proprietarul auto păgubit, așa cum apare pe NC/PV (citit la PRELUARE DATE sau scris de mână). */
   proprietarPagubit?: string
   /** Din contractul final: data reală a plecării clientului cu mașina / a predării ei înapoi (YYYY-MM-DD). */

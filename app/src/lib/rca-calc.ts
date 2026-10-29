@@ -271,6 +271,9 @@ export function calculRCA(d: Dosar): RezultatCalculRCA {
       r.formula += ' — confirmat de contractul final'
     }
   }
+  // Data preluării scrisă de mână (ex. clientul o mai ține câteva zile, raportat 29.10.2026 pe BH42MEC):
+  // termenul de pe card urmează data scrisă; zilele decontabile rămân cele din calcul.
+  if (r && d.endManual && d.end && !d.dte) r.dataPreluare = d.end
   return r
 }
 

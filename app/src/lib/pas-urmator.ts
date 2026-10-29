@@ -1,4 +1,4 @@
-import { calculRCA, etapaDosar, fmtDate, prioritateDosar, todayStr, urgentaDosar, zileScurseDeLaPredare } from './rca-calc'
+import { calculRCA, etapaDosar, fmtDate, prioritateDosar, todayStr, urgentaDosar, zileDecontabileReale, zileScurseDeLaPredare } from './rca-calc'
 import type { Dosar } from './types'
 import { STARE } from './culori'
 
@@ -57,9 +57,11 @@ export function textTermen(d: Dosar): TextTermen {
   const rca = calculRCA(d)
   const finalizat = d.status === 'finalizat'
   const scurse = zileScurseDeLaPredare(d.start)
+  // cu data preluării scrisă de mână, „ziua X din Y” și bara merg până la ea (nu până la zilele din deviz)
   const total = rca.zile
-  const procent = finalizat || d.preluatBifat ? 100 : scurse !== null && total ? Math.max(0, Math.min(100, (scurse / total) * 100)) : 0
-  const ziuaDin = scurse !== null && total ? `ziua ${scurse} din ${total}` : ''
+  const pana = d.endManual && d.start && rca.dataPreluare ? (zileDecontabileReale(d.start, rca.dataPreluare) ?? total) : total
+  const procent = finalizat || d.preluatBifat ? 100 : scurse !== null && total ? Math.max(0, Math.min(100, (scurse / (pana || 1)) * 100)) : 0
+  const ziuaDin = scurse !== null && pana ? `ziua ${scurse} din ${pana}` : ''
 
   if (u.inaintePredare) {
     return {

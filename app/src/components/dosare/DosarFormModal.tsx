@@ -28,7 +28,7 @@ import {
 import { KNOWN_INSURERS } from '@/lib/asiguratori'
 import { imagineMasina } from '@/lib/cars'
 import { suggestClasaFromModel, vehicleClasses } from '@/lib/clase-auto'
-import { calculRCA, etapaDosar, todayStr } from '@/lib/rca-calc'
+import { fmtDate, calculRCA, etapaDosar, todayStr } from '@/lib/rca-calc'
 import { ConflictSalvare } from '@/lib/dosare-storage'
 import { useDosareContext } from '@/contexts/DosareContext'
 import { ETAPA_META, dosarGol, type Dosar, type Vehicul } from '@/lib/types'
@@ -93,11 +93,14 @@ export function DosarFormModal({
 
   function set<K extends keyof Dosar>(key: K, value: Dosar[K]) {
     if (key === 'zileDeviz') setEndAuto(true) // zile noi -> data preluarii se recalculeaza
-    setDraft((d) => ({ ...d, ...majuscule({ [key]: value } as Partial<Dosar>) }))
+    setDraft((d) => ({ ...d, ...majuscule({ [key]: value } as Partial<Dosar>), ...(key === 'zileDeviz' ? { endManual: false } : {}) }))
   }
   function patch(p: Partial<Dosar>) {
+    // zile noi -> data preluarii se recalculeaza; o data de preluare venita din document (PRELUARE DATE) = de mana
+    const extra: Partial<Dosar> = 'zileDeviz' in p ? { endManual: false } : 'end' in p ? { endManual: !!p.end } : {}
     if ('zileDeviz' in p) setEndAuto(true)
-    setDraft((d) => ({ ...d, ...majuscule(p) }))
+    else if ('end' in p) setEndAuto(!p.end)
+    setDraft((d) => ({ ...d, ...majuscule(p), ...extra }))
   }
 
   // Clasa se sugereaza din marca/model chiar in timp ce scrii; o clasa aleasa de mana nu se mai schimba.
@@ -151,7 +154,8 @@ export function DosarFormModal({
 
   const etapa = ETAPA_META[etapaDosar(draft)]
   const rcaPreview = calculRCA(draft)
-  const preluareCalculata = draft.dte ? null : rcaPreview.dataPreluare
+  // data calculată din deviz/contract, fără cea scrisă de mână
+  const preluareCalculata = draft.dte ? null : calculRCA({ ...draft, endManual: false }).dataPreluare
 
   useEffect(() => {
     if (open && endAuto && preluareCalculata && preluareCalculata !== draft.end) {
@@ -320,11 +324,27 @@ export function DosarFormModal({
               id="fEnd"
               value={draft.end}
               onChange={(v) => {
-                setEndAuto(false)
-                set('end', v)
+                // scrisă de mână = termenul de pe card; ștearsă = revine la data calculată
+                setEndAuto(!v)
+                setDraft((d) => ({ ...d, end: v, endManual: !!v }))
               }}
               disabled={draft.dte}
             />
+            {draft.endManual && draft.end && preluareCalculata && preluareCalculata !== draft.end && (
+              <p className="text-[11.5px] text-tx-3">
+                Scrisă de mână · din calcul: {fmtDate(preluareCalculata)} ·{' '}
+                <button
+                  type="button"
+                  className="font-semibold text-accent-tx hover:underline"
+                  onClick={() => {
+                    setEndAuto(true)
+                    setDraft((d) => ({ ...d, end: preluareCalculata, endManual: false }))
+                  }}
+                >
+                  revino la calcul
+                </button>
+              </p>
+            )}
           </div>
           <div className="flex items-center gap-2 sm:col-span-2">
             <Checkbox id="fDte" checked={draft.dte} onCheckedChange={(v) => set('dte', v === true)} />
