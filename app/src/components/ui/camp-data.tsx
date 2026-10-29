@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { CalendarDays, ChevronLeft, ChevronRight } from 'lucide-react'
 import { Popover, PopoverAnchor, PopoverContent } from '@/components/ui/popover'
 import { isHoliday, isoLocal, todayStr } from '@/lib/rca-calc'
@@ -26,6 +26,11 @@ export function inIso(text: string): string | null {
   return isoLocal(d)
 }
 
+// Pe telefon/tabletă (deget, nu mouse) câmpul nu deschide tastatura: tastatura muta fereastra în timp ce
+// apăsai pe o zi, iar calendarul „sărea” și trebuia apăsat de mai multe ori (raportat 29.10.2026 la
+// Calculator de date). Acolo data se alege doar din calendar; pe calculator se poate și scrie.
+const esteAtingere = () => typeof window !== 'undefined' && window.matchMedia?.('(pointer: coarse)').matches
+
 const CAMP_IMPLICIT =
   'flex h-[38px] w-full min-w-0 items-center gap-2 rounded-[11px] border border-border-strong bg-background px-3 text-[13.5px] text-foreground transition-colors focus-within:border-accent-tx'
 
@@ -52,6 +57,8 @@ export function CampData({
   'aria-label'?: string
 }) {
   const [deschis, setDeschis] = useState(false)
+  const [atingere] = useState(esteAtingere)
+  const ancora = useRef<HTMLDivElement>(null)
   const [text, setText] = useState(dinIso(value))
   const [luna, setLuna] = useState(() => (value || todayStr()).slice(0, 7))
 
@@ -88,13 +95,22 @@ export function CampData({
   return (
     <Popover open={deschis && !disabled} onOpenChange={setDeschis}>
       <PopoverAnchor asChild>
-        <div className={cn(CAMP_IMPLICIT, disabled && 'pointer-events-none opacity-50', className)} onClick={() => !disabled && setDeschis(true)}>
+        <div
+          ref={ancora}
+          className={cn(CAMP_IMPLICIT, disabled && 'pointer-events-none opacity-50', atingere && 'cursor-pointer', className)}
+          onClick={(e) => {
+            // clicurile din calendar (portal) urcă în React până aici — nu redeschid calendarul după alegere
+            if (disabled || !ancora.current?.contains(e.target as Node)) return
+            setDeschis(atingere ? (o) => !o : true)
+          }}
+        >
           <input
             id={id}
             value={text}
             disabled={disabled}
             aria-label={ariaLabel}
-            inputMode="numeric"
+            inputMode={atingere ? 'none' : 'numeric'}
+            readOnly={atingere}
             placeholder={placeholder}
             onChange={(e) => setText(e.target.value)}
             onBlur={confirmaText}
@@ -114,6 +130,10 @@ export function CampData({
       <PopoverContent
         align="start"
         onOpenAutoFocus={(e) => e.preventDefault()}
+        // apăsarea pe câmp nu închide-și-redeschide calendarul (clipea)
+        onInteractOutside={(e) => {
+          if (ancora.current?.contains(e.target as Node)) e.preventDefault()
+        }}
         className="w-[284px] gap-2 rounded-xl border border-border-strong bg-surface-2 p-3 text-foreground shadow-lg shadow-black/40 ring-0"
       >
         <div className="flex items-center justify-between">
