@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { CalendarDays, ChevronLeft, ChevronRight } from 'lucide-react'
+import { CalendarDays, ChevronDown, ChevronLeft, ChevronRight } from 'lucide-react'
 import { Popover, PopoverAnchor, PopoverContent } from '@/components/ui/popover'
 import { isHoliday, isoLocal, todayStr } from '@/lib/rca-calc'
 import { cn } from '@/lib/utils'
@@ -16,7 +16,10 @@ export const dinIso = (iso: string) => (iso ? iso.split('-').reverse().join('.')
 
 /** „27.10.2026”, „27.10.26”, „27/10/2026”, „27-10-2026” → ISO; altfel null. */
 export function inIso(text: string): string | null {
-  const m = text.trim().match(/^(\d{1,2})[./-](\d{1,2})[./-](\d{2}|\d{4})$/)
+  const t = text.trim()
+  // doar cifre (tastatura numerică de pe telefon n-are punct): „29102026” / „291026”
+  const c = /^\d{6}$|^\d{8}$/.test(t) ? t.match(/^(\d{2})(\d{2})(\d{2,4})$/) : null
+  const m = c ?? t.match(/^(\d{1,2})[./-](\d{1,2})[./-](\d{2}|\d{4})$/)
   if (!m) return null
   const zi = +m[1]
   const luna = +m[2]
@@ -26,10 +29,19 @@ export function inIso(text: string): string | null {
   return isoLocal(d)
 }
 
-// Pe telefon/tabletă (deget, nu mouse) câmpul nu deschide tastatura: tastatura muta fereastra în timp ce
+// Pe telefon/tabletă (deget, nu mouse): atingi textul = scrii (tastatură numerică, punctele se pun singure),
+// atingi iconița = calendarul (tastatura se închide întâi). Înainte, tastatura muta fereastra în timp ce
 // apăsai pe o zi, iar calendarul „sărea” și trebuia apăsat de mai multe ori (raportat 29.10.2026 la
-// Calculator de date). Acolo data se alege doar din calendar; pe calculator se poate și scrie.
+// Calculator de date).
 const esteAtingere = () => typeof window !== 'undefined' && window.matchMedia?.('(pointer: coarse)').matches
+
+/** Când scrii doar cifre, punctele se pun singure: „2910” → „29.10”, „29102026” → „29.10.2026”. */
+function cuPuncte(v: string, anterior: string): string {
+  if (!/^[\d.]*$/.test(v)) return v
+  if (v.length < anterior.length) return v // ștergi: lasă cum e
+  const c = v.replace(/\D/g, '').slice(0, 8)
+  return [c.slice(0, 2), c.slice(2, 4), c.slice(4)].filter(Boolean).join('.') + (c.length === 2 || c.length === 4 ? '.' : '')
+}
 
 const CAMP_IMPLICIT =
   'flex h-[38px] w-full min-w-0 items-center gap-2 rounded-[11px] border border-border-strong bg-background px-3 text-[13.5px] text-foreground transition-colors focus-within:border-accent-tx'
@@ -58,13 +70,17 @@ export function CampData({
 }) {
   const [deschis, setDeschis] = useState(false)
   const [atingere] = useState(esteAtingere)
+  const [vedere, setVedere] = useState<'zile' | 'luni'>('zile')
   const ancora = useRef<HTMLDivElement>(null)
   const [text, setText] = useState(dinIso(value))
   const [luna, setLuna] = useState(() => (value || todayStr()).slice(0, 7))
 
   useEffect(() => setText(dinIso(value)), [value])
   useEffect(() => {
-    if (deschis) setLuna((value || todayStr()).slice(0, 7))
+    if (deschis) {
+      setLuna((value || todayStr()).slice(0, 7))
+      setVedere('zile')
+    }
   }, [deschis, value])
 
   function alege(iso: string) {
@@ -101,7 +117,8 @@ export function CampData({
           onClick={(e) => {
             // clicurile din calendar (portal) urcă în React până aici — nu redeschid calendarul după alegere
             if (disabled || !ancora.current?.contains(e.target as Node)) return
-            setDeschis(atingere ? (o) => !o : true)
+            // pe telefon textul = tastatura; calendarul se deschide doar din iconiță
+            if (!atingere) setDeschis(true)
           }}
         >
           <input
@@ -109,10 +126,16 @@ export function CampData({
             value={text}
             disabled={disabled}
             aria-label={ariaLabel}
-            inputMode={atingere ? 'none' : 'numeric'}
-            readOnly={atingere}
+            inputMode="numeric"
             placeholder={placeholder}
-            onChange={(e) => setText(e.target.value)}
+            onFocus={() => atingere && setDeschis(false)}
+            onChange={(e) => {
+              const t = cuPuncte(e.target.value, text)
+              setText(t)
+              // data întreagă scrisă („29.10.2026”) se aplică pe loc, fără să mai ieși din câmp
+              const iso = t.length >= 10 ? inIso(t) : null
+              if (iso && (!min || iso >= min) && iso !== value) onChange(iso)
+            }}
             onBlur={confirmaText}
             onKeyDown={(e) => {
               if (e.key === 'Enter') {
@@ -124,7 +147,21 @@ export function CampData({
             }}
             className="h-full min-w-0 flex-1 bg-transparent text-inherit tabular-nums placeholder:text-tx-3 focus:outline-none"
           />
-          <CalendarDays className="size-4 shrink-0 text-tx-3" aria-hidden="true" />
+          <button
+            type="button"
+            tabIndex={-1}
+            aria-label="Calendar"
+            onClick={(e) => {
+              e.stopPropagation()
+              if (disabled) return
+              // închide tastatura înainte să apară calendarul (altfel fereastra se mișcă)
+              ;(document.activeElement as HTMLElement | null)?.blur?.()
+              setDeschis((o) => !o)
+            }}
+            className={cn('-mr-2 flex shrink-0 items-center justify-center self-stretch rounded-md text-tx-3 hover:text-foreground', atingere ? 'w-10' : 'w-7')}
+          >
+            <CalendarDays className="size-4" aria-hidden="true" />
+          </button>
         </div>
       </PopoverAnchor>
       <PopoverContent
@@ -137,16 +174,47 @@ export function CampData({
         className="w-[284px] gap-2 rounded-xl border border-border-strong bg-surface-2 p-3 text-foreground shadow-lg shadow-black/40 ring-0"
       >
         <div className="flex items-center justify-between">
-          <button type="button" aria-label="Luna trecută" onClick={() => muta(-1)} className="flex size-8 items-center justify-center rounded-lg text-tx-2 hover:bg-surface-hover hover:text-foreground">
+          <button type="button" aria-label="Luna trecută" onClick={() => muta(vedere === 'luni' ? -12 : -1)} className="flex size-8 items-center justify-center rounded-lg text-tx-2 hover:bg-surface-hover hover:text-foreground">
             <ChevronLeft className="size-4" aria-hidden="true" />
           </button>
-          <span className="text-[14px] font-bold">
-            {LUNI[l - 1]} {an}
-          </span>
-          <button type="button" aria-label="Luna viitoare" onClick={() => muta(1)} className="flex size-8 items-center justify-center rounded-lg text-tx-2 hover:bg-surface-hover hover:text-foreground">
+          <button
+            type="button"
+            onClick={() => setVedere((v) => (v === 'zile' ? 'luni' : 'zile'))}
+            className="flex items-center gap-1 rounded-lg px-2 py-1 text-[14px] font-bold hover:bg-surface-hover"
+            aria-label="Alege luna și anul"
+          >
+            {vedere === 'zile' ? `${LUNI[l - 1]} ${an}` : an}
+            <ChevronDown className={cn('size-3.5 text-tx-3 transition-transform', vedere === 'luni' && 'rotate-180')} aria-hidden="true" />
+          </button>
+          <button type="button" aria-label="Luna viitoare" onClick={() => muta(vedere === 'luni' ? 12 : 1)} className="flex size-8 items-center justify-center rounded-lg text-tx-2 hover:bg-surface-hover hover:text-foreground">
             <ChevronRight className="size-4" aria-hidden="true" />
           </button>
         </div>
+        {vedere === 'luni' ? (
+          <div className="grid grid-cols-3 gap-1.5 py-1">
+            {LUNI.map((nume, i) => {
+              const cheie = `${an}-${String(i + 1).padStart(2, '0')}`
+              const aleasa = (value || '').slice(0, 7) === cheie
+              const curenta = azi.slice(0, 7) === cheie
+              return (
+                <button
+                  key={nume}
+                  type="button"
+                  onClick={() => {
+                    setLuna(cheie)
+                    setVedere('zile')
+                  }}
+                  className={cn(
+                    'flex h-11 items-center justify-center rounded-lg text-[13.5px] font-semibold transition-colors',
+                    aleasa ? 'bg-primary text-primary-foreground' : cn('text-foreground hover:bg-surface-hover', curenta && 'text-accent-tx ring-1 ring-inset ring-accent-tx/60'),
+                  )}
+                >
+                  {nume.slice(0, 3)}
+                </button>
+              )
+            })}
+          </div>
+        ) : (
         <div className="grid grid-cols-7 gap-0.5 text-center">
           {ZILE_SAPT.map((z, i) => (
             <span key={z} className={cn('pb-1 text-[11.5px] font-semibold', i >= 5 ? 'text-tx-3' : 'text-tx-2')}>
@@ -167,7 +235,9 @@ export function CampData({
                 onClick={() => alege(iso)}
                 title={isHoliday(d) ? 'Sărbătoare legală' : undefined}
                 className={cn(
-                  'flex h-8 items-center justify-center rounded-lg text-[13px] tabular-nums transition-colors',
+                  'flex items-center justify-center rounded-lg',
+                  atingere ? 'h-10' : 'h-8',
+                  ' text-[13px] tabular-nums transition-colors',
                   ales
                     ? 'bg-primary font-bold text-primary-foreground'
                     : cn(
@@ -183,6 +253,7 @@ export function CampData({
             )
           })}
         </div>
+        )}
         <div className="flex items-center justify-between border-t border-border pt-2">
           {golPermis ? (
             <button type="button" onClick={() => alege('')} className="rounded-md px-2 py-1 text-[12.5px] font-semibold text-tx-3 hover:bg-surface-hover hover:text-foreground">
