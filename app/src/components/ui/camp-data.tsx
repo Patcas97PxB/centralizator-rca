@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { CalendarDays, ChevronDown, ChevronLeft, ChevronRight } from 'lucide-react'
+import { CalendarDays, ChevronLeft, ChevronRight } from 'lucide-react'
 import { Popover, PopoverAnchor, PopoverContent } from '@/components/ui/popover'
 import { isHoliday, isoLocal, todayStr } from '@/lib/rca-calc'
 import { cn } from '@/lib/utils'
@@ -29,10 +29,9 @@ export function inIso(text: string): string | null {
   return isoLocal(d)
 }
 
-// Pe telefon/tabletă (deget, nu mouse): atingi textul = scrii (tastatură numerică, punctele se pun singure),
-// atingi iconița = calendarul (tastatura se închide întâi). Înainte, tastatura muta fereastra în timp ce
-// apăsai pe o zi, iar calendarul „sărea” și trebuia apăsat de mai multe ori (raportat 29.10.2026 la
-// Calculator de date).
+// Pe telefon/tabletă (deget, nu mouse): prima atingere deschide calendarul pe luna curentă, fără tastatură
+// (tastatura muta fereastra și calendarul „sărea” — raportat 29.10.2026). Pentru scris: „Scrie data” din calendar
+// → tastatură numerică, punctele se pun singure. În calendar: luna → lunile anului, anul → anii (cerut 29.10.2026).
 const esteAtingere = () => typeof window !== 'undefined' && window.matchMedia?.('(pointer: coarse)').matches
 
 /** Când scrii doar cifre, punctele se pun singure: „2910” → „29.10”, „29102026” → „29.10.2026”. */
@@ -70,7 +69,10 @@ export function CampData({
 }) {
   const [deschis, setDeschis] = useState(false)
   const [atingere] = useState(esteAtingere)
-  const [vedere, setVedere] = useState<'zile' | 'luni'>('zile')
+  const [vedere, setVedere] = useState<'zile' | 'luni' | 'ani'>('zile')
+  // pe telefon: tastatura apare doar după „Scrie data” din calendar (altfel atingerea deschide calendarul)
+  const [scrie, setScrie] = useState(false)
+  const inputRef = useRef<HTMLInputElement>(null)
   const ancora = useRef<HTMLDivElement>(null)
   const [text, setText] = useState(dinIso(value))
   const [luna, setLuna] = useState(() => (value || todayStr()).slice(0, 7))
@@ -106,6 +108,7 @@ export function CampData({
     return d
   })
   const azi = todayStr()
+  const anStart = an - 6 // ani: 12 pe pagină, anul curent al calendarului pe al 7-lea loc
   const muta = (n: number) => setLuna(isoLocal(new Date(an, l - 1 + n, 1)).slice(0, 7))
 
   return (
@@ -117,18 +120,19 @@ export function CampData({
           onClick={(e) => {
             // clicurile din calendar (portal) urcă în React până aici — nu redeschid calendarul după alegere
             if (disabled || !ancora.current?.contains(e.target as Node)) return
-            // pe telefon textul = tastatura; calendarul se deschide doar din iconiță
-            if (!atingere) setDeschis(true)
+            // primul click/atingere = calendarul pe luna curentă (pe telefon, fără tastatură — vezi „Scrie data”)
+            if (!scrie) setDeschis(true)
           }}
         >
           <input
             id={id}
+            ref={inputRef}
+            readOnly={atingere && !scrie}
             value={text}
             disabled={disabled}
             aria-label={ariaLabel}
             inputMode="numeric"
             placeholder={placeholder}
-            onFocus={() => atingere && setDeschis(false)}
             onChange={(e) => {
               const t = cuPuncte(e.target.value, text)
               setText(t)
@@ -136,7 +140,10 @@ export function CampData({
               const iso = t.length >= 10 ? inIso(t) : null
               if (iso && (!min || iso >= min) && iso !== value) onChange(iso)
             }}
-            onBlur={confirmaText}
+            onBlur={() => {
+              confirmaText()
+              setScrie(false)
+            }}
             onKeyDown={(e) => {
               if (e.key === 'Enter') {
                 e.preventDefault()
@@ -174,23 +181,49 @@ export function CampData({
         className="w-[284px] gap-2 rounded-xl border border-border-strong bg-surface-2 p-3 text-foreground shadow-lg shadow-black/40 ring-0"
       >
         <div className="flex items-center justify-between">
-          <button type="button" aria-label="Luna trecută" onClick={() => muta(vedere === 'luni' ? -12 : -1)} className="flex size-8 items-center justify-center rounded-lg text-tx-2 hover:bg-surface-hover hover:text-foreground">
+          <button type="button" aria-label="Luna trecută" onClick={() => muta(vedere === 'ani' ? -144 : vedere === 'luni' ? -12 : -1)} className="flex size-8 items-center justify-center rounded-lg text-tx-2 hover:bg-surface-hover hover:text-foreground">
             <ChevronLeft className="size-4" aria-hidden="true" />
           </button>
-          <button
-            type="button"
-            onClick={() => setVedere((v) => (v === 'zile' ? 'luni' : 'zile'))}
-            className="flex items-center gap-1 rounded-lg px-2 py-1 text-[14px] font-bold hover:bg-surface-hover"
-            aria-label="Alege luna și anul"
-          >
-            {vedere === 'zile' ? `${LUNI[l - 1]} ${an}` : an}
-            <ChevronDown className={cn('size-3.5 text-tx-3 transition-transform', vedere === 'luni' && 'rotate-180')} aria-hidden="true" />
-          </button>
-          <button type="button" aria-label="Luna viitoare" onClick={() => muta(vedere === 'luni' ? 12 : 1)} className="flex size-8 items-center justify-center rounded-lg text-tx-2 hover:bg-surface-hover hover:text-foreground">
+          <div className="flex items-center gap-0.5">
+            {vedere === 'zile' && (
+              <button type="button" onClick={() => setVedere('luni')} aria-label="Alege luna" className="rounded-lg px-2 py-1 text-[14px] font-bold hover:bg-surface-hover">
+                {LUNI[l - 1]}
+              </button>
+            )}
+            {vedere === 'ani' ? (
+              <span className="px-2 py-1 text-[14px] font-bold tabular-nums">
+                {anStart}–{anStart + 11}
+              </span>
+            ) : (
+              <button type="button" onClick={() => setVedere('ani')} aria-label="Alege anul" className="rounded-lg px-2 py-1 text-[14px] font-bold tabular-nums hover:bg-surface-hover">
+                {an}
+              </button>
+            )}
+          </div>
+          <button type="button" aria-label="Luna viitoare" onClick={() => muta(vedere === 'ani' ? 144 : vedere === 'luni' ? 12 : 1)} className="flex size-8 items-center justify-center rounded-lg text-tx-2 hover:bg-surface-hover hover:text-foreground">
             <ChevronRight className="size-4" aria-hidden="true" />
           </button>
         </div>
-        {vedere === 'luni' ? (
+        {vedere === 'ani' ? (
+          <div className="grid grid-cols-3 gap-1.5 py-1">
+            {Array.from({ length: 12 }, (_, k) => anStart + k).map((a) => (
+              <button
+                key={a}
+                type="button"
+                onClick={() => {
+                  setLuna(`${a}-${String(l).padStart(2, '0')}`)
+                  setVedere('luni')
+                }}
+                className={cn(
+                  'flex h-11 items-center justify-center rounded-lg text-[13.5px] font-semibold tabular-nums transition-colors',
+                  a === an ? 'bg-primary text-primary-foreground' : cn('text-foreground hover:bg-surface-hover', String(a) === azi.slice(0, 4) && 'text-accent-tx ring-1 ring-inset ring-accent-tx/60'),
+                )}
+              >
+                {a}
+              </button>
+            ))}
+          </div>
+        ) : vedere === 'luni' ? (
           <div className="grid grid-cols-3 gap-1.5 py-1">
             {LUNI.map((nume, i) => {
               const cheie = `${an}-${String(i + 1).padStart(2, '0')}`
@@ -255,6 +288,22 @@ export function CampData({
         </div>
         )}
         <div className="flex items-center justify-between border-t border-border pt-2">
+          {atingere ? (
+            <button
+              type="button"
+              onClick={() => {
+                setDeschis(false)
+                setScrie(true)
+                setTimeout(() => {
+                  inputRef.current?.focus()
+                  inputRef.current?.select()
+                }, 0)
+              }}
+              className="rounded-md px-2 py-1 text-[12.5px] font-semibold text-tx-2 hover:bg-surface-hover hover:text-foreground"
+            >
+              Scrie data
+            </button>
+          ) : null}
           {golPermis ? (
             <button type="button" onClick={() => alege('')} className="rounded-md px-2 py-1 text-[12.5px] font-semibold text-tx-3 hover:bg-surface-hover hover:text-foreground">
               Șterge
