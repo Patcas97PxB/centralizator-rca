@@ -6,7 +6,7 @@ import { remindere } from '@/lib/reminder'
 import { exportDosareXlsx } from '@/lib/xlsx-export'
 import type { Dosar } from '@/lib/types'
 import type { AnalizaDeviz } from '@/lib/deviz-analiza'
-import { prioritateDosar, zileLaTermen } from '@/lib/rca-calc'
+import { etapaDosar, prioritateDosar, zileLaTermen } from '@/lib/rca-calc'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { FilterBar } from './FilterBar'
@@ -79,6 +79,10 @@ export function DosarePage({ actiune, onActiuneFolosita }: { actiune?: ActiuneRa
         const za = zileLaTermen(a.e) ?? 999
         const zb = zileLaTermen(b.e) ?? 999
         if (za !== zb) return za - zb
+        // De predat: cea mai apropiată predare prima (azi, mâine, …)
+        const ra = etapaDosar(a.e) === 'rezervat'
+        const rb = etapaDosar(b.e) === 'rezervat'
+        if (ra && rb && a.e.start !== b.e.start) return (a.e.start || '9999').localeCompare(b.e.start || '9999')
         return a.i - b.i
       })
       .map((x) => x.d)

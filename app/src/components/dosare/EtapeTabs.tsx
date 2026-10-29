@@ -3,7 +3,7 @@ import { cn } from '@/lib/utils'
 
 const TABURI: { cheie: Etapa | 'toate'; nume: string }[] = [
   { cheie: 'toate', nume: 'Toate' },
-  { cheie: 'rezervat', nume: 'Rezervate' },
+  { cheie: 'rezervat', nume: 'De predat' },
   { cheie: 'la_client', nume: 'La client' },
   { cheie: 'de_trimis', nume: 'De trimis' },
   { cheie: 'finalizat', nume: 'Finalizate' },
