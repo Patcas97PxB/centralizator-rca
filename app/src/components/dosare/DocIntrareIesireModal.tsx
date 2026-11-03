@@ -145,7 +145,7 @@ export function DocIntrareIesireModal({
 
   return (
     <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
-      <DialogContent className="sm:max-w-[460px]">
+      <DialogContent faraInchidereAfara className="sm:max-w-[460px]">
         <DialogHeader>
           <DialogTitle>Document intrare/ieșire service</DialogTitle>
           <DialogDescription>

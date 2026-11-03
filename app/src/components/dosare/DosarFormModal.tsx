@@ -167,6 +167,7 @@ export function DosarFormModal({
     <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
       <DialogContent
         showCloseButton={false}
+        faraInchidereAfara
         className={cn(FEREASTRA_MARE, 'sm:max-w-[760px]')}
       >
         <FereastraAntet titlu={dosar ? 'Editează dosar' : 'Dosar nou'} subtitlu={dosar ? [draft.nrAutoPagubit, draft.nrDosar].filter(Boolean).join(' · ') : undefined} onClose={onClose} />

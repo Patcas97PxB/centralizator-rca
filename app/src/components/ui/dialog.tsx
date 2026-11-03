@@ -56,10 +56,15 @@ function DialogContent({
   className,
   children,
   showCloseButton = true,
+  faraInchidereAfara = false,
   onInteractOutside,
+  onEscapeKeyDown,
   ...props
 }: React.ComponentProps<typeof DialogPrimitive.Content> & {
   showCloseButton?: boolean
+  /** Ferestrele cu date nesalvate (Dosar nou / Editează…): nu se închid la click pe lângă sau la Esc,
+   * doar din X / Anulează / Salvează (cererea utilizatorului, 03.11.2026 — pierdea ce scrisese). */
+  faraInchidereAfara?: boolean
 }) {
   return (
     <DialogPortal>
@@ -71,8 +76,12 @@ function DialogContent({
           className
         )}
         onInteractOutside={(e) => {
-          if (inStratSeparat(e.target)) e.preventDefault()
+          if (faraInchidereAfara || inStratSeparat(e.target)) e.preventDefault()
           onInteractOutside?.(e)
+        }}
+        onEscapeKeyDown={(e) => {
+          if (faraInchidereAfara) e.preventDefault()
+          onEscapeKeyDown?.(e)
         }}
         {...props}
       >

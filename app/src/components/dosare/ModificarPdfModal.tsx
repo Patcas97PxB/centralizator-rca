@@ -254,6 +254,7 @@ export function ModificarPdfModal({ open, onClose }: { open: boolean; onClose: (
     <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
       <DialogContent
         showCloseButton={false}
+        faraInchidereAfara
         className={cn(FEREASTRA_MARE, 'max-h-[92vh] sm:max-w-[1060px]')}
       >
         <FereastraAntet titlu="Modificare PDF" subtitlu={numeFisier || 'Alege un PDF: schimbă text sau separă paginile într-un PDF nou'} onClose={onClose} />
