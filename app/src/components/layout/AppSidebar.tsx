@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react'
-import { Calculator, CalendarClock, Coins, FilePen, FileText } from 'lucide-react'
+import { Calculator, CalendarClock, Coins, FilePen, FileText, Mail } from 'lucide-react'
 import { Sidebar, SidebarContent, SidebarHeader, useSidebar } from '@/components/ui/sidebar'
 import { useAtentieSetari } from '@/lib/atentie-setari'
 import { assetUrl } from '@/lib/asset-url'
@@ -39,6 +39,7 @@ export function AppSidebar({
   onTarif,
   onDate,
   onDocII,
+  onMail,
 }: {
   active: SectionKey
   onSelect: (key: SectionKey) => void
@@ -48,6 +49,7 @@ export function AppSidebar({
   onTarif: () => void
   onDate: () => void
   onDocII: () => void
+  onMail: () => void
 }) {
   const { setOpenMobile } = useSidebar()
   const atentie = useAtentieSetari()
@@ -103,6 +105,7 @@ export function AppSidebar({
             { label: 'Modificare PDF', icon: FilePen, onClick: onPdf },
             { label: 'Verificare tarif', icon: Coins, onClick: onTarif },
             { label: 'Calculator de date', icon: CalendarClock, onClick: onDate },
+            { label: 'Creare mail', icon: Mail, onClick: onMail },
             { label: 'Document intrare/ieșire', icon: FileText, onClick: onDocII },
           ].map((u) => (
             <Rand
