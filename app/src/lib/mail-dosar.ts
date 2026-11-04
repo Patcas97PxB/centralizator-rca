@@ -108,7 +108,8 @@ export function htmlMail(c: CampuriMail, stari: StareRand[]): string {
   const ul = (xs: string[]) => '<ul>' + xs.map((x) => `<li>${esc(x)}</li>`).join('') + '</ul>'
   let h = `<div style="font-family:Arial,sans-serif;font-size:13px">`
   h += `<p>${SALUT}</p><p>${esc(CERERE)}</p>`
-  h += '<p>' + RANDURI_DATE(c).map(([e, v]) => `<b>${esc(e)}</b> ${esc(v)}`).join('<br>') + '</p>'
+  // ca în modelul utilizatorului: la „Lead” e îngroșată și valoarea („Lead: WALK IN” tot bold)
+  h += '<p>' + RANDURI_DATE(c).map(([e, v]) => (e === 'Lead:' ? `<b>${esc(e)} ${esc(v)}</b>` : `<b>${esc(e)}</b> ${esc(v)}`)).join('<br>') + '</p>'
   if (atasate.length) h += `<p><b><u>Am atașat următoarele documente</u></b>:</p>${ul(atasate)}`
   if (necesare.length) h += `<p><b><u>Necesar</u></b>:</p>${ul(necesare)}`
   return h + '</div>'

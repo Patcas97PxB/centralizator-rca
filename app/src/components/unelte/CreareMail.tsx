@@ -33,7 +33,8 @@ const scrie = (k: string, v: string) => {
   }
 }
 
-const URMATOR: Record<StareRand, StareRand> = { atasat: 'necesar', necesar: 'scos', scos: 'atasat' }
+// un click pe un document necesar îl trece la atașat (completarea de mână pornește cu toate la necesar)
+const URMATOR: Record<StareRand, StareRand> = { necesar: 'atasat', atasat: 'scos', scos: 'necesar' }
 const STIL: Record<StareRand, string> = {
   atasat: 'border-st-green/50 bg-st-green/12 text-st-green-tx',
   necesar: 'border-st-amber/50 bg-st-amber/12 text-st-amber-tx',
@@ -96,7 +97,8 @@ export function CreareMail({ open, onClose }: { open: boolean; onClose: () => vo
   function alege(id: string) {
     setDosarId(id)
     const d = dosare.find((x) => x.id === id) ?? null
-    setC((v) => ({ ...campuriDinDosar(d, agentie, v.lead), lead: v.lead }))
+    // fără dosar: câmpuri goale de completat de mână (Lead și Stare rămân cu valorile obișnuite)
+    setC((v) => ({ ...campuriDinDosar(d, agentie, v.lead), lead: v.lead, ...(d ? {} : { stare: 'DEPLASABILA' }) }))
     setStari(stariDinDosar(d, d ? cheiLocale(folder, d) : []))
   }
 
@@ -106,8 +108,9 @@ export function CreareMail({ open, onClose }: { open: boolean; onClose: () => vo
   }, [open])
 
   const set = (k: keyof CampuriMail, v: string) => setC((x) => ({ ...x, [k]: v }))
-  const text = dosarId ? textMail(c, stari) : ''
-  const html = dosarId ? htmlMail(c, stari) : ''
+  // se poate completa și de mână, fără dosar (cererea utilizatorului, 04.11.2026)
+  const text = textMail(c, stari)
+  const html = htmlMail(c, stari)
 
   return (
     <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
@@ -115,13 +118,11 @@ export function CreareMail({ open, onClose }: { open: boolean; onClose: () => vo
         <FereastraAntet titlu="Creare mail" subtitlu="Subiectul și textul pentru asigurator — destinatarii îi pui tu" onClose={onClose} />
         <div className="flex flex-col gap-3.5 px-5 py-4">
           <div>
-            <span className={ETICHETA}>Dosar</span>
+            <span className={ETICHETA}>Din dosar (opțional — sau completezi de mână)</span>
             <AlegeDosar dosare={lista} ales={dosarId} onAlege={alege} />
           </div>
 
-          {dosarId && (
-            <>
-              <label>
+          <label>
                 <span className={ETICHETA}>Subiect</span>
                 <input value={c.subiect} onChange={(e) => set('subiect', e.target.value)} className={CAMP} />
               </label>
@@ -176,7 +177,7 @@ export function CreareMail({ open, onClose }: { open: boolean; onClose: () => vo
 
               <div>
                 <span className={ETICHETA}>
-                  Documente <span className="font-normal text-tx-3">— click mută: atașat → necesar → scos</span>
+                  Documente <span className="font-normal text-tx-3">— click mută: necesar → atașat → scos</span>
                 </span>
                 <div className="flex flex-wrap gap-1.5">
                   {RANDURI_MAIL.map((r, i) => (
@@ -202,15 +203,11 @@ export function CreareMail({ open, onClose }: { open: boolean; onClose: () => vo
                 <span className={ETICHETA}>Previzualizare</span>
                 <div className="rounded-xl border border-border bg-background px-4 py-3 text-[13px] leading-relaxed text-foreground [&_li]:ml-5 [&_li]:list-disc [&_p]:mb-2.5" dangerouslySetInnerHTML={{ __html: html }} />
               </div>
-            </>
-          )}
         </div>
-        {dosarId && (
-          <div className="sticky bottom-0 flex flex-wrap justify-end gap-2 border-t border-border bg-card px-5 py-3">
-            <ButonCopiere eticheta="Copiază subiectul" text={c.subiect} />
-            <ButonCopiere eticheta="Copiază textul" text={text} html={html} primar />
-          </div>
-        )}
+        <div className="sticky bottom-0 flex flex-wrap justify-end gap-2 border-t border-border bg-card px-5 py-3">
+          <ButonCopiere eticheta="Copiază subiectul" text={c.subiect} />
+          <ButonCopiere eticheta="Copiază textul" text={text} html={html} primar />
+        </div>
       </DialogContent>
     </Dialog>
   )
