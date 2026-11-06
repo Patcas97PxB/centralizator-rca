@@ -3,6 +3,7 @@ import { Check, Copy } from 'lucide-react'
 import { Dialog, DialogContent } from '@/components/ui/dialog'
 import { FereastraAntet } from '@/components/ui/fereastra'
 import { AlegeDosar } from '@/components/unelte/VerificareTarif'
+import { ServiceCombobox } from '@/components/dosare/ServiceCombobox'
 import { useDosareContext } from '@/contexts/DosareContext'
 import { cheiLocale, useFolderLocal } from '@/lib/folder-local'
 import { RANDURI_MAIL, campuriDinDosar, htmlMail, stariDinDosar, textMail, type CampuriMail, type StareRand } from '@/lib/mail-dosar'
@@ -78,7 +79,11 @@ function ButonCopiere({ eticheta, text, html, primar }: { eticheta: string; text
 }
 
 export function CreareMail({ open, onClose }: { open: boolean; onClose: () => void }) {
-  const { dosare } = useDosareContext()
+  const { dosare, servicii } = useDosareContext()
+  const optiuniLead = useMemo(
+    () => [{ id: 'walk-in', nume: 'WALK IN', telefon: '' }, ...servicii.filter((x) => x.nume.trim().toUpperCase() !== 'WALK IN')],
+    [servicii],
+  )
   const folder = useFolderLocal()
   const [dosarId, setDosarId] = useState('')
   const [leadObisnuit, setLeadObisnuit] = useState(() => citeste(CHEIE_LEAD, 'WALK IN'))
@@ -145,21 +150,23 @@ export function CreareMail({ open, onClose }: { open: boolean; onClose: () => vo
                   <span className={ETICHETA}>Stare mașină</span>
                   <input value={c.stare} onChange={(e) => set('stare', e.target.value)} className={CAMP} />
                 </label>
-                <label>
+                <div>
                   <span className={ETICHETA}>Lead</span>
-                  <input
+                  {/* alegi din service-urile salvate (sau WALK IN), ori scrii altceva (06.11.2026) */}
+                  <ServiceCombobox
                     value={c.lead}
-                    onChange={(e) => {
-                      set('lead', e.target.value)
-                      // se ține minte doar valoarea scrisă fără service în dosar (ex. WALK IN)
+                    servicii={optiuniLead}
+                    onChange={(v) => {
+                      const val = v.toLocaleUpperCase('ro-RO')
+                      set('lead', val)
+                      // se ține minte doar valoarea aleasă fără service în dosar (ex. WALK IN)
                       if (!dosarAles?.service?.trim()) {
-                        setLeadObisnuit(e.target.value)
-                        scrie(CHEIE_LEAD, e.target.value)
+                        setLeadObisnuit(val)
+                        scrie(CHEIE_LEAD, val)
                       }
                     }}
-                    className={CAMP}
                   />
-                </label>
+                </div>
                 <label>
                   <span className={ETICHETA}>Agenție (în subiect)</span>
                   <input
