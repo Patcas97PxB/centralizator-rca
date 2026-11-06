@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { AlertTriangle, CheckCircle2, ChevronDown, Search, X } from 'lucide-react'
 import { Dialog, DialogContent } from '@/components/ui/dialog'
 import { FereastraAntet } from '@/components/ui/fereastra'
@@ -160,7 +160,7 @@ function explicaDiferenta(v: number, zile: number, t: NonNullable<ReturnType<typ
   }
 }
 
-export function VerificareTarif({ open, onClose }: { open: boolean; onClose: () => void }) {
+export function VerificareTarif({ open, onClose, dosarInitial }: { open: boolean; onClose: () => void; dosarInitial?: string }) {
   const { dosare } = useDosareContext()
   const [dosarId, setDosarId] = useState('')
   const [asig, setAsig] = useState('Hellas')
@@ -179,6 +179,12 @@ export function VerificareTarif({ open, onClose }: { open: boolean; onClose: () 
     [dosare],
   )
   const clase = claseAsigurator(asig)
+
+  // deschisă din panoul unui dosar: dosarul e deja ales
+  useEffect(() => {
+    if (open && dosarInitial) dinDosar(dosarInitial)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, dosarInitial])
 
   function dinDosar(id: string) {
     setDosarId(id)

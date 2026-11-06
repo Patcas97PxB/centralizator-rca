@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { AlertTriangle, Bell, BellOff, Check, FolderOpen, ImageIcon, Pencil, Undo2, X } from 'lucide-react'
+import { AlertTriangle, Bell, BellOff, Check, Coins, FileText, FolderOpen, ImageIcon, Mail, Pencil, Undo2, X } from 'lucide-react'
 import { Sheet, SheetContent, SheetDescription, SheetTitle } from '@/components/ui/sheet'
 import { imagineMasina } from '@/lib/cars'
 import { cheiLocale, useFolderLocal } from '@/lib/folder-local'
@@ -10,6 +10,9 @@ import { faraReminder, fmtZi, textCand } from '@/lib/reminder'
 import { ETAPA_META, type Dosar, type Etapa, type StatusDosar } from '@/lib/types'
 import { cn } from '@/lib/utils'
 import { ReminderModal } from './ReminderModal'
+import { DocIntrareIesireModal } from './DocIntrareIesireModal'
+import { VerificareTarif } from '@/components/unelte/VerificareTarif'
+import { CreareMail } from '@/components/unelte/CreareMail'
 import { majuscule } from '@/lib/majuscule'
 
 const ETAPE: Etapa[] = ['rezervat', 'la_client', 'de_trimis', 'finalizat']
@@ -51,6 +54,8 @@ export function DosarPanou({
 }) {
   const folder = useFolderLocal()
   const [reminderDeschis, setReminderDeschis] = useState(false)
+  // uneltele deschise direct pe dosarul ăsta (cerut 06.11.2026)
+  const [unealta, setUnealta] = useState<'tarif' | 'docii' | 'mail' | null>(null)
   const [blocat, setBlocat] = useState<string | null>(null)
   useEffect(() => setBlocat(null), [dosar?.id])
   // Observațiile (câmpul Note) se scriu direct aici; se salvează la ieșirea din câmp, cu MAJUSCULE ca în formular.
@@ -219,7 +224,6 @@ export function DosarPanou({
               <Rand eticheta="Nr. dosar" valoare={dosar.nrDosar} />
               <Rand eticheta="Rezervare" valoare={dosar.nrRezervare} />
               <Rand eticheta="Clasă auto" valoare={dosar.clasaAuto} />
-              <Rand eticheta="Zile din deviz" valoare={dosar.zileDeviz ? `${dosar.zileDeviz}${rca.dataPreluare ? ' · preluare ' + fmtDate(rca.dataPreluare) : ''}` : ''} />
             </dl>
           </Sectiune>
 
@@ -279,7 +283,45 @@ export function DosarPanou({
           </Sectiune>
         </div>
 
-        <div className="border-t border-border px-5 py-3.5">
+        {/* Uneltele pe dosarul ăsta + zilele din deviz, mereu la vedere jos (cerut 06.11.2026) */}
+        <div className="border-t border-border px-5 pt-3">
+          <div className="mb-2.5 flex items-baseline justify-between gap-3 rounded-lg bg-surface-2 px-3 py-2">
+            <span className="text-[12.5px] font-semibold text-tx-2">Zile din deviz</span>
+            <span className="text-right text-[13px] tabular-nums text-tx-2">
+              {dosar.zileDeviz ? (
+                <>
+                  <b className="text-[16px] text-foreground">{dosar.zileDeviz}</b>
+                  {rca.zile != null && <> · decontabile <b className="text-foreground">{rca.zile}</b></>}
+                </>
+              ) : dosar.dte ? (
+                'DTE — fără deviz'
+              ) : (
+                <span className="text-tx-3">necompletat</span>
+              )}
+            </span>
+          </div>
+          <div className="grid grid-cols-3 gap-2">
+            {(
+              [
+                ['tarif', 'Verificare tarif', Coins],
+                ['docii', 'Doc. intrare/ieșire', FileText],
+                ['mail', 'Mail', Mail],
+              ] as const
+            ).map(([k, eticheta, Icon]) => (
+              <button
+                key={k}
+                type="button"
+                onClick={() => setUnealta(k)}
+                className="flex h-14 flex-col items-center justify-center gap-1 rounded-lg border border-border-strong px-1 text-[12px] font-semibold text-foreground transition-colors hover:bg-surface-hover"
+              >
+                <Icon className="size-4 text-tx-2" aria-hidden="true" />
+                {eticheta}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div className="px-5 py-3.5">
           {blocat && (
             <p className="mb-2.5 flex items-start gap-1.5 text-[12.5px] font-bold text-st-red" role="alert">
               <AlertTriangle className="mt-px size-4 shrink-0" aria-hidden="true" />
@@ -307,6 +349,9 @@ export function DosarPanou({
           </div>
         </div>
         <ReminderModal dosar={dosar} open={reminderDeschis} onClose={() => setReminderDeschis(false)} onPatch={(p) => onPatch(dosar.id, p)} />
+        <VerificareTarif open={unealta === 'tarif'} onClose={() => setUnealta(null)} dosarInitial={dosar.id} />
+        <DocIntrareIesireModal dosar={dosar} open={unealta === 'docii'} onClose={() => setUnealta(null)} onPatch={(p) => onPatch(dosar.id, p)} />
+        <CreareMail open={unealta === 'mail'} onClose={() => setUnealta(null)} dosarInitial={dosar.id} />
       </SheetContent>
     </Sheet>
   )

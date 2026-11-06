@@ -78,7 +78,7 @@ function ButonCopiere({ eticheta, text, html, primar }: { eticheta: string; text
   )
 }
 
-export function CreareMail({ open, onClose }: { open: boolean; onClose: () => void }) {
+export function CreareMail({ open, onClose, dosarInitial }: { open: boolean; onClose: () => void; dosarInitial?: string }) {
   const { dosare, servicii } = useDosareContext()
   const optiuniLead = useMemo(
     () => [{ id: 'walk-in', nume: 'WALK IN', telefon: '' }, ...servicii.filter((x) => x.nume.trim().toUpperCase() !== 'WALK IN')],
@@ -110,7 +110,7 @@ export function CreareMail({ open, onClose }: { open: boolean; onClose: () => vo
   }
 
   useEffect(() => {
-    if (open) alege('')
+    if (open) alege(dosarInitial ?? '')
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open])
 
