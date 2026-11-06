@@ -1,11 +1,11 @@
-import { Suspense, lazy, useEffect, useState } from 'react'
+import { Suspense, lazy, useCallback, useEffect, useState } from 'react'
 import { Calculator, CalendarClock, Coins, FilePen, FileText, Mail, NotebookPen } from 'lucide-react'
 import type { AnalizaDeviz } from '@/lib/deviz-analiza'
 import { filtreImplicite } from '@/lib/dosare-filter'
 import { mergiLaCardDosar } from '@/lib/mergi-la-dosar'
 import { AuthGate } from '@/components/AuthGate'
 import { AppShell } from '@/components/layout/AppShell'
-import { NAV_ITEMS, type SectionKey } from '@/components/layout/nav-items'
+import { NAV_ITEMS, adresaPagina, paginaDinAdresa, type SectionKey } from '@/components/layout/nav-items'
 import { ComingSoonPage } from '@/components/ComingSoonPage'
 import { DosarePage } from '@/components/dosare/DosarePage'
 import { RapoartePage } from '@/components/rapoarte/RapoartePage'
@@ -36,7 +36,21 @@ const TITLURI: Record<SectionKey, { title: string; subtitle: string }> = {
 }
 
 function AppContent() {
-  const [active, setActive] = useState<SectionKey>('dosare')
+  const [active, setActiveStare] = useState<SectionKey>(paginaDinAdresa)
+  // pagina curentă se vede în adresă (#rapoarte…), ca un tab deschis cu Ctrl+click să pornească pe ea
+  const setActive = useCallback((k: SectionKey) => {
+    setActiveStare(k)
+    try {
+      history.replaceState(history.state, '', adresaPagina(k))
+    } catch {
+      /* fără history (preview) — rămâne doar pagina din aplicație */
+    }
+  }, [])
+  useEffect(() => {
+    const laSchimbare = () => setActiveStare(paginaDinAdresa())
+    window.addEventListener('hashchange', laSchimbare)
+    return () => window.removeEventListener('hashchange', laSchimbare)
+  }, [])
   const { deSunat, setFiltre } = useDosareContext()
   const { title, subtitle } = TITLURI[active]
 

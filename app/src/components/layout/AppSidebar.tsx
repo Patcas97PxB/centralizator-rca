@@ -5,7 +5,7 @@ import { useAtentieSetari } from '@/lib/atentie-setari'
 import { assetUrl } from '@/lib/asset-url'
 import { notitaScadenta, useNotite } from '@/lib/notite'
 import { cn } from '@/lib/utils'
-import { NAV_GROUP_LABELS, NAV_ITEMS, type NavGroup, type SectionKey } from './nav-items'
+import { NAV_GROUP_LABELS, NAV_ITEMS, adresaPagina, type NavGroup, type SectionKey } from './nav-items'
 
 const GROUP_ORDER: NavGroup[] = ['operational', 'administrare']
 
@@ -15,18 +15,38 @@ const GRUP = 'px-3 pb-1 pt-4 text-[12px] font-semibold text-tx-3 first:pt-1'
 const RAND =
   'flex h-10 w-full items-center gap-3 rounded-lg px-3 text-left text-[14px] font-semibold transition-colors'
 
-function Rand({ on, icon, label, onClick, dupa }: { on?: boolean; icon: ReactNode; label: string; onClick: () => void; dupa?: ReactNode }) {
+function Rand({
+  on,
+  icon,
+  label,
+  onClick,
+  dupa,
+  href,
+}: {
+  on?: boolean
+  icon: ReactNode
+  label: string
+  onClick: () => void
+  dupa?: ReactNode
+  /** Paginile sunt linkuri: Ctrl/⌘+click, Shift+click sau click cu rotița le deschid în tab nou. */
+  href?: string
+}) {
+  const Tag = href ? 'a' : 'button'
   return (
-    <button
-      type="button"
-      onClick={onClick}
+    <Tag
+      {...(href ? { href } : { type: 'button' as const })}
+      onClick={(e: React.MouseEvent) => {
+        if (href && (e.ctrlKey || e.metaKey || e.shiftKey || e.button !== 0)) return // tab/fereastră nouă, lăsăm browserul
+        e.preventDefault()
+        onClick()
+      }}
       aria-current={on ? 'page' : undefined}
       className={cn(RAND, on ? 'bg-surface-2 text-foreground' : 'text-tx-2 hover:bg-surface-hover hover:text-foreground')}
     >
       <span className={cn('flex shrink-0', on ? 'text-accent-tx' : 'text-tx-3')}>{icon}</span>
       <span className="min-w-0 flex-1 truncate">{label}</span>
       {dupa}
-    </button>
+    </Tag>
   )
 }
 
@@ -62,6 +82,7 @@ export function AppSidebar({
       on={active === item.key}
       icon={<item.icon className={ICON} strokeWidth={1.9} aria-hidden="true" />}
       label={item.label}
+      href={adresaPagina(item.key)}
       onClick={() => {
         onSelect(item.key)
         setOpenMobile(false)
