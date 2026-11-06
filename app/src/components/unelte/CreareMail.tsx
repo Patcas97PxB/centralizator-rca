@@ -81,6 +81,8 @@ export function CreareMail({ open, onClose }: { open: boolean; onClose: () => vo
   const { dosare } = useDosareContext()
   const folder = useFolderLocal()
   const [dosarId, setDosarId] = useState('')
+  const [leadObisnuit, setLeadObisnuit] = useState(() => citeste(CHEIE_LEAD, 'WALK IN'))
+  const dosarAles = dosare.find((x) => x.id === dosarId) ?? null
   const [agentie, setAgentie] = useState(() => citeste(CHEIE_AGENTIE, 'ORADEA'))
   const [c, setC] = useState<CampuriMail>(() => campuriDinDosar(null, '', citeste(CHEIE_LEAD, 'WALK IN')))
   const [stari, setStari] = useState<StareRand[]>(() => stariDinDosar(null))
@@ -98,7 +100,7 @@ export function CreareMail({ open, onClose }: { open: boolean; onClose: () => vo
     setDosarId(id)
     const d = dosare.find((x) => x.id === id) ?? null
     // fără dosar: câmpuri goale de completat de mână (Lead și Stare rămân cu valorile obișnuite)
-    setC((v) => ({ ...campuriDinDosar(d, agentie, v.lead), lead: v.lead, ...(d ? {} : { stare: 'DEPLASABILA' }) }))
+    setC(() => ({ ...campuriDinDosar(d, agentie, leadObisnuit), ...(d ? {} : { stare: 'DEPLASABILA' }) }))
     setStari(stariDinDosar(d, d ? cheiLocale(folder, d) : []))
   }
 
@@ -149,7 +151,11 @@ export function CreareMail({ open, onClose }: { open: boolean; onClose: () => vo
                     value={c.lead}
                     onChange={(e) => {
                       set('lead', e.target.value)
-                      scrie(CHEIE_LEAD, e.target.value)
+                      // se ține minte doar valoarea scrisă fără service în dosar (ex. WALK IN)
+                      if (!dosarAles?.service?.trim()) {
+                        setLeadObisnuit(e.target.value)
+                        scrie(CHEIE_LEAD, e.target.value)
+                      }
                     }}
                     className={CAMP}
                   />

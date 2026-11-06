@@ -67,7 +67,8 @@ export function campuriDinDosar(d: Dosar | null, agentie: string, lead: string):
     model: MARE(d.marcaModel),
     proprietar: MARE(d.proprietarPagubit || d.numeClient),
     stare: d.vehicul === 'nedeplasabil' ? 'NEDEPLASABILA' : 'DEPLASABILA',
-    lead,
+    // Lead = service-ul ales în dosar (06.11.2026); fără service, valoarea obișnuită (WALK IN)
+    lead: MARE(d.service) || lead,
     obs: '',
   }
 }
