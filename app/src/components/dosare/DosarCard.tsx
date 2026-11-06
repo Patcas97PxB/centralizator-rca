@@ -2,7 +2,8 @@ import { useEffect, useRef, useState, type KeyboardEvent, type MouseEvent } from
 import { AlertTriangle, Bell, BellOff, Check, ChevronDown, ImageIcon, StickyNote } from 'lucide-react'
 import { imagineMasina } from '@/lib/cars'
 import { cheiLocale, useFolderLocal } from '@/lib/folder-local'
-import { docStatus, lipsuriFinalizare, numeScurtDoc } from '@/lib/documente'
+import { docStatus, numeScurtDoc } from '@/lib/documente'
+import { ConfirmaFinalizare } from './ConfirmaFinalizare'
 import { etapaDosar } from '@/lib/rca-calc'
 import { culoareCard, dateDosar, pasUrmator, textTermen } from '@/lib/pas-urmator'
 import { ETAPA_META, type Dosar, type Etapa, type StatusDosar } from '@/lib/types'
@@ -63,6 +64,7 @@ export function DosarCard({
 
   const [reminderDeschis, setReminderDeschis] = useState(false)
   const [blocat, setBlocat] = useState<string | null>(null)
+  const [deConfirmat, setDeConfirmat] = useState<string[] | null>(null)
   const [shaking, setShaking] = useState(false)
   useEffect(() => {
     if (!blocat) return
@@ -82,10 +84,10 @@ export function DosarCard({
       onPatch(dosar.id, pas.patch)
       return
     }
-    const lipsuri = lipsuriFinalizare(dosar, docLocale)
-    if (lipsuri.length > 0) {
-      setBlocat(null)
-      setTimeout(() => setBlocat('Nu se poate finaliza — lipsește: ' + lipsuri.join(', ')), 0)
+    // documente lipsă → întreabă (nu mai blochează, 06.11.2026)
+    const lipsa = docStatus(dosar, docLocale).missing
+    if (lipsa.length > 0) {
+      setDeConfirmat(lipsa)
       return
     }
     onStatusChange(dosar.id, 'finalizat')
@@ -100,6 +102,7 @@ export function DosarCard({
   }
 
   return (
+    <>
     <div
       role="button"
       tabIndex={0}
@@ -269,5 +272,15 @@ export function DosarCard({
         <ReminderModal dosar={dosar} open={reminderDeschis} onClose={() => setReminderDeschis(false)} onPatch={(p) => onPatch(dosar.id, p)} />
       </div>
     </div>
+    {/* în afara cardului: click-urile din fereastră nu deschid panoul */}
+    <ConfirmaFinalizare
+      lipsa={deConfirmat}
+      onNu={() => setDeConfirmat(null)}
+      onDa={() => {
+        setDeConfirmat(null)
+        onStatusChange(dosar.id, 'finalizat')
+      }}
+    />
+    </>
   )
 }

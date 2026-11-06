@@ -3,7 +3,8 @@ import { AlertTriangle, Bell, BellOff, Check, Coins, FileText, FolderOpen, Image
 import { Sheet, SheetContent, SheetDescription, SheetTitle } from '@/components/ui/sheet'
 import { imagineMasina } from '@/lib/cars'
 import { cheiLocale, useFolderLocal } from '@/lib/folder-local'
-import { DOCUMENT_LABELS_NUMARATE, docLabelText, docStatus, lipsuriFinalizare } from '@/lib/documente'
+import { DOCUMENT_LABELS_NUMARATE, docLabelText, docStatus } from '@/lib/documente'
+import { ConfirmaFinalizare } from './ConfirmaFinalizare'
 import { calculRCA, etapaDosar, fmtDate } from '@/lib/rca-calc'
 import { anulareUltimulPas, culoareCard, dateDosar, pasUrmator, textTermen } from '@/lib/pas-urmator'
 import { faraReminder, fmtZi, textCand } from '@/lib/reminder'
@@ -55,6 +56,7 @@ export function DosarPanou({
   const folder = useFolderLocal()
   const [reminderDeschis, setReminderDeschis] = useState(false)
   // uneltele deschise direct pe dosarul ăsta (cerut 06.11.2026)
+  const [deConfirmat, setDeConfirmat] = useState<string[] | null>(null)
   const [unealta, setUnealta] = useState<'tarif' | 'docii' | 'mail' | null>(null)
   const [blocat, setBlocat] = useState<string | null>(null)
   useEffect(() => setBlocat(null), [dosar?.id])
@@ -99,9 +101,10 @@ export function DosarPanou({
       onPatch(dosar.id, pas.patch)
       return
     }
-    const lipsuri = lipsuriFinalizare(dosar, docLocale)
-    if (lipsuri.length > 0) {
-      setBlocat('Nu se poate finaliza — lipsește: ' + lipsuri.join(', '))
+    // documente lipsă → întreabă (nu mai blochează, 06.11.2026)
+    const lipsa = docStatus(dosar, docLocale).missing
+    if (lipsa.length > 0) {
+      setDeConfirmat(lipsa)
       return
     }
     setBlocat(null)
@@ -351,6 +354,15 @@ export function DosarPanou({
         <ReminderModal dosar={dosar} open={reminderDeschis} onClose={() => setReminderDeschis(false)} onPatch={(p) => onPatch(dosar.id, p)} />
         <VerificareTarif open={unealta === 'tarif'} onClose={() => setUnealta(null)} dosarInitial={dosar.id} />
         <DocIntrareIesireModal dosar={dosar} open={unealta === 'docii'} onClose={() => setUnealta(null)} onPatch={(p) => onPatch(dosar.id, p)} />
+        <ConfirmaFinalizare
+          lipsa={deConfirmat}
+          onNu={() => setDeConfirmat(null)}
+          onDa={() => {
+            setDeConfirmat(null)
+            setBlocat(null)
+            onStatusChange(dosar.id, 'finalizat')
+          }}
+        />
         <CreareMail open={unealta === 'mail'} onClose={() => setUnealta(null)} dosarInitial={dosar.id} />
       </SheetContent>
     </Sheet>
