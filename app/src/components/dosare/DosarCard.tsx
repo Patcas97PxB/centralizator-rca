@@ -110,7 +110,7 @@ export function DosarCard({
       onClick={() => onDeschide(dosar.id)}
       onKeyDown={laTasta}
       className={cn(
-        'relative flex min-w-0 cursor-pointer flex-col gap-2.5 rounded-[14px] border bg-card py-3 pl-[18px] pr-3.5 text-left outline-none transition-colors duration-150 hover:bg-surface-hover/40 focus-visible:ring-2 focus-visible:ring-ring',
+        'relative flex min-w-0 flex-1 cursor-pointer flex-col gap-2.5 rounded-[14px] border bg-card py-3 pl-[18px] pr-3.5 text-left outline-none transition-colors duration-150 hover:bg-surface-hover/40 focus-visible:ring-2 focus-visible:ring-ring',
         selectat ? 'border-primary' : 'border-border',
         // finalizat = card stins, ca să nu semene cu cele încă în lucru
         dosar.status === 'finalizat' && !celebrating && !selectat && 'opacity-[.62] hover:opacity-100 focus-visible:opacity-100',
@@ -248,7 +248,7 @@ export function DosarCard({
       )}
 
       {/* 5 · Pasul următor: etapele + un singur buton */}
-      <div className="flex items-center gap-2.5 border-t border-border pt-2.5">
+      <div className="mt-auto flex items-center gap-2.5 border-t border-border pt-2.5">
         <div className="flex min-w-0 flex-1 items-center gap-1" aria-label={`Etapa ${pasIndex + 1} din 4: ${meta.label}`}>
           {ETAPE.map((e, k) => (
             <span

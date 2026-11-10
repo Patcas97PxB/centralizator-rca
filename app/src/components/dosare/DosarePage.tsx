@@ -201,7 +201,7 @@ export function DosarePage({ actiune, onActiuneFolosita }: { actiune?: ActiuneRa
               Niciun dosar nu corespunde filtrelor curente.
             </div>
           ) : (
-            <div className="grid grid-cols-[repeat(auto-fill,minmax(min(100%,340px),1fr))] gap-3">
+            <div className="grid auto-rows-fr grid-cols-[repeat(auto-fill,minmax(min(100%,340px),1fr))] gap-3">
               {ordonate.map((d) => (
                 <div
                   key={d.id}
@@ -209,7 +209,7 @@ export function DosarePage({ actiune, onActiuneFolosita }: { actiune?: ActiuneRa
                     if (el) carduri.current.set(d.id, el)
                     else carduri.current.delete(d.id)
                   }}
-                  id={`dosar-${d.id}`} className="min-w-0 rounded-[14px]">
+                  id={`dosar-${d.id}`} className="flex min-w-0 flex-col rounded-[14px]">
                   <DosarCard dosar={d} selectat={panouId === d.id} onStatusChange={onStatusChange} onDeschide={setPanouId} onPatch={onPatch} />
                 </div>
               ))}
