@@ -113,7 +113,7 @@ export function DosarCard({
         'relative flex min-w-0 flex-1 cursor-pointer flex-col gap-2.5 rounded-[14px] border bg-card py-3 pl-[18px] pr-3.5 text-left outline-none transition-colors duration-150 hover:bg-surface-hover/40 focus-visible:ring-2 focus-visible:ring-ring',
         selectat ? 'border-primary' : 'border-border',
         // finalizat = card stins, ca să nu semene cu cele încă în lucru
-        dosar.status === 'finalizat' && !celebrating && !selectat && 'opacity-[.62] hover:opacity-100 focus-visible:opacity-100',
+        dosar.status === 'finalizat' && !celebrating && !selectat && 'opacity-[.78] hover:opacity-100 focus-visible:opacity-100',
         shaking && 'animate-[devizShake_.45s_ease-in-out_both]',
       )}
     >
@@ -171,7 +171,7 @@ export function DosarCard({
               type="button"
               onClick={stop}
               title={meta.label + (dosar.amintesteMi ? ` · Amintește-mi ${textCand(dosar.amintesteLa)}${dosar.amintesteNota ? ': ' + dosar.amintesteNota : ''}` : '')}
-              className="flex min-h-8 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full bg-surface-2 px-2.5 py-1 text-[11.5px] font-bold text-tx-2 transition-colors hover:bg-surface-hover hover:text-foreground"
+              className="flex min-h-8 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full bg-surface-2 px-2.5 py-1 text-[12px] font-bold text-tx-2 transition-colors hover:bg-surface-hover hover:text-foreground"
             >
               <span className="size-[7px] rounded-full" style={{ background: meta.color }} />
               {meta.label.charAt(0) + meta.label.slice(1).toLowerCase()}
@@ -180,7 +180,7 @@ export function DosarCard({
             </button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-60" onClick={stop}>
-            <p className="px-2 py-1.5 text-[11px] leading-snug text-muted-foreground">
+            <p className="px-2 py-1.5 text-[12px] leading-snug text-muted-foreground">
               Etapa se schimbă singură din pașii dosarului (predat → preluat → finalizat).
             </p>
             <DropdownMenuItem onClick={() => setReminderDeschis(true)}>
@@ -212,12 +212,12 @@ export function DosarCard({
         </div>
         <div className="flex items-end justify-between gap-2">
           <span className="flex flex-col">
-            <span className="text-[11px] text-tx-3">{date.predare.eticheta}</span>
+            <span className="text-[12px] text-tx-3">{date.predare.eticheta}</span>
             <span className="text-[13px] font-bold tabular-nums text-foreground">{date.predare.data}</span>
           </span>
-          {termen.sub && <span className="min-w-0 truncate pb-px text-[11.5px] text-tx-3">{termen.sub}</span>}
+          {termen.sub && <span className="min-w-0 truncate pb-px text-[12px] text-tx-3">{termen.sub}</span>}
           <span className="flex flex-col items-end">
-            <span className="text-[11px] text-tx-3">{date.preluare.eticheta}</span>
+            <span className="text-[12px] text-tx-3">{date.preluare.eticheta}</span>
             <span className="text-[13px] font-bold tabular-nums text-foreground">{date.preluare.data}</span>
           </span>
         </div>

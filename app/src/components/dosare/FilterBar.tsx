@@ -17,7 +17,7 @@ import { LegendaButton } from './LegendaCulori'
 import { CampData } from '@/components/ui/camp-data'
 
 const CONTROL =
-  'h-10 md:h-[34px] rounded-[11px] border-border bg-border/[.24] text-[13.5px] font-semibold text-foreground transition-colors hover:bg-border/50'
+  'h-10 md:h-[34px] rounded-[11px] border-border bg-border/[.24] text-base md:text-[13.5px] font-semibold text-foreground transition-colors hover:bg-border/50'
 
 export function FilterBar({
   filtre,
@@ -48,7 +48,7 @@ export function FilterBar({
         <Input
           value={filtre.search}
           onChange={(e) => onChange({ ...filtre, search: e.target.value })}
-          placeholder="Caută: nr. auto, RBH, service, dosar, marcă, telefon…"
+          placeholder="Caută nr. auto, RBH, dosar, service…"
           className={cn(CONTROL, 'w-full pl-9 pr-3 font-normal')}
         />
       </div>

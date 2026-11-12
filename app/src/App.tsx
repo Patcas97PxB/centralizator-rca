@@ -27,7 +27,7 @@ import { CreareMail } from '@/components/unelte/CreareMail'
 const ModificarPdfModal = lazy(() => import('@/components/dosare/ModificarPdfModal').then((m) => ({ default: m.ModificarPdfModal })))
 
 const TITLURI: Record<SectionKey, { title: string; subtitle: string }> = {
-  dosare: { title: 'Toate dosarele RCA. Un singur loc.', subtitle: 'Urmărește, gestionează, rezolvă mai rapid.' },
+  dosare: { title: 'Dosare', subtitle: 'Toate dosarele RCA, cu termenul și pasul următor.' },
   notite: { title: 'Notițe', subtitle: 'Ce ai vorbit la telefon — vizibile toată echipa, legate singure de dosar.' },
   dashboard: { title: 'Dashboard', subtitle: 'În curând.' },
   servicii: { title: 'Service-uri', subtitle: 'Lista folosită la completarea dosarelor.' },

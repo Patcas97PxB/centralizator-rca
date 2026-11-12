@@ -48,6 +48,7 @@
     --color-surface-2: var(--surface-2);
     --color-surface-hover: var(--surface-hover);
     --color-border-strong: var(--border-strong);
+    --color-contur-camp: var(--contur-camp);
     --color-tx-2: var(--tx-2);
     --color-tx-3: var(--tx-3);
     --color-accent-tx: var(--accent-tx);
@@ -113,7 +114,7 @@
     --destructive: #ef4444;
     --destructive-foreground: #ffffff;
 
-    --border: #252e41;
+    --border: #2e3850;
     --input: #252e41;
     --ring: #3b82f6;
     --radius: 0.75rem;
@@ -131,6 +132,8 @@
     --surface-2: #1c2333;
     --surface-hover: #232c40;
     --border-strong: #334059;
+    /* conturul câmpurilor de completat: ≥3:1 față de card (WCAG 1.4.11; pe proiector dispăreau) */
+    --contur-camp: #5b6884;
     --tx-2: #a9b3c7;
     --tx-3: #8a95ac;
     --accent-tx: #60a5fa;
@@ -171,7 +174,7 @@
     --accent: #eef1f6;
     --accent-foreground: #0f172a;
 
-    --border: #e1e6ee;
+    --border: #d6dce6;
     --input: #e1e6ee;
     --ring: #2563eb;
 
@@ -185,17 +188,18 @@
     --surface-2: #f1f4f8;
     --surface-hover: #e7ecf3;
     --border-strong: #cdd5e1;
+    --contur-camp: #8792a6;
     --tx-2: #475569;
     --tx-3: #64748b;
     --accent-tx: #1d4ed8;
     --st-red: #dc2626;    --st-red-bg: rgba(220, 38, 38, .09);   --st-red-tx: #b91c1c;
-    --st-amber: #d97706;  --st-amber-bg: rgba(217, 119, 6, .1);  --st-amber-tx: #a16207;
-    --st-green: #059669;  --st-green-bg: rgba(5, 150, 105, .09); --st-green-tx: #047857;
+    --st-amber: #b45309;  --st-amber-bg: rgba(217, 119, 6, .1);  --st-amber-tx: #a16207;
+    --st-green: #047857;  --st-green-bg: rgba(5, 150, 105, .09); --st-green-tx: #047857;
     --st-blue: #2563eb;   --st-blue-bg: rgba(37, 99, 235, .09);  --st-blue-tx: #1d4ed8;
     --st-gray: #64748b;   --st-gray-bg: rgba(100, 116, 139, .1); --st-gray-tx: #475569;
     --st-violet: #7c3aed; --st-violet-tx: #6d28d9;
-    --st-orange: #ea580c; --st-orange-tx: #c2410c;
-    --st-cyan: #0891b2;   --st-cyan-tx: #0e7490;
+    --st-orange: #c2410c; --st-orange-tx: #c2410c;
+    --st-cyan: #0e7490;   --st-cyan-tx: #0e7490;
 
     --danger-strong: #dc2626;
     --shadow-ambient: 0 18px 40px -18px rgba(15, 23, 42, 0.25);
@@ -205,6 +209,11 @@
 @layer base {
   * {
     @apply border-border outline-ring/50;
+    }
+  /* focusul de la tastatură: contur plin de 2 px (înainte 0,8 px la 50%, aproape invizibil) */
+  :focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: 2px;
     }
   body {
     @apply bg-background text-foreground;

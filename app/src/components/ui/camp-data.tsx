@@ -43,7 +43,7 @@ function cuPuncte(v: string, anterior: string): string {
 }
 
 const CAMP_IMPLICIT =
-  'flex h-[38px] w-full min-w-0 items-center gap-2 rounded-[11px] border border-border-strong bg-background px-3 text-[13.5px] text-foreground transition-colors focus-within:border-accent-tx'
+  'flex h-[38px] w-full min-w-0 items-center gap-2 rounded-[11px] border border-contur-camp bg-background px-3 text-base md:text-[13.5px] text-foreground transition-colors focus-within:border-accent-tx'
 
 export function CampData({
   value,

@@ -154,7 +154,7 @@ export function Header({
         >
           <Search className="size-4" aria-hidden="true" />
           <span className="hidden md:inline">Caută</span>
-          <kbd className="hidden rounded border border-border px-1 text-[10.5px] font-semibold md:inline">Ctrl K</kbd>
+          <kbd className="hidden rounded border border-border px-1 text-[11px] font-semibold md:inline">Ctrl K</kbd>
         </button>
         <button
           type="button"
@@ -175,7 +175,7 @@ export function Header({
               <Bell className="size-4" aria-hidden="true" />
               {deSunat.length > 0 && (
                 <span
-                  className="absolute -right-1.5 -top-1.5 flex h-5 min-w-5 items-center justify-center rounded-full bg-st-red px-[5px] text-[10px] font-extrabold text-white"
+                  className="absolute -right-1.5 -top-1.5 flex h-5 min-w-5 items-center justify-center rounded-full bg-st-red px-[5px] text-[11px] font-extrabold text-white"
                   style={{ boxShadow: '0 0 0 2px var(--background)' }}
                 >
                   {deSunat.length > 9 ? '9+' : deSunat.length}
@@ -189,7 +189,7 @@ export function Header({
                 <Bell className="size-4 text-st-orange" aria-hidden="true" />
                 De făcut
               </span>
-              <div className="flex rounded-full border border-border bg-card p-0.5 text-[11px] font-bold" role="tablist">
+              <div className="flex rounded-full border border-border bg-card p-0.5 text-[12px] font-bold" role="tablist">
                 {([['toate', 'Toate', deSunat.length], ['ale_mele', 'Ale mele', aleMele.length]] as const).map(([k, label, n]) => (
                   <button
                     key={k}
@@ -230,10 +230,10 @@ export function Header({
                               {dosar.nrAutoPagubit || dosar.nrDosar || '—'}
                               {dosar.marcaModel && <span className="font-medium text-tx-3"> · {dosar.marcaModel}</span>}
                             </span>
-                            <span className="block truncate text-[11px] text-tx-3">{detaliu}</span>
+                            <span className="block truncate text-[12px] text-tx-3">{detaliu}</span>
                           </span>
                           <span
-                            className="shrink-0 rounded-full border px-2 py-0.5 text-[10px] font-extrabold uppercase"
+                            className="shrink-0 rounded-full border px-2 py-0.5 text-[11px] font-extrabold uppercase"
                             style={{ color: culoare, borderColor: hex(culoare, '66'), background: hex(culoare, '1f') }}
                           >
                             {eticheta}
@@ -271,13 +271,13 @@ export function Header({
                             {dosar.nrAutoPagubit || dosar.nrDosar || '—'}
                             {dosar.marcaModel && <span className="font-medium text-tx-3"> · {dosar.marcaModel}</span>}
                           </span>
-                          <span className="block truncate text-[11px] text-tx-3">
+                          <span className="block truncate text-[12px] text-tx-3">
                             {dosar.amintesteNota || 'Amintește-mi'}
                             {dosar.amintesteLa && !scadent ? ` · ${fmtZi(dosar.amintesteLa)}` : ''}
                           </span>
                         </span>
                         <span
-                          className="shrink-0 rounded-full border px-2 py-0.5 text-[10px] font-extrabold uppercase"
+                          className="shrink-0 rounded-full border px-2 py-0.5 text-[11px] font-extrabold uppercase"
                           style={{ color: culoare, borderColor: hex(culoare, '66'), background: hex(culoare, '1f') }}
                         >
                           {textCand(dosar.amintesteLa)}
@@ -294,7 +294,7 @@ export function Header({
                           const p = (x: number) => String(x).padStart(2, '0')
                           void salveazaRapid({ ...dosar, amintesteLa: `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}` })
                         }}
-                        className="shrink-0 rounded-lg px-1.5 py-1 text-[10.5px] font-extrabold text-tx-3 transition-colors hover:bg-foreground/10 hover:text-foreground"
+                        className="shrink-0 rounded-lg px-1.5 py-1 text-[11px] font-extrabold text-tx-3 transition-colors hover:bg-foreground/10 hover:text-foreground"
                       >
                         +1 zi
                       </button>
@@ -325,7 +325,7 @@ export function Header({
               </Avatar>
               <span className="hidden text-left leading-[1.2] sm:block">
                 <span className="block text-[13px] font-bold">{NUME_UTILIZATOR}</span>
-                <span className="block text-[11.5px] text-tx-3">{ROL_UTILIZATOR}</span>
+                <span className="block text-[12px] text-tx-3">{ROL_UTILIZATOR}</span>
               </span>
               <ChevronDown className="hidden size-[15px] text-tx-3 sm:block" aria-hidden="true" />
             </button>

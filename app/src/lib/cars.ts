@@ -2,11 +2,23 @@
 // model ("a4.png", "bmw 3.png", "c class.png"). Orice fisier nou pus acolo e luat automat la
 // urmatorul build/pornire a serverului, fara alte modificari de cod. Folderul File/ nu e in Git
 // (contine si documente interne), deci pozele ajung pe site doar prin build-ul local.
-const FISIERE = import.meta.glob('../../../File/Cars/car_nobg/*.{png,jpg,jpeg,webp}', {
+const ORIGINALE = import.meta.glob('../../../File/Cars/car_nobg/*.{png,jpg,jpeg,webp}', {
   eager: true,
   query: '?url',
   import: 'default',
 }) as Record<string, string>
+// Copiile mici (max. 260 px, ~35 KB în loc de ~1 MB) din File/Cars/car_web, făcute cu
+// app/scripts/micsoreaza-poze.ps1. O poză nouă fără copie mică se ia din original.
+const MICI = import.meta.glob('../../../File/Cars/car_web/*.png', {
+  eager: true,
+  query: '?url',
+  import: 'default',
+}) as Record<string, string>
+const numeFaraExt = (cale: string) => cale.split('/').pop()!.replace(/\.[^.]+$/, '').toLowerCase()
+const miciDupaNume = new Map(Object.entries(MICI).map(([cale, url]) => [numeFaraExt(cale), url]))
+const FISIERE: Record<string, string> = Object.fromEntries(
+  Object.entries(ORIGINALE).map(([cale, url]) => [cale, miciDupaNume.get(numeFaraExt(cale)) ?? url]),
+)
 
 function curata(text: string): string {
   return text
