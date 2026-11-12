@@ -86,7 +86,8 @@ export interface TarifGrila {
 // (Omniasig) sau lipseste clasa/zilele.
 export function calcTarifGrila(dosar: Pick<Dosar, 'clasaAuto' | 'asigurator' | 'zileDeviz'>, zileOverride?: number | null): TarifGrila | null {
   const clasa = dosar.clasaAuto
-  const asig = (dosar.asigurator || '').toLowerCase()
+  // fără spații: „Generali ” = „generali”, „Eazy Insure” = „eazyinsure”
+  const asig = (dosar.asigurator || '').toLowerCase().replace(/\s+/g, '')
   const zile = Number(zileOverride != null ? zileOverride : dosar.zileDeviz) || 0
   if (!clasa || !zile) return null
   if (asig === 'omniasig') return null

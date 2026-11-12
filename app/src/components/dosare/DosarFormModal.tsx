@@ -71,6 +71,10 @@ export function DosarFormModal({
   const [draft, setDraft] = useState<Dosar>(() => dosar ?? dosarGol())
   const [saving, setSaving] = useState(false)
   const [eroare, setEroare] = useState('')
+  const [campGresit, setCampGresit] = useState<string | null>(null)
+  const gresit = (camp: string) => (campGresit === camp ? true : undefined)
+  const mesajSub = (camp: string) =>
+    campGresit === camp && eroare ? <p className="text-[12px] text-destructive">{eroare}</p> : null
   const [confirmStergere, setConfirmStergere] = useState(false)
   const [conflict, setConflict] = useState<Dosar | null>(null)
   // Alt dosar cu acelasi nr. (normalizat: spatii, cratime, sufixul Hellas) — avertizare, nu blocare.
@@ -88,8 +92,17 @@ export function DosarFormModal({
       setEndAuto(!dosar?.end)
       setClasaSugerata(false)
       setEroare('')
+      setCampGresit(null)
     }
   }, [open, dosar, initialDraft])
+
+  // orice schimbare în formular stinge marcajul de eroare (se verifică din nou la Salvează)
+  useEffect(() => {
+    setCampGresit((c) => {
+      if (c) setEroare('')
+      return null
+    })
+  }, [draft])
 
   function set<K extends keyof Dosar>(key: K, value: Dosar[K]) {
     if (key === 'zileDeviz') setEndAuto(true) // zile noi -> data preluarii se recalculeaza
@@ -132,15 +145,28 @@ export function DosarFormModal({
     }
   }
 
+  // Eroarea de validare: marcată pe câmp, mesaj sub el și lângă Salvează, câmpul adus în ecran.
+  function greseala(camp: string, mesaj: string) {
+    setEroare(mesaj)
+    setCampGresit(camp)
+    requestAnimationFrame(() => {
+      const el = document.getElementById(camp)
+      el?.scrollIntoView({ block: 'center', behavior: 'smooth' })
+      if (camp !== 'fStart' && camp !== 'fEnd') el?.focus({ preventScroll: true })
+    })
+  }
+
   async function handleSubmit(fortat = false) {
-    if (!draft.nrDosar.trim()) {
-      setEroare('Introdu numărul dosarului.')
-      return
+    if (!draft.nrDosar.trim()) return greseala('fNrDosar', 'Introdu numărul dosarului.')
+    if (!draft.asigurator) return greseala('fAsigurator', 'Alege asiguratorul.')
+    const zileText = String(draft.zileDeviz ?? '').trim()
+    if (zileText !== '') {
+      const zile = Number(zileText)
+      if (!Number.isInteger(zile) || zile < 0 || zile > 365)
+        return greseala('fZileDeviz', 'Zilele din deviz trebuie să fie un număr întreg, între 0 și 365.')
     }
-    if (!draft.asigurator) {
-      setEroare('Alege asiguratorul.')
-      return
-    }
+    if (!draft.dte && draft.start && draft.end && draft.end < draft.start)
+      return greseala('fEnd', 'Data preluării nu poate fi înaintea predării.')
     if (!fortat) {
       const nr = normDosar(draft.nrDosar)
       const alt = dosare.find((x) => x.id !== draft.id && normDosar(x.nrDosar) === nr)
@@ -180,12 +206,13 @@ export function DosarFormModal({
           <Sectiune>Dosar</Sectiune>
           <div className="space-y-1.5">
             <Label htmlFor="fNrDosar">Nr. dosar *</Label>
-            <Input id="fNrDosar" value={draft.nrDosar} onChange={(e) => set('nrDosar', e.target.value)} />
+            <Input id="fNrDosar" aria-invalid={gresit('fNrDosar')} value={draft.nrDosar} onChange={(e) => set('nrDosar', e.target.value)} />
+            {mesajSub('fNrDosar')}
           </div>
           <div className="space-y-1.5">
             <Label htmlFor="fAsigurator">Asigurator *</Label>
             <Select value={draft.asigurator} onValueChange={(v) => set('asigurator', v)}>
-              <SelectTrigger id="fAsigurator" className="w-full">
+              <SelectTrigger id="fAsigurator" aria-invalid={gresit('fAsigurator')} className="w-full">
                 <SelectValue placeholder="Alege asiguratorul" />
               </SelectTrigger>
               <SelectContent>
@@ -196,6 +223,7 @@ export function DosarFormModal({
                 ))}
               </SelectContent>
             </Select>
+            {mesajSub('fAsigurator')}
           </div>
           <div className="space-y-1.5">
             <Label htmlFor="fNrRezervare">Nr. rezervare (RBH)</Label>
@@ -312,8 +340,9 @@ export function DosarFormModal({
           >
             <div className="flex items-center gap-2">
               <Label htmlFor="fZileDeviz" className="whitespace-nowrap">Zile din deviz</Label>
-              <Input id="fZileDeviz" type="number" min={0} value={draft.zileDeviz} onChange={(e) => set('zileDeviz', e.target.value)} className="h-8 w-20" />
+              <Input id="fZileDeviz" type="number" min={0} step={1} aria-invalid={gresit('fZileDeviz')} value={draft.zileDeviz} onChange={(e) => set('zileDeviz', e.target.value)} className="h-8 w-20" />
             </div>
+            {mesajSub('fZileDeviz')}
           </DevizRecalculeazaButton>
           <div className="space-y-1.5">
             <Label htmlFor="fStart">Data predare</Label>
@@ -331,6 +360,7 @@ export function DosarFormModal({
               }}
               disabled={draft.dte}
             />
+            {mesajSub('fEnd')}
             {draft.endManual && draft.end && preluareCalculata && preluareCalculata !== draft.end && (
               <p className="text-[11.5px] text-tx-3">
                 Scrisă de mână · din calcul: {fmtDate(preluareCalculata)} ·{' '}
@@ -377,8 +407,6 @@ export function DosarFormModal({
 
         <ContractFinalSection draft={draft} onPatch={patch} />
 
-        {eroare && <p className="text-sm text-destructive">{eroare}</p>}
-
         </div>
 
         <FereastraSubsol>
@@ -394,7 +422,12 @@ export function DosarFormModal({
           ) : (
             <span />
           )}
-          <div className="flex gap-2">
+          <div className="flex items-center gap-2">
+            {eroare && (
+              <p role="alert" className="max-w-[260px] text-right text-[12.5px] leading-snug text-destructive">
+                {eroare}
+              </p>
+            )}
             <button
               type="button"
               onClick={onClose}
