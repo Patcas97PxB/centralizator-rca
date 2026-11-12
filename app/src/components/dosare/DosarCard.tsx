@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, type KeyboardEvent, type MouseEvent } from 'react'
 import { AlertTriangle, Bell, BellOff, Check, ChevronDown, ImageIcon, StickyNote } from 'lucide-react'
-import { imagineMasina } from '@/lib/cars'
+import { imagineMasina, POZA_NECUNOSCUTA } from '@/lib/cars'
 import { cheiLocale, useFolderLocal } from '@/lib/folder-local'
 import { docStatus, numeScurtDoc } from '@/lib/documente'
 import { ConfirmaFinalizare } from './ConfirmaFinalizare'
@@ -138,6 +138,8 @@ export function DosarCard({
         <div className="flex h-[60px] w-[104px] shrink-0 items-center justify-center">
           {poza ? (
             <img src={poza} alt={dosar.marcaModelInlocuire} loading="lazy" className="poza-masina size-full object-contain" />
+          ) : POZA_NECUNOSCUTA ? (
+            <img src={POZA_NECUNOSCUTA} alt="Mașină de înlocuire nesetată" loading="lazy" className="size-full object-contain" />
           ) : (
             <ImageIcon className="size-5 text-tx-3" aria-hidden="true" />
           )}

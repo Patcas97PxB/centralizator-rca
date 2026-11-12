@@ -38,10 +38,20 @@ function tokeniModel(text: string): Set<string> {
   return set
 }
 
-const CATALOG = Object.entries(FISIERE).map(([cale, url]) => {
-  const nume = cale.split('/').pop()!.replace(/\.[^.]+$/, '')
-  return { variante: variante(nume), url }
-})
+function numeFisier(cale: string): string {
+  return cale.split('/').pop()!.replace(/\.[^.]+$/, '')
+}
+
+// "necunoscut.png" din acelasi folder = silueta gri aratata cand dosarul nu are masina de inlocuire
+// (sau modelul scris nu are poza). Nu intra in catalogul de modele.
+const ESTE_NECUNOSCUT = (cale: string) => curata(numeFisier(cale)).trim() === 'necunoscut'
+
+export const POZA_NECUNOSCUTA: string | null =
+  Object.entries(FISIERE).find(([cale]) => ESTE_NECUNOSCUT(cale))?.[1] ?? null
+
+const CATALOG = Object.entries(FISIERE)
+  .filter(([cale]) => !ESTE_NECUNOSCUT(cale))
+  .map(([cale, url]) => ({ variante: variante(numeFisier(cale)), url }))
 
 export function imagineMasina(marcaModel: string): string | null {
   const model = tokeniModel(marcaModel || '')
