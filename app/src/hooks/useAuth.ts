@@ -23,6 +23,8 @@ function useAuthDemo() {
   const logout = useCallback(async () => {
     await iesiDemo()
     setDeblocat(false)
+    // Starea `deblocat` e locala fiecarui useAuth(): AuthGate nu afla de iesirea din antet → reincarcare.
+    window.location.reload()
   }, [])
   return { session: null as Session | null, email: '', isLoading: deblocat === undefined, isAuthenticated: !!deblocat, login, logout }
 }
