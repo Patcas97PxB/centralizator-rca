@@ -447,3 +447,11 @@ export function prioritateDosar(d: Dosar): number {
       return 3
   }
 }
+
+// Ordinea cardurilor în listă (cererea utilizatorului, 12.11.2026): roșu → galben → în curs
+// (verde, apoi albastru/cyan) → mov (preluate, de închis) → finalizate jos.
+export function ordineDosar(d: Dosar): number {
+  if (d.status === 'finalizat') return 5
+  if (etapaDosar(d) === 'de_trimis') return 4
+  return prioritateDosar(d)
+}

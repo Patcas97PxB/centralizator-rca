@@ -6,7 +6,7 @@ import { remindere } from '@/lib/reminder'
 import { exportDosareXlsx } from '@/lib/xlsx-export'
 import type { Dosar } from '@/lib/types'
 import type { AnalizaDeviz } from '@/lib/deviz-analiza'
-import { etapaDosar, prioritateDosar, zileLaTermen } from '@/lib/rca-calc'
+import { etapaDosar, ordineDosar, zileLaTermen } from '@/lib/rca-calc'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { FilterBar } from './FilterBar'
@@ -73,8 +73,8 @@ export function DosarePage({ actiune, onActiuneFolosita }: { actiune?: ActiuneRa
     return filtrate
       .map((d, i) => ({ d, i, e: efectiv(d) }))
       .sort((a, b) => {
-        const pa = prioritateDosar(a.e)
-        const pb = prioritateDosar(b.e)
+        const pa = ordineDosar(a.e)
+        const pb = ordineDosar(b.e)
         if (pa !== pb) return pa - pb
         const za = zileLaTermen(a.e) ?? 999
         const zb = zileLaTermen(b.e) ?? 999
