@@ -157,7 +157,7 @@ export function RapoartePage({ onAlegeDosar }: { onAlegeDosar?: (id: string) => 
                       <Fragment key={r.dosar.id}>
                         <tr className={cn('border-t border-border transition-colors hover:bg-foreground/[.03]', !r.finalizat && 'opacity-[.82]')}>
                           <td className={cn('whitespace-nowrap px-3 py-[9px] font-extrabold', r.finalizat ? 'text-st-green' : 'text-tx-2')}>
-                            {r.finalizat ? 'finalizat' : 'în curs'}
+                            {r.finalizat ? 'Finalizat' : 'În curs'}
                           </td>
                           <td className={TD}>{r.dosar.nrRezervare || '—'}</td>
                           <td className="whitespace-nowrap px-3 py-[9px] font-bold text-foreground">{r.dosar.nrAutoPagubit || '—'}</td>

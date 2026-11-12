@@ -124,7 +124,7 @@ export function calcTarifGrila(dosar: Pick<Dosar, 'clasaAuto' | 'asigurator' | '
   } else if (asig === 'generali' && t.generali) {
     const p3 = zile <= 3
     pretZi = p3 ? t.generali[0] : t.generali[1]
-    palier = p3 ? '1-3 zile' : '>4 zile'
+    palier = p3 ? '1-3 zile' : '≥4 zile'
   } else if (asig === 'asirom' && t.asirom != null) {
     pretZi = t.asirom
     palier = 'tarif unic'

@@ -17,6 +17,8 @@ import type { Dosar } from '@/lib/types'
 // dosar (se completează singure) și scrii valoarea de pe contract → ✓ / ⚠️.
 
 const TVA = 0.21
+// suma cu TVA calculată în bani întregi (172,425 → 172,43; în virgulă mobilă ieșea 172,42)
+const sumaCuTva = (x: number) => Math.round((Math.round(x * 100) * Math.round((1 + TVA) * 100)) / 100) / 100
 const FARA_GRILA = ['Omniasig', 'Gothaer', 'Uniqa']
 
 function claseAsigurator(asig: string): string[] {
@@ -201,7 +203,7 @@ export function VerificareTarif({ open, onClose, dosarInitial }: { open: boolean
   const tarif = calcTarifGrila({ asigurator: asig, clasaAuto: clasa, zileDeviz: String(nZile) }, nZile)
   const moneda = (tarif?.moneda ?? 'EUR') as Moneda
   const v = parseSuma(valoare)
-  const sume = tarif ? [tarif.total, tarif.total * (1 + TVA), ...(tarif.totalExtern != null ? [tarif.totalExtern, tarif.totalExtern * (1 + TVA)] : [])] : []
+  const sume = tarif ? [tarif.total, sumaCuTva(tarif.total), ...(tarif.totalExtern != null ? [tarif.totalExtern, sumaCuTva(tarif.totalExtern)] : [])] : []
   const potrivit = v > 0 && sume.some((s) => Math.abs(s - v) <= 1)
   const explicatie = v > 0 && !potrivit && tarif ? explicaDiferenta(v, nZile, tarif) : null
 
@@ -253,11 +255,11 @@ export function VerificareTarif({ open, onClose, dosarInitial }: { open: boolean
                 <span className="text-[12px] text-tx-3">{tarif.palier}</span>
               </div>
               <div className="mt-1.5 text-[26px] font-extrabold leading-tight text-foreground tabular-nums">{formatSuma(tarif.total, moneda)}</div>
-              <div className="text-[12.5px] text-tx-3">cu TVA 21%: {formatSuma(tarif.total * (1 + TVA), moneda)}</div>
+              <div className="text-[12.5px] text-tx-3">cu TVA 21%: {formatSuma(sumaCuTva(tarif.total), moneda)}</div>
               {tarif.totalExtern != null && (
                 <div className="mt-2 border-t border-border pt-2 text-[13px] text-tx-2">
                   Allianz extern: <b className="text-foreground">{formatSuma(tarif.totalExtern, moneda)}</b>
-                  <span className="text-tx-3"> · cu TVA {formatSuma(tarif.totalExtern * (1 + TVA), moneda)}</span>
+                  <span className="text-tx-3"> · cu TVA {formatSuma(sumaCuTva(tarif.totalExtern), moneda)}</span>
                 </div>
               )}
             </div>

@@ -72,6 +72,10 @@ export function DosarFormModal({
   const [saving, setSaving] = useState(false)
   const [eroare, setEroare] = useState('')
   const [campGresit, setCampGresit] = useState<string | null>(null)
+  // „Anulează” / X întreabă înainte să piardă ce s-a scris (data preluării se completează singură, nu contează)
+  const [amprentaInitiala, setAmprentaInitiala] = useState('')
+  const [confirmRenunt, setConfirmRenunt] = useState(false)
+  const amprenta = (d: Dosar) => JSON.stringify({ ...d, end: undefined, endManual: undefined })
   const gresit = (camp: string) => (campGresit === camp ? true : undefined)
   const mesajSub = (camp: string) =>
     campGresit === camp && eroare ? <p className="text-[12px] text-destructive">{eroare}</p> : null
@@ -88,7 +92,10 @@ export function DosarFormModal({
   useEffect(() => {
     if (open) {
       // dosar nou: etapa „REZERVAT" (vine din bife), predarea azi
-      setDraft(majuscule(dosar ?? { ...dosarGol(), ...initialDraft, id: 'd' + Date.now(), start: todayStr() }))
+      const d0 = majuscule(dosar ?? { ...dosarGol(), ...initialDraft, id: 'd' + Date.now(), start: todayStr() })
+      setDraft(d0)
+      setAmprentaInitiala(amprenta(d0))
+      setConfirmRenunt(false)
       setEndAuto(!dosar?.end)
       setClasaSugerata(false)
       setEroare('')
@@ -178,6 +185,11 @@ export function DosarFormModal({
     await salveaza(formatCanonic(majuscule(draft)))
   }
 
+  function cereInchidere() {
+    if (amprentaInitiala && amprenta(draft) !== amprentaInitiala) setConfirmRenunt(true)
+    else onClose()
+  }
+
   const etapa = ETAPA_META[etapaDosar(draft)]
   const rcaPreview = calculRCA(draft)
   // data calculată din deviz/contract, fără cea scrisă de mână
@@ -190,13 +202,13 @@ export function DosarFormModal({
   }, [open, endAuto, preluareCalculata, draft.end])
 
   return (
-    <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
+    <Dialog open={open} onOpenChange={(o) => !o && cereInchidere()}>
       <DialogContent
         showCloseButton={false}
         faraInchidereAfara
         className={cn(FEREASTRA_MARE, 'sm:max-w-[760px]')}
       >
-        <FereastraAntet titlu={dosar ? 'Editează dosar' : 'Dosar nou'} subtitlu={dosar ? [draft.nrAutoPagubit, draft.nrDosar].filter(Boolean).join(' · ') : undefined} onClose={onClose} />
+        <FereastraAntet titlu={dosar ? 'Editează dosar' : 'Dosar nou'} subtitlu={dosar ? [draft.nrAutoPagubit, draft.nrDosar].filter(Boolean).join(' · ') : undefined} onClose={cereInchidere} />
 
         <div className="flex flex-col gap-4 px-5 pb-5 pt-4">
         <PreluareDateSection draft={draft} onPatch={patch} />
@@ -430,7 +442,7 @@ export function DosarFormModal({
             )}
             <button
               type="button"
-              onClick={onClose}
+              onClick={cereInchidere}
               className={BTN_SECUNDAR}
             >
               Anulează
@@ -466,6 +478,27 @@ export function DosarFormModal({
               }}
             >
               Salvează oricum
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog open={confirmRenunt} onOpenChange={setConfirmRenunt}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Renunți la modificări?</AlertDialogTitle>
+            <AlertDialogDescription>Ce ai scris în acest formular nu se salvează.</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Continuă editarea</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive text-white hover:bg-destructive/90"
+              onClick={() => {
+                setConfirmRenunt(false)
+                onClose()
+              }}
+            >
+              Renunță
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

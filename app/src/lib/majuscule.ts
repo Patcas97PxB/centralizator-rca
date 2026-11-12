@@ -30,5 +30,8 @@ export function formatCanonic<T extends Partial<Dosar>>(d: T): T {
   if (typeof out.nrAutoPagubit === 'string') out.nrAutoPagubit = formatNrAuto(out.nrAutoPagubit)
   if (typeof out.nrAutoInlocuire === 'string') out.nrAutoInlocuire = formatNrAuto(out.nrAutoInlocuire)
   if (typeof out.nrRezervare === 'string') out.nrRezervare = formatRbh(out.nrRezervare)
+  // dosarele vechi aveau „Dacia Duster” lângă „DACIA DUSTER” — aceeași formă peste tot
+  if (typeof out.marcaModel === 'string') out.marcaModel = out.marcaModel.toUpperCase()
+  if (typeof out.marcaModelInlocuire === 'string') out.marcaModelInlocuire = out.marcaModelInlocuire.toUpperCase()
   return out
 }

@@ -75,6 +75,7 @@ export function CampData({
   const inputRef = useRef<HTMLInputElement>(null)
   const ancora = useRef<HTMLDivElement>(null)
   const [text, setText] = useState(dinIso(value))
+  const [gresita, setGresita] = useState(false)
   const [luna, setLuna] = useState(() => (value || todayStr()).slice(0, 7))
 
   useEffect(() => setText(dinIso(value)), [value])
@@ -86,6 +87,7 @@ export function CampData({
   }, [deschis, value])
 
   function alege(iso: string) {
+    setGresita(false)
     onChange(iso)
     setText(dinIso(iso))
     setDeschis(false)
@@ -93,8 +95,14 @@ export function CampData({
   function confirmaText() {
     if (!text.trim()) return golPermis ? onChange('') : setText(dinIso(value))
     const iso = inIso(text)
-    if (iso && (!min || iso >= min)) onChange(iso)
-    else setText(dinIso(value))
+    if (iso && (!min || iso >= min)) {
+      setGresita(false)
+      onChange(iso)
+    } else {
+      // „31.02.2026” sau înainte de minim: revine la data veche, dar spune de ce
+      setGresita(true)
+      setText(dinIso(value))
+    }
   }
 
   // grila: 6 săptămâni, de luni, începând cu săptămâna în care cade 1 a lunii
@@ -112,6 +120,7 @@ export function CampData({
   const muta = (n: number) => setLuna(isoLocal(new Date(an, l - 1 + n, 1)).slice(0, 7))
 
   return (
+    <>
     <Popover open={deschis && !disabled} onOpenChange={setDeschis}>
       <PopoverAnchor asChild>
         <div
@@ -136,6 +145,7 @@ export function CampData({
             onChange={(e) => {
               const t = cuPuncte(e.target.value, text)
               setText(t)
+              setGresita(false)
               // data întreagă scrisă („29.10.2026”) se aplică pe loc, fără să mai ieși din câmp
               const iso = t.length >= 10 ? inIso(t) : null
               if (iso && (!min || iso >= min) && iso !== value) onChange(iso)
@@ -322,5 +332,7 @@ export function CampData({
         </div>
       </PopoverContent>
     </Popover>
+    {gresita && <p className="mt-1 text-[12px] text-destructive">Dată invalidă — scrie ziua.luna.anul, ex. 27.10.2026</p>}
+    </>
   )
 }

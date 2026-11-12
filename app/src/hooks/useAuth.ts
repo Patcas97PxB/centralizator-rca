@@ -50,7 +50,10 @@ function useAuthSupabase() {
   const login = useCallback(async (email: string, password: string) => {
     if (!emailPermis(email)) return 'domeniu'
     const { error } = await supabase.auth.signInWithPassword({ email: email.trim().toLowerCase(), password })
-    return error ? error.message : null
+    if (!error) return null
+    // serverul nu răspunde (fără internet, proiect oprit) ≠ parolă greșită
+    if (error.name === 'AuthRetryableFetchError' || !error.status || !navigator.onLine) return 'retea'
+    return error.message
   }, [])
 
   const logout = useCallback(async () => {

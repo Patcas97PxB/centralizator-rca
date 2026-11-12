@@ -62,6 +62,8 @@ export function AuthGate({ children }: { children: ReactNode }) {
     setSubmitting(false)
     if (msg === 'domeniu') {
       setError(`Accesul e permis doar cu adresa de email ${DOMENIU_PERMIS}.`)
+    } else if (msg === 'retea') {
+      setError('Nu mă pot conecta la server. Verifică internetul și încearcă din nou.')
     } else if (msg) {
       setError(UTILIZATOR_DEMO ? 'Utilizator sau parolă greșită.' : ESTE_DEMO ? 'Parolă greșită.' : 'Email sau parolă greșită.')
       setPassword('')
