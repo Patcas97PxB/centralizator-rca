@@ -19,7 +19,7 @@ Live: https://patcas97pxb.github.io/centralizator-rca/ · Repo: `Patcas97PxB/cen
 
 ## Publicare pe live (IMPORTANT — nu ajunge un simplu push)
 1. `cd app && npm run build`
-2. Din rădăcină: `git rm -rq assets && cp -r app/dist/assets assets && cp app/dist/index.html index.html && rm -rf ocr-models && cp -r app/dist/ocr-models ocr-models && git add assets index.html ocr-models` (modelele PaddleOCR din `ocr-models/` trebuie să fie și ele în rădăcină)
+2. Din rădăcină: `node app/scripts/publica-assets.mjs && git add -A assets index.html ocr-models assets-versiune.txt` — copiază build-ul (și `ocr-models/`, modelele PaddleOCR) în rădăcină **păstrând fișierele versiunii anterioare** din `assets/` (lista în `assets-versiune.txt`); cele mai vechi se șterg. Motivul (13.11.2026): GitHub Pages ține `index.html` în cache ~10 min, iar un browser cu pagina veche cerea CSS/JS-ul șters → pagina apărea fără stil. Nu mai folosi `git rm -rq assets`.
 3. `git commit` + `git push origin main`
 4. Așteaptă „pages build and deployment" (`gh run list --limit 1`), apoi verifică asset-urile noi (curl 200).
 **Adresa de test** (înainte de publicare, când utilizatorul vrea să verifice): `cd app && npx vite build --base=/centralizator-rca/preview/ --outDir dist-preview --emptyOutDir`, apoi din rădăcină `rm -rf preview && cp -r app/dist-preview preview && rm -rf app/dist-preview`, commit + push pe `main` → https://patcas97pxb.github.io/centralizator-rca/preview/ (site-ul principal neschimbat; aceeași bază de date).
