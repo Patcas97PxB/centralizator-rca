@@ -13,7 +13,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import type { DeSunat, TipAviz } from '@/lib/rca-calc'
 import type { Dosar } from '@/lib/types'
 import { permiteCitirea, useFolderLocal } from '@/lib/folder-local'
-import { ESTE_DEMO } from '@/lib/demo'
+import { ESTE_DEMO, UTILIZATOR_DEMO } from '@/lib/demo'
 import { initiale, numeDinEmail } from '@/lib/autentificare'
 import { useDosareContext } from '@/contexts/DosareContext'
 import { faraReminder, fmtZi, peste, remindere, reminderScadent, textCand } from '@/lib/reminder'
@@ -99,8 +99,8 @@ export function Header({
   const { dosare, salveazaRapid } = useDosareContext()
   const aleMele = remindere(dosare)
   const { logout, email } = useAuth()
-  const NUME_UTILIZATOR = ESTE_DEMO ? 'DEMO' : numeDinEmail(email)
-  const INITIALE_UTILIZATOR = ESTE_DEMO ? 'D' : initiale(NUME_UTILIZATOR)
+  const NUME_UTILIZATOR = ESTE_DEMO ? UTILIZATOR_DEMO || 'DEMO' : numeDinEmail(email)
+  const INITIALE_UTILIZATOR = ESTE_DEMO ? (UTILIZATOR_DEMO || 'D').slice(0, 1).toUpperCase() : initiale(NUME_UTILIZATOR)
   const folder = useFolderLocal()
   // Chrome cere din nou voie la folderul de pe laptop la fiecare pornire: atunci (doar atunci) apare aici un
   // buton, ca permisiunea să fie la un click; restul setărilor folderului sunt în Setări.

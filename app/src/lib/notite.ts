@@ -1,6 +1,6 @@
 import { useEffect, useSyncExternalStore } from 'react'
 import { supabase } from './supabase'
-import { ESTE_DEMO, demoNotite, demoSalveazaNotite } from './demo'
+import { ESTE_DEMO, UTILIZATOR_DEMO, demoNotite, demoSalveazaNotite } from './demo'
 import { normAuto } from './folder-local'
 import { todayStr } from './rca-calc'
 import type { Dosar } from './types'
@@ -61,7 +61,7 @@ async function scrieUna(n: Notita) {
 }
 
 async function autorCurent(): Promise<string> {
-  if (ESTE_DEMO) return 'DEMO'
+  if (ESTE_DEMO) return UTILIZATOR_DEMO || 'DEMO'
   const { data } = await supabase.auth.getSession()
   return data.session?.user.email ?? ''
 }

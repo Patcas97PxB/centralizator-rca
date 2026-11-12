@@ -5,6 +5,10 @@ import type { Dosar, Serviciu } from './types'
 // derivata din parola), iar tot ce modifica testerul ramane doar in browserul lui (IndexedDB).
 // Aplicatia reala nu e atinsa niciodata.
 export const ESTE_DEMO = import.meta.env.VITE_DEMO === '1'
+/** Varianta de prezentare (/prezentare/, 12.11.2026): pe lângă parolă cere și un utilizator fix
+ * (VITE_DEMO_UTILIZATOR, ex. „Autonomtest”). Gol = demo-ul obișnuit, doar cu parolă. Utilizatorul nu e
+ * un secret (e în cod) — datele le apără parola, care e cheia de decriptare a copiei. */
+export const UTILIZATOR_DEMO = ESTE_DEMO ? ((import.meta.env.VITE_DEMO_UTILIZATOR as string | undefined) ?? '').trim() : ''
 
 interface CopieDemo {
   dosare: Dosar[]
@@ -39,7 +43,7 @@ async function decripteaza(parola: string): Promise<CopieDemo> {
 }
 
 // ---- IndexedDB minimal ------------------------------------------------------------------------
-const DB = 'rca-demo'
+const DB = UTILIZATOR_DEMO ? 'rca-demo-' + UTILIZATOR_DEMO.toLowerCase() : 'rca-demo'
 function deschide(): Promise<IDBDatabase> {
   return new Promise((res, rej) => {
     const req = indexedDB.open(DB, 1)

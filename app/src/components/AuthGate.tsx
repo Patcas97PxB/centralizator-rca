@@ -3,7 +3,7 @@ import { Loader2 } from 'lucide-react'
 import { useAuth } from '@/hooks/useAuth'
 import { assetUrl } from '@/lib/asset-url'
 import { Input } from '@/components/ui/input'
-import { ESTE_DEMO } from '@/lib/demo'
+import { ESTE_DEMO, UTILIZATOR_DEMO } from '@/lib/demo'
 import { SiteFooter } from '@/components/layout/SiteFooter'
 import { DOMENIU_PERMIS } from '@/lib/autentificare'
 
@@ -24,6 +24,7 @@ export function AuthGate({ children }: { children: ReactNode }) {
   const { isLoading, isAuthenticated, login } = useAuth()
   const [email, setEmail] = useState(emailSalvat)
   const [password, setPassword] = useState('')
+  const [utilizator, setUtilizator] = useState('')
   const [error, setError] = useState('')
   const [submitting, setSubmitting] = useState(false)
 
@@ -46,18 +47,23 @@ export function AuthGate({ children }: { children: ReactNode }) {
       setError('Introdu adresa de email.')
       return
     }
+    if (UTILIZATOR_DEMO && !utilizator.trim()) {
+      setError('Introdu utilizatorul.')
+      return
+    }
     if (!password) {
       setError('Introdu parola.')
       return
     }
     setSubmitting(true)
     setError('')
-    const msg = await login(email, password)
+    const utilizatorGresit = !!UTILIZATOR_DEMO && utilizator.trim().toLowerCase() !== UTILIZATOR_DEMO.toLowerCase()
+    const msg = utilizatorGresit ? 'utilizator' : await login(email, password)
     setSubmitting(false)
     if (msg === 'domeniu') {
       setError(`Accesul e permis doar cu adresa de email ${DOMENIU_PERMIS}.`)
     } else if (msg) {
-      setError(ESTE_DEMO ? 'Parolă greșită.' : 'Email sau parolă greșită.')
+      setError(UTILIZATOR_DEMO ? 'Utilizator sau parolă greșită.' : ESTE_DEMO ? 'Parolă greșită.' : 'Email sau parolă greșită.')
       setPassword('')
     } else {
       setPassword('')
@@ -89,7 +95,7 @@ export function AuthGate({ children }: { children: ReactNode }) {
             <div>
               <h1 className="text-xl font-extrabold tracking-[-.01em] text-foreground">Bine ai revenit</h1>
               <p className="mt-1 text-[13px] text-tx-3">
-                {ESTE_DEMO ? 'Intră cu parola variantei de test.' : 'Intră cu contul tău Autonom.'}
+                {UTILIZATOR_DEMO ? 'Intră cu utilizatorul și parola primite.' : ESTE_DEMO ? 'Intră cu parola variantei de test.' : 'Intră cu contul tău Autonom.'}
               </p>
             </div>
             {ESTE_DEMO && (
@@ -117,6 +123,25 @@ export function AuthGate({ children }: { children: ReactNode }) {
               />
             </div>
           )}
+          {UTILIZATOR_DEMO && (
+            <div className="mb-4">
+              <label htmlFor="authUtilizator" className="mb-1.5 block text-[13px] font-semibold text-tx-2">
+                Utilizator
+              </label>
+              <Input
+                id="authUtilizator"
+                type="text"
+                autoComplete="username"
+                autoCapitalize="none"
+                spellCheck={false}
+                autoFocus
+                placeholder="Introdu utilizatorul"
+                value={utilizator}
+                onChange={(e) => setUtilizator(e.target.value)}
+                className={campCls}
+              />
+            </div>
+          )}
           <label htmlFor="authPassword" className="mb-1.5 block text-[13px] font-semibold text-tx-2">
             Parolă
           </label>
@@ -124,7 +149,7 @@ export function AuthGate({ children }: { children: ReactNode }) {
             id="authPassword"
             type="password"
             autoComplete="current-password"
-            autoFocus={ESTE_DEMO || !!email}
+            autoFocus={UTILIZATOR_DEMO ? false : ESTE_DEMO || !!email}
             placeholder="Introdu parola"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
