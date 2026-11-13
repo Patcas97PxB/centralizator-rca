@@ -43,7 +43,11 @@ async function decripteaza(parola: string): Promise<CopieDemo> {
 }
 
 // ---- IndexedDB minimal ------------------------------------------------------------------------
-const DB = UTILIZATOR_DEMO ? 'rca-demo-' + UTILIZATOR_DEMO.toLowerCase() : 'rca-demo'
+// VITE_DEMO_BAZA (ex. „gol” pentru /test/, 13.11.2026): baza separata pentru o varianta cu acelasi
+// utilizator ca alta (/prezentare/ si /test/ au amandoua „Autonomtest” si stau pe acelasi site,
+// deci fara sufix ar imparti dosarele in browser).
+const BAZA_DEMO = ((import.meta.env.VITE_DEMO_BAZA as string | undefined) ?? '').trim().toLowerCase()
+const DB = (UTILIZATOR_DEMO ? 'rca-demo-' + UTILIZATOR_DEMO.toLowerCase() : 'rca-demo') + (BAZA_DEMO ? '-' + BAZA_DEMO : '')
 function deschide(): Promise<IDBDatabase> {
   return new Promise((res, rej) => {
     const req = indexedDB.open(DB, 1)
