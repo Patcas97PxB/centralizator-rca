@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
-import { Bell, Check, ChevronDown, Laptop, LogOut, Plus, Search } from 'lucide-react'
+import { Bell, Check, ChevronDown, GraduationCap, Laptop, LogOut, Plus, Search } from 'lucide-react'
+import { pornesteTur } from '@/lib/tur'
 import { useAuth } from '@/hooks/useAuth'
 import { assetUrl } from '@/lib/asset-url'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
@@ -316,6 +317,18 @@ export function Header({
             )}
           </PopoverContent>
         </Popover>
+
+        {/* Pornește tutorialul oricând (13.11.2026, cerut: „un buton să pornesc tutorialul, undeva lângă cont”) */}
+        <button
+          type="button"
+          data-tur="tutorial"
+          onClick={pornesteTur}
+          title="Tutorial — arată-mi cum se folosește"
+          aria-label="Pornește tutorialul"
+          className="flex size-10 items-center justify-center rounded-[10px] border border-border bg-border/[.28] text-tx-2 transition-colors hover:bg-border/60 hover:text-foreground md:size-[34px]"
+        >
+          <GraduationCap className="size-4" aria-hidden="true" />
+        </button>
 
         <DropdownMenu>
           <DropdownMenuTrigger asChild>

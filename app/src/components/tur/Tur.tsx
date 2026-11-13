@@ -395,9 +395,17 @@ const PASI: Pas[] = [
     zoom: true,
     text: () => (
       <>
-        Folderul de pe laptop, backup-ul și tema Dark / Light. Tot de aici poți <b>relua tutorialul</b> oricând.
+        Folderul de pe laptop, backup-ul și tema Dark / Light.
       </>
     ),
+  },
+  {
+    capitol: 'Meniu',
+    tinte: ['tutorial'],
+    icon: GraduationCap,
+    titlu: 'Tutorialul, oricând',
+    zoom: true,
+    text: () => <>Vrei să-l revezi sau să i-l arăți unui coleg? Butonul ăsta îl pornește din nou, de pe orice pagină.</>,
   },
 ]
 
@@ -549,17 +557,26 @@ export function Tur({ gata, onDosare, onNou }: { /** datele s-au încărcat */ g
         setNumeTinta(g?.nume ?? null)
       }
       if (!el) return setZona(null)
-      const r = el.getBoundingClientRect()
+      // Butoanele cu zoom își schimbă mărimea de pe ecran de câteva ori pe secundă; dacă am măsura-o așa,
+      // zona luminată și explicația ar tremura odată cu ele (raportat 13.11.2026 la pașii de unelte:
+      // „se mișcă caseta de text și nu se poate citi”). Luăm centrul (rămâne pe loc la zoom) și mărimea
+      // reală a elementului, fără transformare, rotunjite la pixel.
+      const b = el.getBoundingClientRect()
+      const lat = el.offsetWidth || b.width
+      const inalt = el.offsetHeight || b.height
+      const r = { left: b.left + b.width / 2 - lat / 2, top: b.top + b.height / 2 - inalt / 2, right: b.left + b.width / 2 + lat / 2, bottom: b.top + b.height / 2 + inalt / 2 }
       // zona luminată nu iese din ecran (meniul lateral e înalt cât pagina)
-      const top = Math.max(4, r.top - LUMINA)
-      const left = Math.max(4, r.left - LUMINA)
+      const top = Math.round(Math.max(4, r.top - LUMINA))
+      const left = Math.round(Math.max(4, r.left - LUMINA))
       const z = {
         top,
         left,
-        width: Math.min(window.innerWidth - 4, r.right + LUMINA) - left,
-        height: Math.min(window.innerHeight - 4, r.bottom + LUMINA) - top,
+        width: Math.round(Math.min(window.innerWidth - 4, r.right + LUMINA)) - left,
+        height: Math.round(Math.min(window.innerHeight - 4, r.bottom + LUMINA)) - top,
       }
-      setZona((v) => (v && v.top === z.top && v.left === z.left && v.width === z.width && v.height === z.height ? v : z))
+      // sub 2 px nu mutăm nimic: la zoom centrul iese cu jumătăți de pixel și rotunjirea ar sări între două valori
+      const aproape = (a: number, b: number) => Math.abs(a - b) < 2
+      setZona((v) => (v && aproape(v.top, z.top) && aproape(v.left, z.left) && aproape(v.width, z.width) && aproape(v.height, z.height) ? v : z))
     }
     masoara()
     const t = setInterval(masoara, 250)
@@ -666,7 +683,9 @@ export function Tur({ gata, onDosare, onNou }: { /** datele s-au încărcat */ g
                 <ArrowRight className="size-4" aria-hidden="true" />
               </button>
             </div>
-            <p className="mt-3.5 text-[12px] text-tx-3">Îl poți porni oricând din Setări → Tutorial.</p>
+            <p className="mt-3.5 flex items-center gap-1.5 text-[12px] text-tx-3">
+              Îl poți porni oricând din butonul <GraduationCap className="size-3.5" aria-label="Tutorial" /> de lângă cont.
+            </p>
           </>
         )}
 
