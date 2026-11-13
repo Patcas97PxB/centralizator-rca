@@ -244,7 +244,7 @@ export function DosarCard({
 
       {/* Observațiile scrise de mână (câmpul Note) — mereu vizibile pe card (cererea utilizatorului) */}
       {dosar.notes && (
-        <div className="flex min-w-0 items-start gap-1.5 rounded-lg bg-surface-2 px-2.5 py-1.5 text-[12.5px] leading-snug text-tx-2" title={dosar.notes}>
+        <div data-tur="c-note" className="flex min-w-0 items-start gap-1.5 rounded-lg bg-surface-2 px-2.5 py-1.5 text-[12.5px] leading-snug text-tx-2" title={dosar.notes}>
           <StickyNote className="mt-px size-3.5 shrink-0 text-tx-3" aria-hidden="true" />
           <span className="line-clamp-2 min-w-0">{dosar.notes}</span>
         </div>

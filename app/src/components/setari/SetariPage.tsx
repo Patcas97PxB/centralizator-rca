@@ -24,9 +24,9 @@ const BTN =
   'inline-flex h-9 items-center gap-1.5 rounded-lg border border-border-strong px-3.5 text-[13px] font-bold text-foreground transition-colors hover:bg-surface-hover disabled:opacity-60'
 const BTN_PRIMAR = 'inline-flex h-9 items-center gap-1.5 rounded-lg bg-primary px-3.5 text-[13px] font-bold text-primary-foreground transition-colors hover:bg-primary/90'
 
-function Card({ icon, titlu, atentie, children }: { icon: ReactNode; titlu: string; atentie?: string; children: ReactNode }) {
+function Card({ icon, titlu, atentie, children, tur }: { icon: ReactNode; titlu: string; atentie?: string; children: ReactNode; tur?: string }) {
   return (
-    <section className="rounded-[14px] border border-border bg-card p-5">
+    <section data-tur={tur} className="rounded-[14px] border border-border bg-card p-5">
       <div className="mb-3 flex items-center gap-2.5">
         <span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-surface-2 text-accent-tx">{icon}</span>
         <h2 className="text-[15px] font-bold text-foreground">{titlu}</h2>
@@ -79,6 +79,7 @@ export function SetariPage() {
     <div className="mx-auto grid max-w-[1000px] gap-4 px-4 py-5 md:grid-cols-2 md:px-6 md:py-6">
       <Card
         icon={<Laptop className="size-4" aria-hidden="true" />}
+        tur="s-folder"
         titlu="Folderul de dosare de pe laptop"
         atentie={atentie.folder ? `Folderul „${f.nume}” așteaptă permisiunea (Chrome o cere la fiecare pornire).` : undefined}
       >
@@ -128,6 +129,7 @@ export function SetariPage() {
 
       <Card
         icon={<Download className="size-4" aria-hidden="true" />}
+        tur="s-backup"
         titlu="Backup"
         atentie={
           atentie.backup
@@ -163,7 +165,7 @@ export function SetariPage() {
         />
       </Card>
 
-      <Card icon={<History className="size-4" aria-hidden="true" />} titlu="Recuperare">
+      <Card icon={<History className="size-4" aria-hidden="true" />} titlu="Recuperare" tur="s-recuperare">
         <p className="text-[13px] leading-relaxed text-tx-2">
           Dosare șterse (180 de zile) și versiunile vechi ale fiecărui dosar (ultimele 20).
         </p>
@@ -174,7 +176,7 @@ export function SetariPage() {
         </div>
       </Card>
 
-      <Card icon={tema === 'light' ? <Sun className="size-4" aria-hidden="true" /> : <Moon className="size-4" aria-hidden="true" />} titlu="Aspect">
+      <Card icon={tema === 'light' ? <Sun className="size-4" aria-hidden="true" /> : <Moon className="size-4" aria-hidden="true" />} titlu="Aspect" tur="s-aspect">
         <p className="text-[13px] leading-relaxed text-tx-2">Tema se ține minte în acest browser.</p>
         <div className="mt-3.5 inline-flex rounded-lg border border-border-strong p-1" role="radiogroup" aria-label="Tema">
           {(
@@ -215,7 +217,7 @@ export function SetariPage() {
       </Card>
 
       <Card icon={<GraduationCap className="size-4" aria-hidden="true" />} titlu="Tutorial">
-        <p className="text-[13px] leading-relaxed text-tx-2">Turul scurt al aplicației: unde adaugi un dosar, ce înseamnă culorile, unde sunt uneltele.</p>
+        <p className="text-[13px] leading-relaxed text-tx-2">Turul aplicației, pe dosare de exemplu: cum adaugi un dosar, cum citești un card, ce face fiecare unealtă.</p>
         <div className="mt-3.5">
           <button type="button" className={BTN} onClick={pornesteTur}>
             Reia tutorialul

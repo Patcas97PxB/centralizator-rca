@@ -227,7 +227,7 @@ export function DosarPanou({
             </button>
           </Sectiune>
 
-          <Sectiune titlu="Client și service">
+          <Sectiune titlu="Client și service" tur="p-client">
             <dl>
               <Rand eticheta="Proprietar" valoare={dosar.proprietarPagubit} />
               <Rand eticheta="Telefon client" valoare={dosar.telClient} />
@@ -267,7 +267,7 @@ export function DosarPanou({
             </div>
           </Sectiune>
 
-          <Sectiune titlu="Amintește-mi">
+          <Sectiune titlu="Amintește-mi" tur="p-reminder">
             {dosar.amintesteMi ? (
               <p className="flex items-center gap-1.5 text-[13.5px] font-semibold text-st-orange">
                 <Bell className="size-4" aria-hidden="true" />

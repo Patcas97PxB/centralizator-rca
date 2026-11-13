@@ -148,7 +148,7 @@ function AppContent() {
       <CalculatorDate open={dateDeschis} onClose={() => setDateDeschis(false)} />
       <DocIntrareIesireModal dosar={null} open={docIIDeschis} onClose={() => setDocIIDeschis(false)} />
       <CreareMail open={mailDeschis} onClose={() => setMailDeschis(false)} />
-      <Tur gata={!loading} onDosare={laDosare} onNou={() => porneste({ tip: 'nou' })} />
+      <Tur gata={!loading} onDosare={laDosare} onPagina={setActive} onNou={() => porneste({ tip: 'nou' })} />
       <CautareRapida open={cautareDeschisa} onClose={() => setCautareDeschisa(false)} onAlegeDosar={alegeDosar} comenzi={comenzi} />
 
       {pdfIncarcat && (
