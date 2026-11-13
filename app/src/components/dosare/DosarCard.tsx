@@ -134,7 +134,7 @@ export function DosarCard({
       )}
 
       {/* 1 · Cine: poza mașinii de înlocuire, păgubit → înlocuire, modelele */}
-      <div className="flex min-w-0 items-start gap-3">
+      <div data-tur="c-cine" className="flex min-w-0 items-start gap-3">
         <div className="flex h-[60px] w-[104px] shrink-0 items-center justify-center">
           {poza ? (
             <img src={poza} alt={dosar.marcaModelInlocuire} loading="lazy" className="poza-masina size-full object-contain" />
@@ -161,7 +161,7 @@ export function DosarCard({
       </div>
 
       {/* 2 · Dosar: asigurator · nr. dosar · RBH, și etapa (meniul „Amintește-mi…”) */}
-      <div className="flex min-w-0 items-center gap-2">
+      <div data-tur="c-dosar" className="flex min-w-0 items-center gap-2">
         <div className="min-w-0 flex-1 truncate text-[12.5px] text-tx-2" title={dosar.updatedAt ? 'Actualizat ' + new Date(dosar.updatedAt).toLocaleString('ro-RO') : undefined}>
           {[dosar.asigurator, dosar.nrDosar, dosar.nrRezervare].filter(Boolean).join(' · ') || '—'}
         </div>
@@ -169,6 +169,7 @@ export function DosarCard({
           <DropdownMenuTrigger asChild>
             <button
               type="button"
+              data-tur="c-etapa"
               onClick={stop}
               title={meta.label + (dosar.amintesteMi ? ` · Amintește-mi ${textCand(dosar.amintesteLa)}${dosar.amintesteNota ? ': ' + dosar.amintesteNota : ''}` : '')}
               className="flex min-h-8 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full bg-surface-2 px-2.5 py-1 text-[12px] font-bold text-tx-2 transition-colors hover:bg-surface-hover hover:text-foreground"
@@ -200,7 +201,7 @@ export function DosarCard({
       </div>
 
       {/* 3 · Termen: textul mare colorat, bara, data predării și data preluării */}
-      <div className="flex flex-col gap-1.5 border-t border-border pt-2.5">
+      <div data-tur="c-termen" className="flex flex-col gap-1.5 border-t border-border pt-2.5">
         <span className="min-w-0 truncate text-[19px] font-extrabold leading-tight tracking-[-.01em]" style={{ color: cardColor }}>
           {termen.mare}
         </span>
@@ -235,7 +236,7 @@ export function DosarCard({
           Toate documentele
         </div>
       ) : (
-        <div className="flex min-w-0 items-center gap-1.5 text-[12.5px] font-semibold text-st-amber-tx" title={'Lipsesc: ' + dst.missing.map(numeScurtDoc).join(', ')}>
+        <div data-tur="c-lipsuri" className="flex min-w-0 items-center gap-1.5 text-[12.5px] font-semibold text-st-amber-tx" title={'Lipsesc: ' + dst.missing.map(numeScurtDoc).join(', ')}>
           <AlertTriangle className="size-4 shrink-0" aria-hidden="true" />
           <span className="truncate">Lipsesc: {dst.missing.map(numeScurtDoc).join(', ')}</span>
         </div>
@@ -250,7 +251,7 @@ export function DosarCard({
       )}
 
       {/* 5 · Pasul următor: etapele + un singur buton */}
-      <div className="mt-auto flex items-center gap-2.5 border-t border-border pt-2.5">
+      <div data-tur="c-pas" className="mt-auto flex items-center gap-2.5 border-t border-border pt-2.5">
         <div className="flex min-w-0 flex-1 items-center gap-1" aria-label={`Etapa ${pasIndex + 1} din 4: ${meta.label}`}>
           {ETAPE.map((e, k) => (
             <span
@@ -262,6 +263,7 @@ export function DosarCard({
         {pas && (
           <button
             type="button"
+            data-tur="c-buton"
             onClick={faPasul}
             className="hidden h-8 shrink-0 items-center whitespace-nowrap rounded-lg bg-primary/15 px-3 text-[12.5px] font-bold text-accent-tx transition-colors hover:bg-primary/25 md:inline-flex"
           >

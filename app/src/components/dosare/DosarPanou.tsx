@@ -18,9 +18,9 @@ import { majuscule } from '@/lib/majuscule'
 
 const ETAPE: Etapa[] = ['rezervat', 'la_client', 'de_trimis', 'finalizat']
 
-function Sectiune({ titlu, children }: { titlu: string; children: React.ReactNode }) {
+function Sectiune({ titlu, children, tur }: { titlu: string; children: React.ReactNode; tur?: string }) {
   return (
-    <section className="border-b border-border py-4 last:border-b-0">
+    <section data-tur={tur} className="border-b border-border py-4 last:border-b-0">
       <h3 className="mb-2.5 text-[12.5px] font-bold text-tx-3">{titlu}</h3>
       {children}
     </section>
@@ -45,6 +45,7 @@ export function DosarPanou({
   onStatusChange,
   onEditeaza,
   onDocumente,
+  inTur = false,
 }: {
   dosar: Dosar | null
   onClose: () => void
@@ -52,6 +53,8 @@ export function DosarPanou({
   onStatusChange: (id: string, status: StatusDosar) => void
   onEditeaza: (id: string) => void
   onDocumente: (id: string) => void
+  /** deschis de tutorial pe un dosar de exemplu: fără blocarea paginii, nu se închide la click pe explicație */
+  inTur?: boolean
 }) {
   const folder = useFolderLocal()
   const [reminderDeschis, setReminderDeschis] = useState(false)
@@ -112,8 +115,14 @@ export function DosarPanou({
   }
 
   return (
-    <Sheet open onOpenChange={(o) => !o && onClose()}>
-      <SheetContent side="right" showCloseButton={false} className="gap-0 border-border bg-card p-0 data-[side=right]:w-full data-[side=right]:sm:max-w-[440px]">
+    <Sheet open modal={!inTur} onOpenChange={(o) => !o && !inTur && onClose()}>
+      <SheetContent
+        side="right"
+        showCloseButton={false}
+        data-tur="panou"
+        onInteractOutside={(e) => inTur && e.preventDefault()}
+        onOpenAutoFocus={(e) => inTur && e.preventDefault()}
+        className="gap-0 border-border bg-card p-0 data-[side=right]:w-full data-[side=right]:sm:max-w-[440px]">
         <div className="flex items-start gap-3 border-b border-border px-5 py-4">
           <div className="flex h-[72px] w-[124px] shrink-0 items-center justify-center">
             {poza ? (
@@ -149,7 +158,7 @@ export function DosarPanou({
         </div>
 
         <div className="min-h-0 flex-1 overflow-y-auto px-5">
-          <Sectiune titlu="Termen">
+          <Sectiune titlu="Termen" tur="p-termen">
             <span className="block text-[20px] font-extrabold leading-tight" style={{ color: culoare }}>{termen.mare}</span>
             <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-surface-2">
               <span className="block h-full rounded-full" style={{ width: `${termen.procent}%`, background: culoare }} />
@@ -189,7 +198,7 @@ export function DosarPanou({
             )}
           </Sectiune>
 
-          <Sectiune titlu={dst.complete ? 'Documente · toate' : `Documente · lipsesc ${dst.missing.length}`}>
+          <Sectiune tur="p-documente" titlu={dst.complete ? 'Documente · toate' : `Documente · lipsesc ${dst.missing.length}`}>
             <ul className="flex flex-col">
               {docsOrdonate.map((k) => {
                 const lipseste = dst.missing.includes(k)
@@ -236,7 +245,7 @@ export function DosarPanou({
             </dl>
           </Sectiune>
 
-          <Sectiune titlu="Observații">
+          <Sectiune titlu="Observații" tur="p-observatii">
             <textarea
               value={nota}
               onChange={(e) => {
@@ -293,7 +302,7 @@ export function DosarPanou({
         </div>
 
         {/* Uneltele pe dosarul ăsta + zilele din deviz, mereu la vedere jos (cerut 06.11.2026) */}
-        <div className="border-t border-border px-5 pt-3">
+        <div data-tur="p-jos" className="border-t border-border px-5 pt-3">
           <div className="mb-2.5 flex items-baseline justify-between gap-3 rounded-lg bg-surface-2 px-3 py-2">
             <span className="text-[12.5px] font-semibold text-tx-2">Zile din deviz</span>
             <span className="text-right text-[13px] tabular-nums text-tx-2">

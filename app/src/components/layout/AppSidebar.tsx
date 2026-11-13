@@ -127,15 +127,16 @@ export function AppSidebar({
           <div className={GRUP}>{NAV_GROUP_LABELS.unelte}</div>
           {NAV_ITEMS.filter((item) => item.group === 'unelte').map(randSectiune)}
           {[
-            { label: 'Zile din deviz', icon: Calculator, onClick: onDeviz },
-            { label: 'Modificare PDF', icon: FilePen, onClick: onPdf },
-            { label: 'Verificare tarif', icon: Coins, onClick: onTarif },
-            { label: 'Calculator de date', icon: CalendarClock, onClick: onDate },
-            { label: 'Creare mail', icon: Mail, onClick: onMail },
-            { label: 'Document intrare/ieșire', icon: FileText, onClick: onDocII },
+            { tur: 'u-deviz', label: 'Zile din deviz', icon: Calculator, onClick: onDeviz },
+            { tur: 'u-pdf', label: 'Modificare PDF', icon: FilePen, onClick: onPdf },
+            { tur: 'u-tarif', label: 'Verificare tarif', icon: Coins, onClick: onTarif },
+            { tur: 'u-date', label: 'Calculator de date', icon: CalendarClock, onClick: onDate },
+            { tur: 'u-mail', label: 'Creare mail', icon: Mail, onClick: onMail },
+            { tur: 'u-docii', label: 'Document intrare/ieșire', icon: FileText, onClick: onDocII },
           ].map((u) => (
             <Rand
               key={u.label}
+              tur={u.tur}
               icon={<u.icon className={ICON} strokeWidth={1.9} aria-hidden="true" />}
               label={u.label}
               onClick={() => {

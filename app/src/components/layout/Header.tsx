@@ -150,6 +150,7 @@ export function Header({
           type="button"
           onClick={onCautare}
           aria-label="Caută dosar (Ctrl+K)"
+          data-tur="cautare-rapida"
           className="flex size-10 items-center justify-center gap-2 rounded-[10px] border border-border bg-border/[.28] text-[12.5px] font-semibold text-tx-3 transition-colors hover:bg-border/60 hover:text-foreground md:h-[34px] md:w-auto md:px-2.5"
         >
           <Search className="size-4" aria-hidden="true" />

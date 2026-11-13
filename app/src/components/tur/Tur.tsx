@@ -6,18 +6,32 @@ import {
   ArrowRight,
   ArrowUp,
   Bell,
+  BellRing,
+  Calculator,
+  CalendarClock,
+  Car,
   ChartColumn,
   CircleCheck,
+  Coins,
+  FilePen,
+  FileText,
+  FileWarning,
   GraduationCap,
   LayoutGrid,
   ListChecks,
+  Mail,
+  MousePointerClick,
+  NotebookPen,
+  PanelRight,
   Plus,
   Search,
   Settings,
+  StickyNote,
+  Timer,
   Workflow,
   Wrench,
 } from 'lucide-react'
-import { laPornireTur, marcheazaTurVazut, turVazut } from '@/lib/tur'
+import { laPornireTur, marcheazaTurVazut, puneStareTur, turVazut } from '@/lib/tur'
 import { cn } from '@/lib/utils'
 
 // Tutorialul interactiv: la prima intrare întreabă „Vrei un tutorial?”, apoi trece pe rând prin
@@ -28,13 +42,19 @@ import { cn } from '@/lib/utils'
 
 type Loc = 'sus' | 'jos' | 'stanga' | 'dreapta'
 interface Pas {
+  /** capitolul din care face parte (apare deasupra titlului) */
+  capitol: string
   /** valori `data-tur`, în ordinea preferinței; prima vizibilă e ținta */
   tinte: string[]
   icon: typeof Plus
   titlu: string
   text: (tinta: string | null, telefon: boolean) => ReactNode
+  /** un exemplu concret, într-o casetă sub text (la unelte) */
+  exemplu?: ReactNode
   /** butoanele mici „respiră” (zoom); zonele mari doar se luminează */
   zoom?: boolean
+  /** pasul se arată cu panoul lateral al primului dosar de exemplu deschis */
+  panou?: boolean
 }
 
 const Punct = ({ culoare, children }: { culoare: string; children: ReactNode }) => (
@@ -45,7 +65,9 @@ const Punct = ({ culoare, children }: { culoare: string; children: ReactNode }) 
 )
 
 const PASI: Pas[] = [
+  // ── Pagina Dosare ──
   {
+    capitol: 'Dosare',
     tinte: ['nou'],
     icon: Plus,
     titlu: 'Dosar nou',
@@ -58,22 +80,14 @@ const PASI: Pas[] = [
     ),
   },
   {
+    capitol: 'Dosare',
     tinte: ['filtre'],
     icon: Search,
     titlu: 'Caută și filtrează',
-    text: (_t, telefon) => (
-      <>
-        Scrii nr. auto, nr. dosar, RBH sau service-ul și rămân doar dosarele potrivite.
-        {!telefon && (
-          <>
-            {' '}
-            Cu <b>Ctrl + K</b> cauți de oriunde din aplicație.
-          </>
-        )}
-      </>
-    ),
+    text: () => <>Scrii nr. auto, nr. dosar, RBH sau service-ul și rămân doar dosarele potrivite.</>,
   },
   {
+    capitol: 'Dosare',
     tinte: ['azi'],
     icon: ListChecks,
     titlu: 'De făcut azi',
@@ -82,33 +96,140 @@ const PASI: Pas[] = [
     ),
   },
   {
+    capitol: 'Dosare',
     tinte: ['etape'],
     icon: Workflow,
     titlu: 'Etapele dosarului',
     text: () => (
       <>
-        Fiecare dosar trece prin <b>De predat → La client → De trimis → Finalizat</b>. Etapa se schimbă singură când marchezi pasul
-        următor pe card.
+        Fiecare dosar trece prin <b>De predat → La client → De trimis → Finalizat</b>. Filele arată câte dosare sunt în fiecare etapă.
+      </>
+    ),
+  },
+  // ── Cardul (pe dosarele de exemplu) ──
+  {
+    capitol: 'Cardul dosarului',
+    tinte: ['lista', 'gol'],
+    icon: LayoutGrid,
+    titlu: 'Culoarea = termenul',
+    text: () => (
+      <>
+        Am pus câteva <b>dosare de exemplu</b>. Fiecare dosar e un card, iar culoarea lui spune cât de urgent e:
+        <span className="mt-2 grid grid-cols-2 gap-x-3 gap-y-1">
+          <Punct culoare="var(--st-red)">roșu — depășit / azi</Punct>
+          <Punct culoare="var(--st-blue)">albastru — de predat</Punct>
+          <Punct culoare="var(--st-amber)">galben — 1–2 zile</Punct>
+          <Punct culoare="var(--st-violet)">mov — de trimis</Punct>
+          <Punct culoare="var(--st-green)">verde — 3+ zile</Punct>
+          <Punct culoare="var(--st-gray)">gri — finalizat</Punct>
+        </span>
       </>
     ),
   },
   {
-    tinte: ['card', 'gol'],
-    icon: LayoutGrid,
-    titlu: 'Cardul dosarului',
+    capitol: 'Cardul dosarului',
+    tinte: ['c-cine'],
+    icon: Car,
+    titlu: 'Ce mașini sunt',
+    text: () => (
+      <>
+        Stânga e <b>mașina păgubită</b>, după săgeată <b>mașina de înlocuire</b> dată clientului. Poza e a mașinii de înlocuire, ca
+        s-o recunoști dintr-o privire.
+      </>
+    ),
+  },
+  {
+    capitol: 'Cardul dosarului',
+    tinte: ['c-termen'],
+    icon: Timer,
+    titlu: 'Termenul',
+    text: () => (
+      <>
+        Câte zile mai are clientul mașina — sau cu câte a depășit. Dedesubt: data predării, <b>ziua X din Y</b> și data până la care
+        trebuie preluată. Se calculează singur din zilele din deviz.
+      </>
+    ),
+  },
+  {
+    capitol: 'Cardul dosarului',
+    tinte: ['c-etapa', 'c-dosar'],
+    icon: BellRing,
+    titlu: 'Etapa și „Amintește-mi”',
+    zoom: true,
+    text: () => (
+      <>
+        Pastila arată etapa. Apasă pe ea și alegi <b>Amintește-mi…</b>: când (azi, mâine, o dată) și ce ai de făcut. Dosarul apare
+        atunci în clopoțel.
+      </>
+    ),
+  },
+  {
+    capitol: 'Cardul dosarului',
+    tinte: ['c-lipsuri'],
+    icon: FileWarning,
+    titlu: 'Documentele lipsă',
+    text: () => (
+      <>
+        Vezi direct ce mai lipsește din dosar (NC, deviz, CC, CD, contract…). Când sunt toate, rândul devine verde: „Toate
+        documentele”.
+      </>
+    ),
+  },
+  {
+    capitol: 'Cardul dosarului',
+    tinte: ['c-buton', 'c-pas'],
+    icon: MousePointerClick,
+    titlu: 'Butonul pasului următor',
+    zoom: true,
     text: (tinta) => (
       <>
-        {tinta === 'card' ? 'Fiecare dosar e un card.' : 'Aici apar dosarele, fiecare pe cardul lui.'} Culoarea arată termenul:
-        <span className="my-2 flex flex-col gap-1">
-          <Punct culoare="var(--st-red)">roșu — termen depășit sau azi</Punct>
-          <Punct culoare="var(--st-amber)">galben — mai sunt 1–2 zile</Punct>
-          <Punct culoare="var(--st-green)">verde — 3 zile sau mai mult</Punct>
-        </span>
-        Click pe card deschide detaliile, documentele și observațiile.
+        Un singur buton duce dosarul mai departe: <b>Marchează predat → Marchează preluat → Finalizează</b>. Liniile din stânga arată
+        la ce etapă e.{tinta === 'c-pas' && ' Butonul apare pe calculator; pe telefon pasul se face din panoul dosarului.'}
+      </>
+    ),
+  },
+  // ── Panoul lateral ──
+  {
+    capitol: 'Panoul dosarului',
+    tinte: ['panou'],
+    icon: PanelRight,
+    titlu: 'Click pe card = toate detaliile',
+    panou: true,
+    text: () => (
+      <>
+        Un click pe card deschide panoul: termenul și etapele cu date, documentele, clientul și service-ul. Tot de aici{' '}
+        <b>anulezi un pas</b> făcut din greșeală.
       </>
     ),
   },
   {
+    capitol: 'Panoul dosarului',
+    tinte: ['p-observatii'],
+    icon: StickyNote,
+    titlu: 'Observații',
+    panou: true,
+    text: () => (
+      <>
+        Scrii direct aici ce ai vorbit cu clientul sau cu service-ul. Se salvează singur și <b>se vede pe card</b>, fără să mai
+        deschizi dosarul.
+      </>
+    ),
+  },
+  {
+    capitol: 'Panoul dosarului',
+    tinte: ['p-jos'],
+    icon: Wrench,
+    titlu: 'Unelte direct pe dosar',
+    panou: true,
+    text: () => (
+      <>
+        Jos ai <b>Verificare tarif</b>, <b>Doc. intrare/ieșire</b> și <b>Mail</b>, deja completate cu datele dosarului, plus{' '}
+        <b>Editează</b> și pasul următor.
+      </>
+    ),
+  },
+  {
+    capitol: 'Dosare',
     tinte: ['clopotel'],
     icon: Bell,
     titlu: 'Clopoțelul',
@@ -119,23 +240,147 @@ const PASI: Pas[] = [
       </>
     ),
   },
+  // ── Uneltele, una câte una ──
   {
+    capitol: 'Unelte',
     tinte: ['unelte'],
     icon: Wrench,
-    titlu: 'Unelte',
+    titlu: 'Uneltele',
     text: (_t, telefon) =>
       telefon ? (
         <>
-          Jos ai <b>Zile din deviz</b> (din PDF sau poză) și <b>Modificare PDF</b>. Restul uneltelor le găsești la lupa din antet.
+          Uneltele te scapă de calculele făcute de mână. Pe telefon ai jos <b>Zile din deviz</b> și <b>Modificare PDF</b>; restul
+          sunt la lupa din antet. Le luăm pe rând.
         </>
       ) : (
         <>
-          Notițe, <b>Zile din deviz</b> (din PDF sau poză), Modificare PDF, Verificare tarif, Calculator de date, Creare mail și
-          Document intrare/ieșire.
+          Uneltele te scapă de calculele și documentele făcute de mână. Merg și <b>fără dosar</b> — de exemplu când te sună un
+          client și vrei doar un răspuns rapid. Le luăm pe rând.
         </>
       ),
   },
   {
+    capitol: 'Unelte',
+    tinte: ['u-deviz'],
+    icon: Calculator,
+    titlu: 'Zile din deviz',
+    zoom: true,
+    text: () => (
+      <>
+        Încarci devizul — PDF sau poze, toate paginile odată — și aplicația citește orele de manoperă și de vopsitorie și îți dă{' '}
+        <b>zilele de lucru</b>. Merge cu Audatex și GT Estimate.
+      </>
+    ),
+    exemplu: (
+      <>
+        30,30 ore în deviz → <b>8 zile</b> (4 ore = 1 zi)
+      </>
+    ),
+  },
+  {
+    capitol: 'Unelte',
+    tinte: ['u-tarif'],
+    icon: Coins,
+    titlu: 'Verificare tarif',
+    zoom: true,
+    text: () => (
+      <>
+        Alegi asiguratorul, clasa mașinii și zilele și primești <b>prețul pe zi și totalul după grilă</b>, cu și fără TVA. Dacă pui
+        și valoarea de pe contract, îți spune dacă e corectă sau unde e diferența.
+      </>
+    ),
+    exemplu: <>„Corespunde grilei” sau „Tarif greșit pe contract”, cu diferența calculată</>,
+  },
+  {
+    capitol: 'Unelte',
+    tinte: ['u-date'],
+    icon: CalendarClock,
+    titlu: 'Calculator de date',
+    zoom: true,
+    text: () => (
+      <>
+        Pentru clientul de la telefon: pui data predării și zilele din deviz și afli <b>până când poate ține mașina</b>. A doua filă
+        numără zilele dintre două date.
+      </>
+    ),
+    exemplu: <>„Preluare cel târziu: miercuri, 04.11.2026”</>,
+  },
+  {
+    capitol: 'Unelte',
+    tinte: ['u-mail'],
+    icon: Mail,
+    titlu: 'Creare mail',
+    zoom: true,
+    text: () => (
+      <>
+        Alegi dosarul și primești <b>subiectul și textul mailului gata scrise</b>, cu documentele atașate și cele care mai trebuie.
+        Apeși „Copiază textul” și îl lipești în mail.
+      </>
+    ),
+    exemplu: <>Subiect: BH01EXE/ RCA/ HDR 100001/ ASIGURATOR ORAȘ</>,
+  },
+  {
+    capitol: 'Unelte',
+    tinte: ['u-docii'],
+    icon: FileText,
+    titlu: 'Document intrare/ieșire',
+    zoom: true,
+    text: () => (
+      <>
+        Completează singur <b>documentul de intrare/ieșire din service</b> — client, mașină, date — din dosar și din contract, și îl
+        descarcă PDF, gata de dat la semnat.
+      </>
+    ),
+  },
+  {
+    capitol: 'Unelte',
+    tinte: ['u-pdf'],
+    icon: FilePen,
+    titlu: 'Modificare PDF',
+    zoom: true,
+    text: () => (
+      <>
+        Schimbi un text dintr-un PDF — o dată, un număr — direct în browser, sau <b>scoți doar anumite pagini</b> într-un PDF nou.
+        Originalul rămâne neatins. Merge pe PDF-uri cu text, nu pe scanări.
+      </>
+    ),
+  },
+  {
+    capitol: 'Unelte',
+    tinte: ['nav-notite'],
+    icon: NotebookPen,
+    titlu: 'Notițe',
+    zoom: true,
+    text: () => (
+      <>
+        Notezi pe scurt ce ai vorbit la telefon. Dacă scrii un <b>nr. auto</b>, notița se adaugă singură la observațiile acelui
+        dosar. Poți pune și „Amintește-mi”.
+      </>
+    ),
+    exemplu: <>„BH01EXE — posibil gata joi” → apare la dosarul BH01EXE</>,
+  },
+  {
+    capitol: 'Unelte',
+    tinte: ['cautare-rapida'],
+    icon: Search,
+    titlu: 'Căutare rapidă',
+    zoom: true,
+    text: (_t, telefon) =>
+      telefon ? (
+        <>
+          Lupa găsește orice dosar după nr. auto, nr. dosar sau RBH și te duce la cardul lui. Cu câmpul gol îți arată{' '}
+          <b>toate uneltele</b>.
+        </>
+      ) : (
+        <>
+          <b>Ctrl + K</b> de oriunde: găsești un dosar după nr. auto, nr. dosar sau RBH și sari la cardul lui. Cu câmpul gol îți
+          arată toate uneltele.
+        </>
+      ),
+  },
+  // ── Restul meniului ──
+  {
+    capitol: 'Meniu',
     tinte: ['nav-rapoarte'],
     icon: ChartColumn,
     titlu: 'Rapoarte',
@@ -143,6 +388,7 @@ const PASI: Pas[] = [
     text: () => <>Valorile contractelor, verificarea tarifului după grilă, statistici și exportul în Excel.</>,
   },
   {
+    capitol: 'Meniu',
     tinte: ['nav-setari'],
     icon: Settings,
     titlu: 'Setări',
@@ -200,12 +446,19 @@ function asaza(z: Zona, w: number, h: number, vw: number, vh: number): Asezare {
   const cx = z.left + z.width / 2
   const cy = z.top + z.height / 2
   let loc = ordine.find((l) => incape[l])
-  if (!loc && z.width >= 2 * w + SPATIU) {
-    // ecran scund (laptop 1366×768) și țintă lată cât pagina: explicația stă peste capătul din dreapta
-    // al zonei luminate — mijlocul și stânga ei rămân la vedere
-    return { loc: 'dreapta', top: Math.max(MARGINE, Math.min(cy - h / 2, vh - h - MARGINE)), left: z.left + z.width - w - 10, w, h, peste: true }
+  if (!loc) {
+    // Nu încape lângă țintă (ecran scund, lista de carduri, panoul cât tot telefonul): explicația stă
+    // PESTE zona luminată, fără săgeată — în colțul din dreapta-jos al ei la țintele late, altfel jos.
+    const lat = z.width >= 2 * w + SPATIU
+    return {
+      loc: 'jos',
+      top: Math.max(MARGINE, Math.min(lat ? z.top + z.height - h - 10 : vh - h - MARGINE - 8, vh - h - MARGINE)),
+      left: Math.max(MARGINE, Math.min(lat ? z.left + z.width - w - 10 : cx - w / 2, vw - w - MARGINE)),
+      w,
+      h,
+      peste: true,
+    }
   }
-  loc ??= cy < vh / 2 ? 'jos' : 'sus'
   let top = loc === 'jos' ? z.top + z.height + SPATIU : loc === 'sus' ? z.top - SPATIU - h : cy - h / 2
   let left = loc === 'dreapta' ? z.left + z.width + SPATIU : loc === 'stanga' ? z.left - SPATIU - w : cx - w / 2
   top = Math.max(MARGINE, Math.min(top, vh - h - MARGINE))
@@ -264,6 +517,13 @@ export function Tur({ gata, onDosare, onNou }: { /** datele s-au încărcat */ g
   const inapoi = useCallback(() => setFaza((f) => (f === 'final' ? PASI.length - 1 : typeof f === 'number' && f > 0 ? f - 1 : f)), [])
 
   const pas = typeof faza === 'number' ? PASI[faza] : null
+
+  // Cât rulează pașii, pagina Dosare arată dosarele de exemplu (și panoul, la pașii lui).
+  const cuPanou = !!pas?.panou
+  useEffect(() => {
+    puneStareTur({ activ: typeof faza === 'number', panou: cuPanou })
+  }, [faza, cuPanou])
+  useEffect(() => () => puneStareTur({ activ: false, panou: false }), [])
 
   // Ținta pasului: o aducem pe ecran, o măsurăm și o urmărim (redimensionare, derulare, lista care se
   // încarcă). Butoanele mici primesc clasa de zoom cât timp sunt arătate.
@@ -395,7 +655,7 @@ export function Tur({ gata, onDosare, onNou }: { /** datele s-au încărcat */ g
             </span>
             <h2 className="text-[18px] font-extrabold tracking-[-.01em] text-foreground">Bine ai venit! Vrei un tutorial?</h2>
             <p className="mt-2 text-[13.5px] leading-relaxed text-tx-2">
-              Îți arăt, în mai puțin de un minut, unde e fiecare lucru: cum adaugi un dosar, ce înseamnă culorile și unde sunt uneltele.
+              Îți arăt în vreo două minute, pe câteva dosare de exemplu, cum citești un card, ce face fiecare buton și la ce te ajută uneltele.
             </p>
             <div className="mt-5 flex flex-wrap items-center justify-end gap-2">
               <button type="button" className={BTN_SECUNDAR} onClick={inchide}>
@@ -418,16 +678,20 @@ export function Tur({ gata, onDosare, onNou }: { /** datele s-au încărcat */ g
               </span>
               <div className="min-w-0">
                 <p className="text-[12px] font-semibold text-tx-3">
-                  Pasul {faza + 1} din {PASI.length}
+                  <span className="text-accent-tx">{pas.capitol}</span> · {faza + 1} din {PASI.length}
                 </p>
                 <h2 className="text-[16.5px] font-extrabold tracking-[-.01em] text-foreground">{pas.titlu}</h2>
               </div>
             </div>
             <div className="mt-3 text-[13.5px] leading-relaxed text-tx-2 [&_b]:font-bold [&_b]:text-foreground">{pas.text(numeTinta, telefon)}</div>
-            <div className="mt-4 flex items-center gap-1" aria-hidden="true">
-              {PASI.map((_, i) => (
-                <span key={i} className={cn('h-1.5 rounded-full transition-all', i === faza ? 'w-5 bg-primary' : i < faza ? 'w-1.5 bg-accent-tx/60' : 'w-1.5 bg-border-strong')} />
-              ))}
+            {pas.exemplu && (
+              <p className="mt-2.5 rounded-lg bg-surface-2 px-3 py-2 text-[12.5px] leading-snug text-tx-2 [&_b]:font-bold [&_b]:text-foreground">
+                <span className="mr-1.5 font-bold text-accent-tx">Exemplu</span>
+                {pas.exemplu}
+              </p>
+            )}
+            <div className="mt-4 h-1.5 overflow-hidden rounded-full bg-surface-2" aria-hidden="true">
+              <span className="block h-full rounded-full bg-primary transition-[width] duration-300" style={{ width: `${((faza + 1) / PASI.length) * 100}%` }} />
             </div>
             <div className="mt-4 flex items-center gap-2">
               <button type="button" className={BTN_TEXT} onClick={inchide}>

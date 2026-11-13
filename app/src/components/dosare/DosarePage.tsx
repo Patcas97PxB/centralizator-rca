@@ -1,12 +1,14 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { X } from 'lucide-react'
 import { useDosareContext } from '@/contexts/DosareContext'
-import { filtreImplicite, numaraEtape } from '@/lib/dosare-filter'
+import { filtreImplicite, filtreazaSiSorteazaDosare, numaraEtape } from '@/lib/dosare-filter'
+import { useStareTur } from '@/lib/tur'
+import { ID_PANOU_TUR, dosareTur } from '@/lib/tur-demo'
 import { remindere } from '@/lib/reminder'
 import { exportDosareXlsx } from '@/lib/xlsx-export'
 import type { Dosar } from '@/lib/types'
 import type { AnalizaDeviz } from '@/lib/deviz-analiza'
-import { etapaDosar, ordineDosar, zileLaTermen } from '@/lib/rca-calc'
+import { dosareDeSunat, etapaDosar, ordineDosar, zileLaTermen } from '@/lib/rca-calc'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { FilterBar } from './FilterBar'
@@ -21,17 +23,25 @@ import { EtapeTabs } from './EtapeTabs'
 export type ActiuneRapida = { id: number; tip: 'nou' } | { id: number; tip: 'deviz'; an: AnalizaDeviz }
 
 export function DosarePage({ actiune, onActiuneFolosita }: { actiune?: ActiuneRapida | null; onActiuneFolosita?: () => void }) {
-  const {
-    dosare, filtrate, servicii, loading, error, filtre, setFiltre,
-    salveazaDosar, salveazaRapid, stergeDosar, deSunat,
-  } = useDosareContext()
+  const ctx = useDosareContext()
+  const { servicii, error, setFiltre, salveazaDosar, salveazaRapid, stergeDosar } = ctx
+  // Tutorialul: cât rulează, pagina arată dosarele de exemplu în locul celor reale (doar pe ecran —
+  // butoanele nu salvează nimic, vezi onPatch/onStatusChange), fără filtrele curente.
+  const tur = useStareTur()
+  const exemple = useMemo(() => (tur.activ ? dosareTur() : null), [tur.activ])
+  const dosare = exemple ?? ctx.dosare
+  const filtre = exemple ? filtreImplicite : ctx.filtre
+  const filtrate = useMemo(() => (exemple ? filtreazaSiSorteazaDosare(exemple, filtreImplicite) : ctx.filtrate), [exemple, ctx.filtrate])
+  const deSunat = useMemo(() => (exemple ? dosareDeSunat(exemple) : ctx.deSunat), [exemple, ctx.deSunat])
+  const loading = exemple ? false : ctx.loading
   const [modalDeschis, setModalDeschis] = useState(false)
   const [dosarActiv, setDosarActiv] = useState<Dosar | null>(null)
   const [initialDraft, setInitialDraft] = useState<Partial<Dosar> | null>(null)
   const [docsId, setDocsId] = useState<string | null>(null)
   // Panoul lateral al dosarului (click pe card). Când din panou deschizi Editează/Documente, panoul se închide
   // și revine după ce închizi fereastra (două ferestre suprapuse se încurcă la click).
-  const [panouId, setPanouId] = useState<string | null>(null)
+  const [panouAles, setPanouId] = useState<string | null>(null)
+  const panouId = exemple ? (tur.panou ? ID_PANOU_TUR : null) : panouAles
   const [panouRevenire, setPanouRevenire] = useState<string | null>(null)
   function revinoLaPanou() {
     if (panouRevenire) setPanouId(panouRevenire)
@@ -138,10 +148,12 @@ export function DosarePage({ actiune, onActiuneFolosita }: { actiune?: ActiuneRa
     setModalDeschis(true)
   }
   async function onPatch(id: string, patch: Partial<Dosar>) {
+    if (exemple) return
     const d = dosare.find((x) => x.id === id)
     if (d) await salveazaRapid({ ...d, ...patch })
   }
   async function onStatusChange(id: string, status: Dosar['status']) {
+    if (exemple) return
     const d = dosare.find((x) => x.id === id)
     if (d) await salveazaRapid({ ...d, status })
   }
@@ -190,6 +202,12 @@ export function DosarePage({ actiune, onActiuneFolosita }: { actiune?: ActiuneRa
             </div>
           )}
 
+          {exemple && (
+            <p className="rounded-xl border border-dashed border-border-strong px-3 py-2 text-[12.5px] font-semibold text-tx-2">
+              Dosare de exemplu — apar doar în tutorial și dispar când îl închizi.
+            </p>
+          )}
+
           {loading ? (
             <div className="grid gap-3 sm:grid-cols-2">
               {Array.from({ length: 4 }).map((_, i) => (
@@ -201,7 +219,7 @@ export function DosarePage({ actiune, onActiuneFolosita }: { actiune?: ActiuneRa
               Niciun dosar nu corespunde filtrelor curente.
             </div>
           ) : (
-            <div className="grid auto-rows-fr grid-cols-[repeat(auto-fill,minmax(min(100%,340px),1fr))] gap-3">
+            <div data-tur="lista" className="grid auto-rows-fr grid-cols-[repeat(auto-fill,minmax(min(100%,340px),1fr))] gap-3">
               {ordonate.map((d, i) => (
                 <div
                   key={d.id}
@@ -232,6 +250,7 @@ export function DosarePage({ actiune, onActiuneFolosita }: { actiune?: ActiuneRa
       <DosarPanou
         dosar={dosare.find((x) => x.id === panouId) ?? null}
         onClose={() => setPanouId(null)}
+        inTur={!!exemple}
         onPatch={onPatch}
         onStatusChange={onStatusChange}
         onEditeaza={(id) => dinPanou(id, deschideEditare)}

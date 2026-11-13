@@ -8,14 +8,18 @@ function Actiune({
   label,
   icon: Icon,
   onClick,
+  tur,
 }: {
   label: string
   icon: typeof Calculator
   onClick: () => void
+  /** ținta tutorialului (`data-tur`) */
+  tur?: string
 }) {
   return (
     <button
       type="button"
+      data-tur={tur}
       onClick={onClick}
       className="flex min-h-[60px] flex-1 flex-col items-center justify-center gap-1.5 rounded-[12px] py-1.5 text-[11.5px] font-semibold text-tx-2 transition-colors active:bg-surface-hover"
     >
@@ -40,7 +44,7 @@ export function MobileBottomNav({
       aria-label="Acțiuni rapide"
       data-tur="unelte"
     >
-      <Actiune label="Zile din deviz" icon={Calculator} onClick={onDeviz} />
+      <Actiune tur="u-deviz" label="Zile din deviz" icon={Calculator} onClick={onDeviz} />
 
       <div className="flex w-[92px] shrink-0 justify-center">
         <button
@@ -58,7 +62,7 @@ export function MobileBottomNav({
         </button>
       </div>
 
-      <Actiune label="Modificare PDF" icon={FilePen} onClick={onPdf} />
+      <Actiune tur="u-pdf" label="Modificare PDF" icon={FilePen} onClick={onPdf} />
     </nav>
   )
 }
