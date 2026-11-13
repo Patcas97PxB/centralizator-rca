@@ -1,5 +1,6 @@
 import { useRef, useState, type ReactNode } from 'react'
-import { AlertTriangle, Download, FolderOpen, History, Laptop, Moon, RefreshCw, Sparkles, Sun, Unlink, Upload } from 'lucide-react'
+import { AlertTriangle, Download, FolderOpen, History, Laptop, Moon, RefreshCw, Sparkles, Sun, Unlink, Upload, GraduationCap } from 'lucide-react'
+import { pornesteTur } from '@/lib/tur'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -209,6 +210,15 @@ export function SetariPage() {
         <div className="mt-3.5">
           <button type="button" className={BTN} onClick={() => setMotionPref(motion === 'on' ? 'auto' : 'on')}>
             {motion === 'on' ? 'Treci pe automat' : 'Pornește mereu'}
+          </button>
+        </div>
+      </Card>
+
+      <Card icon={<GraduationCap className="size-4" aria-hidden="true" />} titlu="Tutorial">
+        <p className="text-[13px] leading-relaxed text-tx-2">Turul scurt al aplicației: unde adaugi un dosar, ce înseamnă culorile, unde sunt uneltele.</p>
+        <div className="mt-3.5">
+          <button type="button" className={BTN} onClick={pornesteTur}>
+            Reia tutorialul
           </button>
         </div>
       </Card>

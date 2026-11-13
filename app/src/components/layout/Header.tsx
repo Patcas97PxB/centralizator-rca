@@ -158,6 +158,7 @@ export function Header({
         </button>
         <button
           type="button"
+          data-tur="nou"
           onClick={onNou}
           className="hidden h-[34px] items-center gap-1.5 rounded-[10px] bg-primary px-3.5 text-[13px] font-bold text-primary-foreground transition-colors hover:bg-primary/90 md:inline-flex"
         >
@@ -167,7 +168,7 @@ export function Header({
 
         <Popover open={deschis} onOpenChange={setDeschis}>
           <PopoverTrigger asChild>
-            <button
+            <button data-tur="clopotel"
               type="button"
               className="relative flex size-10 items-center justify-center rounded-[10px] border border-border bg-border/[.28] md:size-[34px] text-tx-2 transition-colors hover:bg-border/60 hover:text-foreground"
               aria-label={deSunat.length > 0 ? `${deSunat.length} ${deSunat.length === 1 ? "aviz" : "avize"}` : 'Notificări'}

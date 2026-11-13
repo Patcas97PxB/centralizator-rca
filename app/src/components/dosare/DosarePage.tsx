@@ -157,7 +157,7 @@ export function DosarePage({ actiune, onActiuneFolosita }: { actiune?: ActiuneRa
       <div>
         <div className="min-w-0 space-y-4">
 
-          <div className="rounded-[20px] border border-border bg-card p-3">
+          <div data-tur="filtre" className="rounded-[20px] border border-border bg-card p-3">
             <FilterBar filtre={filtre} onChange={setFiltre} servicii={servicii} onExport={() => exportDosareXlsx(filtrate)} nrAleMele={remindere(dosare).length} />
           </div>
 
@@ -197,19 +197,19 @@ export function DosarePage({ actiune, onActiuneFolosita }: { actiune?: ActiuneRa
               ))}
             </div>
           ) : filtrate.length === 0 ? (
-            <div className="rounded-2xl border border-dashed border-border p-10 text-center text-sm text-muted-foreground">
+            <div data-tur="gol" className="rounded-2xl border border-dashed border-border p-10 text-center text-sm text-muted-foreground">
               Niciun dosar nu corespunde filtrelor curente.
             </div>
           ) : (
             <div className="grid auto-rows-fr grid-cols-[repeat(auto-fill,minmax(min(100%,340px),1fr))] gap-3">
-              {ordonate.map((d) => (
+              {ordonate.map((d, i) => (
                 <div
                   key={d.id}
                   ref={(el) => {
                     if (el) carduri.current.set(d.id, el)
                     else carduri.current.delete(d.id)
                   }}
-                  id={`dosar-${d.id}`} className="flex min-w-0 flex-col rounded-[14px]">
+                  id={`dosar-${d.id}`} data-tur={i === 0 ? 'card' : undefined} className="flex min-w-0 flex-col rounded-[14px]">
                   <DosarCard dosar={d} selectat={panouId === d.id} onStatusChange={onStatusChange} onDeschide={setPanouId} onPatch={onPatch} />
                 </div>
               ))}

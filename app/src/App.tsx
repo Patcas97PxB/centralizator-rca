@@ -22,6 +22,7 @@ import { CalculatorDate } from '@/components/unelte/CalculatorDate'
 import { CautareRapida, type ComandaRapida } from '@/components/unelte/CautareRapida'
 import { DocIntrareIesireModal } from '@/components/dosare/DocIntrareIesireModal'
 import { CreareMail } from '@/components/unelte/CreareMail'
+import { Tur } from '@/components/tur/Tur'
 
 // Editorul PDF (MuPDF + pdf-lib) e mare — se incarca doar cand e deschis.
 const ModificarPdfModal = lazy(() => import('@/components/dosare/ModificarPdfModal').then((m) => ({ default: m.ModificarPdfModal })))
@@ -51,7 +52,8 @@ function AppContent() {
     window.addEventListener('hashchange', laSchimbare)
     return () => window.removeEventListener('hashchange', laSchimbare)
   }, [])
-  const { deSunat, setFiltre } = useDosareContext()
+  const { deSunat, setFiltre, loading } = useDosareContext()
+  const laDosare = useCallback(() => setActive('dosare'), [setActive])
   const { title, subtitle } = TITLURI[active]
 
   // Te duce la cardul dosarului: comuta pe Dosare, scoate filtrele care l-ar ascunde, deruleaza
@@ -146,6 +148,7 @@ function AppContent() {
       <CalculatorDate open={dateDeschis} onClose={() => setDateDeschis(false)} />
       <DocIntrareIesireModal dosar={null} open={docIIDeschis} onClose={() => setDocIIDeschis(false)} />
       <CreareMail open={mailDeschis} onClose={() => setMailDeschis(false)} />
+      <Tur gata={!loading} onDosare={laDosare} onNou={() => porneste({ tip: 'nou' })} />
       <CautareRapida open={cautareDeschisa} onClose={() => setCautareDeschisa(false)} onAlegeDosar={alegeDosar} comenzi={comenzi} />
 
       {pdfIncarcat && (

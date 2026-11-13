@@ -252,6 +252,29 @@
 }
 
 
+/* Tutorialul (components/tur/Tur.tsx): zona luminată = o „gaură” în întunericul din jur (umbra uriașă),
+   cu inel albastru care pulsează; butoanele mici „respiră” (zoom), săgeata se mișcă spre țintă. Rulează
+   doar cât e tutorialul deschis; cu animațiile reduse din sistem rămân statice (regula de mai sus). */
+@keyframes turInel { 0%, 100% { outline-color: rgba(96,165,250,.95); outline-offset: 0; } 50% { outline-color: rgba(96,165,250,.35); outline-offset: 5px; } }
+@keyframes turZoom { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.09); } }
+@keyframes turSageataY { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(var(--tur-d)); } }
+@keyframes turSageataX { 0%, 100% { transform: translateX(0); } 50% { transform: translateX(var(--tur-d)); } }
+@keyframes turIntra { from { opacity: 0; scale: .96; } to { opacity: 1; scale: 1; } }
+@keyframes turIcon { 0% { transform: scale(.5) rotate(-12deg); } 60% { transform: scale(1.12) rotate(4deg); } 100% { transform: none; } }
+.tur-lumina {
+  box-shadow: 0 0 0 9999px rgba(3,7,18,.72);
+  outline: 2px solid rgba(96,165,250,.95);
+  transition: top .28s ease, left .28s ease, width .28s ease, height .28s ease;
+  animation: turInel 1.6s ease-in-out infinite;
+}
+.tur-zoom { animation: turZoom 1.6s ease-in-out infinite; position: relative; z-index: 1; }
+.tur-sageata-jos { --tur-d: -7px; animation: turSageataY 1s ease-in-out infinite; }
+.tur-sageata-sus { --tur-d: 7px; animation: turSageataY 1s ease-in-out infinite; }
+.tur-sageata-dreapta { --tur-d: -7px; animation: turSageataX 1s ease-in-out infinite; }
+.tur-sageata-stanga { --tur-d: 7px; animation: turSageataX 1s ease-in-out infinite; }
+.tur-cutie { animation: turIntra .22s ease-out both; }
+.tur-icon { animation: turIcon .45s ease-out both; }
+
 @keyframes dosarEvidentiat {
   0%, 100% { box-shadow: 0 0 0 0 rgba(96,165,250,0); }
   20%, 70% { box-shadow: 0 0 0 3px rgba(96,165,250,.85); }

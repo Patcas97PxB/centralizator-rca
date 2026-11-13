@@ -20,7 +20,7 @@ export function EtapeTabs({
   onAlege: (cheie: Etapa | 'toate') => void
 }) {
   return (
-    <div role="tablist" aria-label="Etape" className="flex gap-1 overflow-x-auto border-b border-border [scrollbar-width:none]">
+    <div role="tablist" aria-label="Etape" data-tur="etape" className="flex gap-1 overflow-x-auto border-b border-border [scrollbar-width:none]">
       {TABURI.map((t) => {
         const on = activ === t.cheie
         return (

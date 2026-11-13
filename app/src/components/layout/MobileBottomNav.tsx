@@ -38,6 +38,7 @@ export function MobileBottomNav({
     <nav
       className="fixed inset-x-0 bottom-0 z-40 flex items-center gap-1 border-t border-border bg-sidebar px-3 pb-[env(safe-area-inset-bottom)] md:hidden"
       aria-label="Acțiuni rapide"
+      data-tur="unelte"
     >
       <Actiune label="Zile din deviz" icon={Calculator} onClick={onDeviz} />
 
@@ -46,6 +47,7 @@ export function MobileBottomNav({
           type="button"
           onClick={onNou}
           aria-label="Dosar nou"
+          data-tur="nou"
           className={cn(
             'btn-brand-gradient relative -mt-6 mb-1 flex size-14 items-center justify-center rounded-full',
             'transition-transform duration-150 active:scale-90 motion-reduce:transition-none',

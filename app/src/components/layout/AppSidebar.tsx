@@ -22,6 +22,7 @@ function Rand({
   onClick,
   dupa,
   href,
+  tur,
 }: {
   on?: boolean
   icon: ReactNode
@@ -30,6 +31,8 @@ function Rand({
   dupa?: ReactNode
   /** Paginile sunt linkuri: Ctrl/⌘+click, Shift+click sau click cu rotița le deschid în tab nou. */
   href?: string
+  /** ținta tutorialului (`data-tur`) */
+  tur?: string
 }) {
   const Tag = href ? 'a' : 'button'
   return (
@@ -41,6 +44,7 @@ function Rand({
         onClick()
       }}
       aria-current={on ? 'page' : undefined}
+      data-tur={tur}
       className={cn(RAND, on ? 'bg-surface-2 text-foreground' : 'text-tx-2 hover:bg-surface-hover hover:text-foreground')}
     >
       <span className={cn('flex shrink-0', on ? 'text-accent-tx' : 'text-tx-3')}>{icon}</span>
@@ -83,6 +87,7 @@ export function AppSidebar({
       icon={<item.icon className={ICON} strokeWidth={1.9} aria-hidden="true" />}
       label={item.label}
       href={adresaPagina(item.key)}
+      tur={`nav-${item.key}`}
       onClick={() => {
         onSelect(item.key)
         setOpenMobile(false)
@@ -118,7 +123,7 @@ export function AppSidebar({
           ))}
         </nav>
         {/* Unelte (redesign F4): mutate din coloana din dreapta a paginii Dosare */}
-        <div className="mt-auto flex flex-col gap-0.5 pb-4 pt-6">
+        <div data-tur="unelte" className="mt-auto flex flex-col gap-0.5 pb-4 pt-6">
           <div className={GRUP}>{NAV_GROUP_LABELS.unelte}</div>
           {NAV_ITEMS.filter((item) => item.group === 'unelte').map(randSectiune)}
           {[

@@ -25,6 +25,7 @@ export function MobileTopNav({
           <button
             key={item.key}
             type="button"
+            data-tur={`nav-${item.key}`}
             onClick={() => onSelect(item.key)}
             aria-current={on ? 'page' : undefined}
             className={cn(

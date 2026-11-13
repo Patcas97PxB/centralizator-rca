@@ -31,7 +31,7 @@ export function DeFacutAzi({
   const vizibile = CHIPURI.filter((c) => numar[c.cheie] > 0 || activ === c.cheie)
 
   return (
-    <div className="flex items-center gap-2 overflow-x-auto pb-0.5 [scrollbar-width:none]">
+    <div data-tur="azi" className="flex items-center gap-2 overflow-x-auto pb-0.5 [scrollbar-width:none]">
       <span className="shrink-0 text-[13.5px] font-bold text-foreground">De făcut azi</span>
       {vizibile.length === 0 && <span className="text-[13px] text-tx-3">nimic urgent</span>}
       {vizibile.map((c) => {
