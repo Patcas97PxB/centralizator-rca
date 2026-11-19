@@ -30,6 +30,7 @@ import {
   Phone,
   Plus,
   ScanText,
+  SlidersHorizontal,
   Search,
   StickyNote,
   Store,
@@ -38,7 +39,7 @@ import {
   Workflow,
   Wrench,
 } from 'lucide-react'
-import { laPornireTur, marcheazaTurVazut, puneStareTur, turVazut } from '@/lib/tur'
+import { laPornireTur, marcheazaTurVazut, puneStareTur, turVazut, type FereastraTur } from '@/lib/tur'
 import { cn } from '@/lib/utils'
 import type { SectionKey } from '@/components/layout/nav-items'
 
@@ -52,8 +53,15 @@ type Loc = 'sus' | 'jos' | 'stanga' | 'dreapta'
 interface Pas {
   /** capitolul din care face parte (apare deasupra titlului) */
   capitol: string
-  /** valori `data-tur`, în ordinea preferinței; prima vizibilă e ținta */
+  /** valori `data-tur`, în ordinea preferinței; prima vizibilă e ținta. „@dialog”, „@popover”, „@main”
+   * = fereastra / lista deschisă de tur, respectiv conținutul paginii */
   tinte: string[]
+  /** butonul de unde se deschide fereastra sau pagina pasului: întâi e luminat el, apoi turul „îl
+   * apasă” și trece pe fereastră (19.11.2026, cerut: „să arate exact unde este și să deschidă pop-up-ul”).
+   * Dacă butonul nu e pe ecran (telefon) sau fereastra e deja deschisă, se trece direct la ea. */
+  buton?: string[]
+  /** fereastra pe care o deschide turul la pasul ăsta */
+  deschide?: FereastraTur
   icon: typeof Plus
   titlu: string
   text: (tinta: string | null, telefon: boolean) => ReactNode
@@ -80,11 +88,17 @@ const PASI: Pas[] = [
   // ── Pagina Dosare ──
   {
     capitol: 'Dosare',
-    tinte: ['nou'],
+    buton: ['nou'],
+    deschide: 'form',
+    tinte: ['@dialog'],
     icon: Plus,
     titlu: 'Dosar nou',
-    zoom: true,
-    text: () => <>De aici adaugi un dosar. Formularul e împărțit pe pași, în ordinea în care lucrezi:</>,
+    text: (_t, telefon) => (
+      <>
+        Butonul <b>Dosar nou</b> e {telefon ? <>jos, în mijloc (<b>+</b>)</> : <>sus, în dreapta</>}. L-am apăsat pentru tine — așa
+        arată formularul. E împărțit pe pași, în ordinea în care lucrezi:
+      </>
+    ),
     detalii: [
       <>
         <b>Dosar</b> (asigurator, nr. dosar, RBH) · <b>Mașina păgubită</b> · <b>Mașina de înlocuire</b> · <b>Client și service</b> ·{' '}
@@ -99,13 +113,14 @@ const PASI: Pas[] = [
   },
   {
     capitol: 'Dosare',
-    tinte: ['nou'],
+    deschide: 'form',
+    tinte: ['f-preluare'],
     icon: ScanText,
     titlu: 'PRELUARE DATE — nu mai scrii de mână',
-    zoom: true,
     text: () => (
       <>
-        În formular ai <b>PRELUARE DATE</b>: încarci documentele și aplicația le citește și completează câmpurile în locul tău.
+        Prima casetă din formular, cea albastră, e <b>PRELUARE DATE</b>: încarci documentele și aplicația le citește și completează
+        câmpurile în locul tău.
       </>
     ),
     detalii: [
@@ -115,6 +130,60 @@ const PASI: Pas[] = [
       </>,
       <>Din deviz calculează singură zilele de lucru, iar clasa mașinii e sugerată după marcă.</>,
       <>Verifici ce a citit și corectezi dacă e cazul, apoi salvezi.</>,
+    ],
+  },
+  {
+    capitol: 'Dosare',
+    deschide: 'form',
+    tinte: ['f-deviz'],
+    icon: Calculator,
+    titlu: 'Zilele din deviz, în formular',
+    text: () => (
+      <>
+        La <b>Termen</b> scrii zilele din deviz sau apeși <b>Calculează zile din deviz</b> și alegi devizul — PDF sau poze — iar
+        aplicația numără singură orele.
+      </>
+    ),
+    detalii: [
+      <>Data predării e azi; o schimbi dacă mașina pleacă în altă zi.</>,
+      <>
+        Data preluării se calculează singură. Dacă o scrii de mână, aceea devine termenul — iar <b>revino la calcul</b> o readuce.
+      </>,
+      <>
+        Bifa <b>DTE</b>: zilele se numără de la predare până la oferta de despăgubire.
+      </>,
+    ],
+  },
+  {
+    capitol: 'Dosare',
+    deschide: 'form',
+    tinte: ['f-calcul'],
+    icon: Timer,
+    titlu: 'Socoteala, pe loc',
+    text: () => (
+      <>
+        Sub câmpuri vezi imediat <b>câte zile sunt decontabile</b> și <b>data estimată a preluării</b>, cu socoteala scrisă — înainte
+        să salvezi.
+      </>
+    ),
+  },
+  {
+    capitol: 'Dosare',
+    deschide: 'form',
+    tinte: ['f-contract'],
+    icon: FileCheck,
+    titlu: 'Contractul final',
+    text: () => (
+      <>
+        Jos în formular încarci <b>contractul final</b>. Aplicația citește zilele, valoarea (cu și fără TVA) și clasa mașinii.
+      </>
+    ),
+    detalii: [
+      <>Verifică dacă e contractul dosarului — după nr. auto, nr. dosar sau RBH. Unul greșit e respins.</>,
+      <>Merge și cu un contract scanat sau pozat.</>,
+      <>
+        După contract se poate face <b>Documentul de intrare/ieșire</b> din service.
+      </>,
     ],
   },
   {
@@ -130,16 +199,34 @@ const PASI: Pas[] = [
     ),
     detalii: [
       <>
-        <b>Filtre avansate</b>: perioadă, service, data predării și sortare (prioritate, zile rămase sau nr. dosar).
-      </>,
-      <>
-        Tot acolo: <b>Exportă lista filtrată în Excel</b>.
-      </>,
-      <>
         <b>Ale mele</b> arată doar dosarele la care ți-ai pus „Amintește-mi”.
       </>,
       <>
         Butonul <b>i</b> deschide legenda culorilor.
+      </>,
+    ],
+  },
+  {
+    capitol: 'Dosare',
+    buton: ['filtre-buton'],
+    deschide: 'filtre',
+    tinte: ['@popover'],
+    icon: SlidersHorizontal,
+    titlu: 'Filtre avansate',
+    text: () => (
+      <>
+        Lângă căutare e <b>Filtre avansate</b>. Se deschide lista asta:
+      </>
+    ),
+    detalii: [
+      <>
+        <b>Perioadă</b> și <b>Sortare</b> — prioritate, zile rămase sau nr. dosar.
+      </>,
+      <>
+        <b>Service</b> și intervalul <b>Predare de la / până la</b>.
+      </>,
+      <>
+        <b>Exportă lista filtrată în Excel</b> — exact dosarele care se văd.
       </>,
     ],
   },
@@ -244,13 +331,15 @@ const PASI: Pas[] = [
   },
   {
     capitol: 'Cardul dosarului',
-    tinte: ['c-etapa', 'c-dosar'],
+    buton: ['c-etapa'],
+    deschide: 'reminder',
+    tinte: ['@dialog'],
     icon: BellRing,
     titlu: 'Etapa și „Amintește-mi”',
-    zoom: true,
     text: () => (
       <>
-        Pastila arată etapa. Apasă pe ea și alegi <b>Amintește-mi…</b> — un reminder pus de tine pe dosarul ăsta.
+        Pastila de pe card arată etapa. Apeși pe ea → <b>Amintește-mi…</b> și se deschide fereastra asta — un reminder pus de tine pe
+        dosar.
       </>
     ),
     detalii: [
@@ -349,16 +438,34 @@ const PASI: Pas[] = [
     panou: true,
     text: () => (
       <>
-        Lista completă: cele care lipsesc sunt primele, cele pe care le ai au bifă verde. Butonul <b>Documente</b> deschide fereastra
-        unde le bifezi.
+        Lista completă: cele care lipsesc sunt primele, cele pe care le ai au bifă verde. Dedesubt e butonul <b>Documente</b>.
+      </>
+    ),
+  },
+  {
+    capitol: 'Panoul dosarului',
+    buton: ['p-documente-buton'],
+    deschide: 'documente',
+    panou: true,
+    tinte: ['@dialog'],
+    icon: FolderOpen,
+    titlu: 'Fereastra Documente',
+    text: () => (
+      <>
+        Butonul <b>Documente</b> deschide fereastra asta: un rând pentru fiecare document, cele lipsă primele.
       </>
     ),
     detalii: [
-      <>Alegi fișierul și aplicația ține minte că îl ai. Fișierul rămâne la tine pe calculator, nu se urcă nicăieri.</>,
+      <>
+        <b>Încarcă</b> — alegi fișierul și aplicația ține minte că îl ai. Fișierul rămâne pe calculatorul tău, nu se urcă nicăieri.
+      </>,
+      <>
+        <b>Nu se aplică</b> — documentul nu mai apare la lipsuri.
+      </>,
       <>
         Din <b>contractul final</b> citește singură zilele și valoarea — de aici vin sumele din Rapoarte.
       </>,
-      <>Verifică și dacă e contractul dosarului potrivit; unul greșit e respins.</>,
+      <>Se salvează la fiecare schimbare; nu ai buton de Salvează.</>,
     ],
   },
   {
@@ -398,7 +505,7 @@ const PASI: Pas[] = [
     text: () => <>Partea de jos rămâne mereu la vedere, oricât ai derula:</>,
     detalii: [
       <>
-        <b>Zile din deviz</b> și câte zile sunt decontabile.
+        <b>Zile din deviz</b>, câte sunt decontabile și <b>socoteala din deviz</b> (orele ÷ 4) — fără să deschizi Editează.
       </>,
       <>
         <b>Verificare tarif</b>, <b>Doc. intrare/ieșire</b> și <b>Mail</b> — se deschid deja completate cu datele dosarului.
@@ -410,11 +517,17 @@ const PASI: Pas[] = [
   },
   {
     capitol: 'Dosare',
-    tinte: ['clopotel'],
+    buton: ['clopotel'],
+    deschide: 'clopotel',
+    tinte: ['@popover'],
     icon: Bell,
     titlu: 'Clopoțelul',
-    zoom: true,
-    text: () => <>Cifra roșie arată câte dosare cer ceva de la tine. Un click pe un rând te duce direct la cardul lui.</>,
+    text: () => (
+      <>
+        Sus, lângă cont. Cifra roșie arată câte dosare cer ceva de la tine; la click se deschide lista. Un click pe un rând te duce
+        direct la cardul dosarului.
+      </>
+    ),
     detalii: [
       <>
         Apar singure: <b>termene aproape sau depășite</b>, dosare <b>preluate și netrimise</b>, mașini la client <b>fără deviz</b>.
@@ -440,16 +553,17 @@ const PASI: Pas[] = [
       ) : (
         <>
           Uneltele te scapă de calculele și documentele făcute de mână. Merg și <b>fără dosar</b> — de exemplu când te sună un
-          client și vrei doar un răspuns rapid. Le luăm pe rând.
+          client și vrei doar un răspuns rapid. La fiecare îți arăt butonul, apoi o deschid.
         </>
       ),
   },
   {
     capitol: 'Unelte',
-    tinte: ['u-deviz'],
+    buton: ['u-deviz'],
+    deschide: 'deviz',
+    tinte: ['@dialog'],
     icon: Calculator,
     titlu: 'Zile din deviz',
-    zoom: true,
     text: () => (
       <>
         Încarci devizul și aplicația citește orele de manoperă și de vopsitorie și îți dă <b>zilele de lucru</b>, cu socoteala
@@ -471,10 +585,11 @@ const PASI: Pas[] = [
   },
   {
     capitol: 'Unelte',
-    tinte: ['u-tarif'],
+    buton: ['u-tarif'],
+    deschide: 'tarif',
+    tinte: ['@dialog'],
     icon: Coins,
     titlu: 'Verificare tarif',
-    zoom: true,
     text: () => (
       <>
         Alegi asiguratorul, clasa mașinii și zilele și primești <b>prețul pe zi și totalul după grilă</b>, cu și fără TVA.
@@ -494,10 +609,11 @@ const PASI: Pas[] = [
   },
   {
     capitol: 'Unelte',
-    tinte: ['u-date'],
+    buton: ['u-date'],
+    deschide: 'date',
+    tinte: ['@dialog'],
     icon: CalendarClock,
     titlu: 'Calculator de date',
-    zoom: true,
     text: () => (
       <>
         Pentru clientul de la telefon: pui data predării, zilele din deviz și asiguratorul și afli <b>până când poate ține mașina</b>,
@@ -514,10 +630,11 @@ const PASI: Pas[] = [
   },
   {
     capitol: 'Unelte',
-    tinte: ['u-mail'],
+    buton: ['u-mail'],
+    deschide: 'mail',
+    tinte: ['@dialog'],
     icon: Mail,
     titlu: 'Creare mail',
-    zoom: true,
     text: () => (
       <>
         Alegi dosarul și primești <b>subiectul și textul mailului gata scrise</b>, după modelul obișnuit: dosar, model mașină,
@@ -537,10 +654,11 @@ const PASI: Pas[] = [
   },
   {
     capitol: 'Unelte',
-    tinte: ['u-docii'],
+    buton: ['u-docii'],
+    deschide: 'docii',
+    tinte: ['@dialog'],
     icon: FileText,
     titlu: 'Document intrare/ieșire',
-    zoom: true,
     text: () => (
       <>
         Completează singur <b>documentul de intrare/ieșire din service</b>: client, mașină, nr. auto, data intrării și a ieșirii.
@@ -556,10 +674,11 @@ const PASI: Pas[] = [
   },
   {
     capitol: 'Unelte',
-    tinte: ['u-pdf'],
+    buton: ['u-pdf'],
+    deschide: 'pdf',
+    tinte: ['@dialog'],
     icon: FilePen,
     titlu: 'Modificare PDF',
-    zoom: true,
     text: () => <>Corectezi un PDF direct în browser, fără alt program.</>,
     detalii: [
       <>
@@ -573,10 +692,11 @@ const PASI: Pas[] = [
   },
   {
     capitol: 'Unelte',
-    tinte: ['nav-notite'],
+    buton: ['nav-notite'],
+    pagina: 'notite',
+    tinte: ['@main'],
     icon: NotebookPen,
     titlu: 'Notițe',
-    zoom: true,
     text: () => <>Carnețelul tău de lângă telefon: notezi repede ce ai vorbit, fără să cauți dosarul.</>,
     detalii: [
       <>
@@ -589,10 +709,11 @@ const PASI: Pas[] = [
   },
   {
     capitol: 'Unelte',
-    tinte: ['cautare-rapida'],
+    buton: ['cautare-rapida'],
+    deschide: 'cautare',
+    tinte: ['@dialog'],
     icon: Search,
     titlu: 'Căutare rapidă',
-    zoom: true,
     text: (_t, telefon) =>
       telefon ? (
         <>
@@ -609,10 +730,11 @@ const PASI: Pas[] = [
   // ── Restul meniului ──
   {
     capitol: 'Meniu',
-    tinte: ['nav-servicii'],
+    buton: ['nav-servicii'],
+    pagina: 'servicii',
+    tinte: ['@main'],
     icon: Store,
     titlu: 'Service-uri',
-    zoom: true,
     text: () => (
       <>
         Lista service-urilor cu care lucrezi, cu telefon. Le adaugi o dată și apoi le <b>alegi din listă</b> în dosar, la filtre și în
@@ -622,10 +744,11 @@ const PASI: Pas[] = [
   },
   {
     capitol: 'Meniu',
-    tinte: ['nav-rapoarte'],
+    buton: ['nav-rapoarte'],
+    pagina: 'rapoarte',
+    tinte: ['@main'],
     icon: ChartColumn,
     titlu: 'Rapoarte',
-    zoom: true,
     text: () => <>Partea de bani și de evidență, pe perioada și service-ul alese.</>,
     detalii: [
       <>
@@ -645,13 +768,14 @@ const PASI: Pas[] = [
   // ── Setări (turul deschide pagina) ──
   {
     capitol: 'Setări',
+    buton: ['nav-setari'],
     pagina: 'setari',
-    tinte: ['s-folder', 'nav-setari'],
+    tinte: ['s-folder'],
     icon: FolderOpen,
     titlu: 'Folderul de pe laptop',
     text: () => (
       <>
-        Am deschis <b>Setări</b>. Dacă ții pe laptop un folder cu câte un subfolder pe dosar, numit după nr. auto, îl alegi aici o
+        Ultima pagină din meniu e <b>Setări</b>. Dacă ții pe laptop un folder cu câte un subfolder pe dosar, numit după nr. auto, îl alegi aici o
         singură dată.
       </>
     ),
@@ -711,20 +835,30 @@ const vizibil = (el: Element) => {
   const r = el.getBoundingClientRect()
   return r.width > 0 && r.height > 0
 }
-function gasesteTinta(pas: Pas): { el: HTMLElement; nume: string } | null {
-  for (const nume of pas.tinte) {
-    for (const el of document.querySelectorAll<HTMLElement>(`[data-tur="${nume}"]`)) {
-      if (vizibil(el)) return { el, nume }
-    }
+const SPECIALE: Record<string, string> = {
+  '@dialog': '[data-slot=dialog-content]',
+  '@popover': '[data-slot=popover-content]',
+  '@main': 'main',
+}
+function gasesteTinta(tinte: string[]): { el: HTMLElement; nume: string } | null {
+  for (const nume of tinte) {
+    const lista = [...document.querySelectorAll<HTMLElement>(SPECIALE[nume] ?? `[data-tur="${nume}"]`)]
+    // la ferestre, cea de deasupra (ultima deschisă)
+    if (SPECIALE[nume]) lista.reverse()
+    for (const el of lista) if (vizibil(el)) return { el, nume }
   }
   return null
 }
+// ferestrele (nu listele mici) se mută spre stânga cât e nevoie ca explicația să încapă în dreapta lor
+const LISTE: FereastraTur[] = ['filtre', 'clopotel']
 
 interface Zona {
   top: number
   left: number
   width: number
   height: number
+  /** ținta e într-o fereastră sau listă deschisă de tur → explicația merge în lateral, nu peste ea */
+  fereastra?: boolean
 }
 const MARGINE = 12 // distanța minimă a explicației față de marginea ecranului
 const SPATIU = 46 // locul săgeții, între țintă și explicație
@@ -748,7 +882,11 @@ function asaza(z: Zona, w: number, h: number, vw: number, vh: number): Asezare {
   }
   // meniul lateral (îngust, lipit de stânga) → explicația în dreapta lui; altfel sub, apoi deasupra
   const lateral = z.left < 260 && z.width <= 260
-  const ordine: Loc[] = lateral ? ['dreapta', 'jos', 'sus', 'stanga'] : ['jos', 'sus', 'dreapta', 'stanga']
+  const ordine: Loc[] = z.fereastra
+    ? ['dreapta', 'stanga', 'jos', 'sus']
+    : lateral
+      ? ['dreapta', 'jos', 'sus', 'stanga']
+      : ['jos', 'sus', 'dreapta', 'stanga']
   const cx = z.left + z.width / 2
   const cy = z.top + z.height / 2
   let loc = ordine.find((l) => incape[l])
@@ -819,6 +957,7 @@ export function Tur({
   useEffect(
     () =>
       laPornireTur(() => {
+        paginaRef.current = 'dosare'
         onDosare()
         setFaza(0)
       }),
@@ -830,6 +969,7 @@ export function Tur({
     setFaza('inchis')
   }, [])
   const porneste = () => {
+    paginaRef.current = 'dosare'
     onDosare()
     setFaza(0)
   }
@@ -838,21 +978,64 @@ export function Tur({
 
   const pas = typeof faza === 'number' ? PASI[faza] : null
 
-  // Cât rulează pașii, pagina Dosare arată dosarele de exemplu (și panoul, la pașii lui).
+  // Etapa pasului: A = e luminat butonul de unde se deschide, B = fereastra / pagina e deschisă.
+  // Se ține împreună cu numărul pasului, ca la schimbarea pasului să nu folosim etapa celui vechi.
+  const deschisRef = useRef<FereastraTur | null>(null)
+  const paginaRef = useRef<SectionKey>('dosare')
+  const [etapa, setEtapa] = useState<{ pas: number; b: boolean }>({ pas: -1, b: true })
+  const dejaAcolo = (p: Pas) => (p.deschide ? deschisRef.current === p.deschide : !!p.pagina && paginaRef.current === p.pagina)
+  const etapaB = pas ? (etapa.pas === faza ? etapa.b : !pas.buton || dejaAcolo(pas)) : false
+  useLayoutEffect(() => {
+    if (typeof faza !== 'number') return
+    const p = PASI[faza]
+    const buton = p.buton ? gasesteTinta(p.buton) : null
+    if (!p.buton || dejaAcolo(p) || !buton) {
+      setEtapa({ pas: faza, b: true })
+      return
+    }
+    setEtapa({ pas: faza, b: false })
+    // butonul stă luminat cât să-l vezi, apoi turul „îl apasă” și deschide fereastra
+    const t = setTimeout(() => {
+      const el = gasesteTinta(p.buton!)?.el
+      if (el) {
+        el.classList.add('tur-apasat')
+        setTimeout(() => el.classList.remove('tur-apasat'), 450)
+      }
+      setEtapa({ pas: faza, b: true })
+    }, 1500)
+    return () => clearTimeout(t)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [faza])
+  const tinteActive = pas ? (etapaB || !pas.buton ? pas.tinte : pas.buton) : null
+  const deschis = pas && etapaB ? (pas.deschide ?? null) : null
+
+  // Cât rulează pașii, aplicația arată dosarele de exemplu (și panoul / fereastra pasului).
   const cuPanou = !!pas?.panou
   useEffect(() => {
-    puneStareTur({ activ: typeof faza === 'number', panou: cuPanou })
-  }, [faza, cuPanou])
-  useEffect(() => () => puneStareTur({ activ: false, panou: false }), [])
-  // Pagina pasului (Setări la ultimul capitol); la final și la închidere ne întoarcem pe Dosare.
-  const pagina = pas ? (pas.pagina ?? 'dosare') : null
+    deschisRef.current = deschis
+    puneStareTur({ activ: typeof faza === 'number', panou: cuPanou, deschis })
+  }, [faza, cuPanou, deschis])
+  useEffect(() => () => puneStareTur({ activ: false, panou: false, deschis: null }), [])
+  // O fereastră deschisă de tur se mută spre stânga (vezi masoara), ca explicația să încapă lângă ea.
+  const mutaFereastra = !!deschis && !LISTE.includes(deschis)
+  useEffect(() => {
+    const html = document.documentElement
+    if (mutaFereastra) html.setAttribute('data-tur-fereastra', '')
+    else html.removeAttribute('data-tur-fereastra')
+    return () => html.removeAttribute('data-tur-fereastra')
+  }, [mutaFereastra])
+  // Pagina pasului; în etapa A rămânem pe pagina de dinainte (se vede butonul din meniu).
+  // La final și la închidere ne întoarcem pe Dosare.
+  const pagina = pas && etapaB ? (pas.pagina ?? 'dosare') : null
   const turPornit = useRef(false)
   useEffect(() => {
     if (pagina) {
       turPornit.current = true
+      paginaRef.current = pagina
       onPagina(pagina)
     } else if (turPornit.current && (faza === 'final' || faza === 'inchis')) {
       turPornit.current = false
+      paginaRef.current = 'dosare'
       onPagina('dosare')
     }
   }, [pagina, faza, onPagina])
@@ -860,28 +1043,50 @@ export function Tur({
 
   // Ținta pasului: o aducem pe ecran, o măsurăm și o urmărim (redimensionare, derulare, lista care se
   // încarcă). Butoanele mici primesc clasa de zoom cât timp sunt arătate.
+  const cheieTinte = tinteActive?.join('|') ?? ''
+  const cuZoom = !!pas && (!etapaB || (!pas.buton && !!pas.zoom))
   useLayoutEffect(() => {
-    if (!pas) {
+    if (!pas || !tinteActive) {
       setZona(null)
       setNumeTinta(null)
       return
     }
     let el: HTMLElement | null = null
     let viu = true
+    const inceput = performance.now()
     const masoara = () => {
       if (!viu) return
-      const g = gasesteTinta(pas)
+      // Fereastra deschisă de tur stă la stânga cât să încapă explicația (400–480 px) în dreapta ei.
+      if (mutaFereastra) {
+        const f = gasesteTinta(['@dialog'])?.el
+        const vw = window.innerWidth
+        let dx = 0
+        if (f && vw >= 1000) {
+          const w = f.offsetWidth
+          const cutieW = cutie.current?.offsetWidth ?? 400
+          // + LUMINA: zona luminată e cu câțiva px mai lată decât fereastra; + 4 rezervă de rotunjire
+          dx = Math.min(Math.max(0, vw / 2 + w / 2 + LUMINA + 4 - (vw - cutieW - SPATIU - MARGINE)), Math.max(0, vw / 2 - w / 2 - 8))
+        }
+        const html = document.documentElement
+        const vechi = parseFloat(html.style.getPropertyValue('--tur-dx') || '0')
+        if (Math.abs(vechi - dx) > 2) html.style.setProperty('--tur-dx', Math.round(dx) + 'px')
+      }
+      const g = gasesteTinta(tinteActive)
       if (g?.el !== el) {
+        // fereastra abia se deschide: lăsăm lumina pe butonul apăsat până apare (cel mult 1,5 s),
+        // în loc să mutăm explicația în centru și înapoi
+        if (!g && el === null && performance.now() - inceput < 1500) return
         el?.classList.remove('tur-zoom')
         el = g?.el ?? null
         if (el) {
           const r = el.getBoundingClientRect()
           if (r.top < 70 || r.bottom > window.innerHeight - 20) el.scrollIntoView({ block: 'center', behavior: 'instant' as ScrollBehavior })
-          if (pas.zoom) el.classList.add('tur-zoom')
+          if (cuZoom) el.classList.add('tur-zoom')
         }
         setNumeTinta(g?.nume ?? null)
       }
       if (!el) return setZona(null)
+      const inFereastra = !!el.closest('[data-slot=dialog-content],[data-slot=popover-content]')
       // Butoanele cu zoom își schimbă mărimea de pe ecran de câteva ori pe secundă; dacă am măsura-o așa,
       // zona luminată și explicația ar tremura odată cu ele (raportat 13.11.2026 la pașii de unelte:
       // „se mișcă caseta de text și nu se poate citi”). Luăm centrul (rămâne pe loc la zoom) și mărimea
@@ -898,10 +1103,13 @@ export function Tur({
         left,
         width: Math.round(Math.min(window.innerWidth - 4, r.right + LUMINA)) - left,
         height: Math.round(Math.min(window.innerHeight - 4, r.bottom + LUMINA)) - top,
+        fereastra: inFereastra,
       }
       // sub 2 px nu mutăm nimic: la zoom centrul iese cu jumătăți de pixel și rotunjirea ar sări între două valori
       const aproape = (a: number, b: number) => Math.abs(a - b) < 2
-      setZona((v) => (v && aproape(v.top, z.top) && aproape(v.left, z.left) && aproape(v.width, z.width) && aproape(v.height, z.height) ? v : z))
+      setZona((v) =>
+        v && v.fereastra === z.fereastra && aproape(v.top, z.top) && aproape(v.left, z.left) && aproape(v.width, z.width) && aproape(v.height, z.height) ? v : z,
+      )
     }
     masoara()
     const t = setInterval(masoara, 250)
@@ -914,7 +1122,8 @@ export function Tur({
       window.removeEventListener('scroll', masoara, true)
       el?.classList.remove('tur-zoom')
     }
-  }, [pas])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pas, cheieTinte, cuZoom, mutaFereastra])
 
   // Locul explicației, după ce îi știm mărimea.
   useLayoutEffect(() => {
@@ -960,7 +1169,7 @@ export function Tur({
   })()
 
   return createPortal(
-    <div className="fixed inset-0 z-[200]" role="dialog" aria-modal="true" aria-label="Tutorial">
+    <div data-tur-root className="pointer-events-auto fixed inset-0 z-[200]" role="dialog" aria-modal="true" aria-label="Tutorial">
       {/* prinde click-urile: cât ține tutorialul, aplicația de dedesubt nu se apasă din greșeală */}
       <div className={cn('absolute inset-0', centrat && 'bg-[rgba(3,7,18,.72)]')} />
 

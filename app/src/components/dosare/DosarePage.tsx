@@ -4,6 +4,7 @@ import { useDosareContext } from '@/contexts/DosareContext'
 import { filtreImplicite, filtreazaSiSorteazaDosare, numaraEtape } from '@/lib/dosare-filter'
 import { useStareTur } from '@/lib/tur'
 import { ID_PANOU_TUR, dosareTur } from '@/lib/tur-demo'
+import { ReminderModal } from './ReminderModal'
 import { remindere } from '@/lib/reminder'
 import { exportDosareXlsx } from '@/lib/xlsx-export'
 import type { Dosar } from '@/lib/types'
@@ -34,6 +35,16 @@ export function DosarePage({ actiune, onActiuneFolosita }: { actiune?: ActiuneRa
   const filtrate = useMemo(() => (exemple ? filtreazaSiSorteazaDosare(exemple, filtreImplicite) : ctx.filtrate), [exemple, ctx.filtrate])
   const deSunat = useMemo(() => (exemple ? dosareDeSunat(exemple) : ctx.deSunat), [exemple, ctx.deSunat])
   const loading = exemple ? false : ctx.loading
+  // Ferestrele pe care le deschide turul, pe primul dosar de exemplu (nimic nu se salvează).
+  const deschisTur = exemple ? tur.deschis : null
+  const exempluTur = exemple?.find((d) => d.id === ID_PANOU_TUR) ?? null
+  const draftTur = useMemo<Partial<Dosar> | null>(() => {
+    if (!exempluTur) return null
+    const { id: _id, ...rest } = exempluTur
+    void _id
+    return { ...rest, predatBifat: false, notes: '' }
+  }, [exempluTur])
+  const faraSalvare = async (d: Dosar) => d.id
   const [modalDeschis, setModalDeschis] = useState(false)
   const [dosarActiv, setDosarActiv] = useState<Dosar | null>(null)
   const [initialDraft, setInitialDraft] = useState<Partial<Dosar> | null>(null)
@@ -170,7 +181,7 @@ export function DosarePage({ actiune, onActiuneFolosita }: { actiune?: ActiuneRa
         <div className="min-w-0 space-y-4">
 
           <div data-tur="filtre" className="rounded-[20px] border border-border bg-card p-3">
-            <FilterBar filtre={filtre} onChange={setFiltre} servicii={servicii} onExport={() => exportDosareXlsx(filtrate)} nrAleMele={remindere(dosare).length} />
+            <FilterBar filtre={filtre} onChange={setFiltre} servicii={servicii} onExport={() => exportDosareXlsx(filtrate)} nrAleMele={remindere(dosare).length} deschisTur={deschisTur === 'filtre'} />
           </div>
 
           <DeFacutAzi
@@ -238,14 +249,18 @@ export function DosarePage({ actiune, onActiuneFolosita }: { actiune?: ActiuneRa
       </div>
 
       <DocumenteModal
-        open={docsId !== null}
-        dosar={dosare.find((x) => x.id === docsId) ?? null}
+        open={docsId !== null || deschisTur === 'documente'}
+        dosar={deschisTur === 'documente' ? exempluTur : (dosare.find((x) => x.id === docsId) ?? null)}
         onClose={() => {
           setDocsId(null)
           revinoLaPanou()
         }}
-        onSave={salveazaDosar}
+        onSave={exemple ? faraSalvare : salveazaDosar}
       />
+
+      {exempluTur && (
+        <ReminderModal dosar={exempluTur} open={deschisTur === 'reminder'} onClose={() => {}} onPatch={() => {}} />
+      )}
 
       <DosarPanou
         dosar={dosare.find((x) => x.id === panouId) ?? null}
@@ -258,15 +273,15 @@ export function DosarePage({ actiune, onActiuneFolosita }: { actiune?: ActiuneRa
       />
 
       <DosarFormModal
-        open={modalDeschis}
-        dosar={dosarActiv}
-        initialDraft={initialDraft}
+        open={modalDeschis || deschisTur === 'form'}
+        dosar={deschisTur === 'form' ? null : dosarActiv}
+        initialDraft={deschisTur === 'form' ? draftTur : initialDraft}
         servicii={servicii}
         onClose={() => {
           setModalDeschis(false)
           revinoLaPanou()
         }}
-        onSave={salveazaDosar}
+        onSave={exemple ? faraSalvare : salveazaDosar}
         onDelete={stergeDosar}
       />
     </div>

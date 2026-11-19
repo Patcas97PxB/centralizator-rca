@@ -220,6 +220,7 @@ export function DosarPanou({
             <button
               type="button"
               onClick={() => onDocumente(dosar.id)}
+              data-tur="p-documente-buton"
               className="mt-2 inline-flex h-8 items-center gap-1.5 rounded-lg border border-border-strong px-3 text-[12.5px] font-bold text-foreground transition-colors hover:bg-surface-hover"
             >
               <FolderOpen className="size-4" aria-hidden="true" />
@@ -303,20 +304,31 @@ export function DosarPanou({
 
         {/* Uneltele pe dosarul ăsta + zilele din deviz, mereu la vedere jos (cerut 06.11.2026) */}
         <div data-tur="p-jos" className="border-t border-border px-5 pt-3">
-          <div className="mb-2.5 flex items-baseline justify-between gap-3 rounded-lg bg-surface-2 px-3 py-2">
-            <span className="text-[12.5px] font-semibold text-tx-2">Zile din deviz</span>
-            <span className="text-right text-[13px] tabular-nums text-tx-2">
-              {dosar.zileDeviz ? (
-                <>
-                  <b className="text-[16px] text-foreground">{dosar.zileDeviz}</b>
-                  {rca.zile != null && <> · decontabile <b className="text-foreground">{rca.zile}</b></>}
-                </>
-              ) : dosar.dte ? (
-                'DTE — fără deviz'
+          <div className="mb-2.5 rounded-lg bg-surface-2 px-3 py-2">
+            <div className="flex items-baseline justify-between gap-3">
+              <span className="text-[12.5px] font-semibold text-tx-2">Zile din deviz</span>
+              <span className="text-right text-[13px] tabular-nums text-tx-2">
+                {dosar.zileDeviz ? (
+                  <>
+                    <b className="text-[16px] text-foreground">{dosar.zileDeviz}</b>
+                    {rca.zile != null && <> · decontabile <b className="text-foreground">{rca.zile}</b></>}
+                  </>
+                ) : dosar.dte ? (
+                  'DTE — fără deviz'
+                ) : (
+                  <span className="text-tx-3">necompletat</span>
+                )}
+              </span>
+            </div>
+            {/* Socoteala din deviz (orele ÷ 4), la vedere fără să deschizi Editează (cerut 19.11.2026) */}
+            {dosar.zileDeviz &&
+              (dosar.zileDevizFormula ? (
+                <p className="mt-1 text-[12px] leading-snug tabular-nums text-tx-3" title={dosar.zileDevizExplicatie || undefined}>
+                  {dosar.zileDevizFormula}
+                </p>
               ) : (
-                <span className="text-tx-3">necompletat</span>
-              )}
-            </span>
+                <p className="mt-1 text-[12px] text-tx-3">Scrise de mână — nu a fost citit un deviz.</p>
+              ))}
           </div>
           <div className="grid grid-cols-3 gap-2">
             {(

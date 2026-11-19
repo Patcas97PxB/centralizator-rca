@@ -214,7 +214,7 @@ export function DosarFormModal({
         <PreluareDateSection draft={draft} onPatch={patch} />
 
         {/* Câmpurile sunt grupate în ordinea pașilor: dosarul, mașina păgubită, mașina de înlocuire, client/service, termen. */}
-        <div className="grid gap-x-4 gap-y-3.5 sm:grid-cols-2">
+        <div data-tur="f-campuri" className="grid gap-x-4 gap-y-3.5 sm:grid-cols-2">
           <Sectiune>Dosar</Sectiune>
           <div className="space-y-1.5">
             <Label htmlFor="fNrDosar">Nr. dosar *</Label>
@@ -408,7 +408,7 @@ export function DosarFormModal({
           </div>
         </div>
 
-        <div className="rounded-xl border border-border bg-muted/40 p-3 text-sm">
+        <div data-tur="f-calcul" className="rounded-xl border border-border bg-muted/40 p-3 text-sm">
           <p className="font-medium text-foreground">
             {rcaPreview.zile != null ? `${rcaPreview.zile} zile decontabile` : 'Termen necunoscut încă'}
             {rcaPreview.dataPreluare && ` — preluare estimată ${rcaPreview.dataPreluare.split('-').reverse().join('.')}`}

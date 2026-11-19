@@ -105,7 +105,7 @@ export function PreluareDateSection({
   }
 
   return (
-    <div className="space-y-2 rounded-2xl border border-primary/35 bg-primary/[.08] p-3.5">
+    <div data-tur="f-preluare" className="space-y-2 rounded-2xl border border-primary/35 bg-primary/[.08] p-3.5">
       <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-3">
         <div className="min-w-0 flex-[1_1_260px]">
           <div className="flex items-center gap-2 text-[13.5px] font-bold text-foreground">

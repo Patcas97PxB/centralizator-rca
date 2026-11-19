@@ -31,7 +31,7 @@ export function ContractFinalSection({
   }
 
   return (
-    <div className="space-y-2 rounded-xl border border-border bg-muted/30 p-3">
+    <div data-tur="f-contract" className="space-y-2 rounded-xl border border-border bg-muted/30 p-3">
       <div className="flex items-center justify-between gap-2">
         <div className="flex items-center gap-2 text-sm font-semibold text-foreground">
           <FileCheck2 className="size-4 text-primary" aria-hidden="true" />

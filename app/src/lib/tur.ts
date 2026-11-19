@@ -40,15 +40,31 @@ export function laPornireTur(f: () => void) {
 // „să apară câteva dosare demo doar în tutorial”), ca explicațiile despre card să aibă pe ce arăta chiar
 // și când aplicația e goală. Sunt doar pe ecran: nu trec prin salvare, nu ajung în baza de date și
 // dispar când se închide turul. `panou` = turul cere deschis panoul lateral al primului exemplu.
+/** Fereastra pe care turul o ține deschisă la pasul curent (19.11.2026, cerut: „să arate exact unde
+ * este și să deschidă pop-up-ul, la fiecare etapă”). Cine o desenează citește `useStareTur().deschis`. */
+export type FereastraTur =
+  | 'form'
+  | 'filtre'
+  | 'reminder'
+  | 'documente'
+  | 'clopotel'
+  | 'deviz'
+  | 'tarif'
+  | 'date'
+  | 'mail'
+  | 'docii'
+  | 'pdf'
+  | 'cautare'
 export interface StareTur {
   activ: boolean
   panou: boolean
+  deschis: FereastraTur | null
 }
-let stare: StareTur = { activ: false, panou: false }
+let stare: StareTur = { activ: false, panou: false, deschis: null }
 const ascultatori = new Set<() => void>()
 
 export function puneStareTur(n: StareTur) {
-  if (n.activ === stare.activ && n.panou === stare.panou) return
+  if (n.activ === stare.activ && n.panou === stare.panou && n.deschis === stare.deschis) return
   stare = n
   ascultatori.forEach((f) => f())
 }

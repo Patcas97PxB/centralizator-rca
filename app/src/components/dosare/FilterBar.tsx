@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { Bell, Download, Search, SlidersHorizontal } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -25,6 +26,7 @@ export function FilterBar({
   servicii,
   onExport,
   nrAleMele,
+  deschisTur,
 }: {
   filtre: DosareFiltre
   onChange: (next: DosareFiltre) => void
@@ -32,6 +34,8 @@ export function FilterBar({
   onExport: () => void
   /** Cate dosare au „Amintește-mi" (butonul „Ale mele"). */
   nrAleMele: number
+  /** tutorialul ține deschise „Filtre avansate” */
+  deschisTur?: boolean
 }) {
   const activeFiltreAvansate = !!(
     filtre.service ||
@@ -41,6 +45,7 @@ export function FilterBar({
     filtre.sortare !== 'actualizare'
   )
 
+  const [filtreDeschise, setFiltreDeschise] = useState(false)
   return (
     <div className="flex flex-wrap items-center gap-2.5">
       <div className="relative min-w-0 flex-1 sm:min-w-[140px]">
@@ -54,10 +59,11 @@ export function FilterBar({
       </div>
 
 
-      <Popover>
+      <Popover open={filtreDeschise || !!deschisTur} onOpenChange={setFiltreDeschise}>
         <PopoverTrigger asChild>
           <button
             type="button"
+            data-tur="filtre-buton"
             aria-label="Filtre avansate"
             className={cn(
               CONTROL,

@@ -273,6 +273,11 @@
 .tur-sageata-dreapta { --tur-d: -7px; animation: turSageataX 1s ease-in-out infinite; }
 .tur-sageata-stanga { --tur-d: 7px; animation: turSageataX 1s ease-in-out infinite; }
 .tur-cutie { animation: turIntra .22s ease-out both; }
+/* „Apăsarea” butonului înainte ca turul să deschidă fereastra lui */
+@keyframes turApasat { 0% { transform: scale(1); } 35% { transform: scale(.88); } 100% { transform: scale(1); } }
+.tur-apasat { animation: turApasat .42s ease-out both !important; }
+/* Fereastra deschisă de tur se dă spre stânga cât să încapă explicația în dreapta ei (--tur-dx, calculat în Tur.tsx) */
+html[data-tur-fereastra] [data-slot=dialog-content] { left: calc(50% - var(--tur-dx, 0px)) !important; transition: left .3s ease; }
 .tur-icon { animation: turIcon .45s ease-out both; }
 
 @keyframes dosarEvidentiat {

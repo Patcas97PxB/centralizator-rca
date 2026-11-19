@@ -23,6 +23,8 @@ import { CautareRapida, type ComandaRapida } from '@/components/unelte/CautareRa
 import { DocIntrareIesireModal } from '@/components/dosare/DocIntrareIesireModal'
 import { CreareMail } from '@/components/unelte/CreareMail'
 import { Tur } from '@/components/tur/Tur'
+import { useStareTur } from '@/lib/tur'
+import { ID_CONTRACT_TUR, ID_PANOU_TUR } from '@/lib/tur-demo'
 
 // Editorul PDF (MuPDF + pdf-lib) e mare — se incarca doar cand e deschis.
 const ModificarPdfModal = lazy(() => import('@/components/dosare/ModificarPdfModal').then((m) => ({ default: m.ModificarPdfModal })))
@@ -52,7 +54,8 @@ function AppContent() {
     window.addEventListener('hashchange', laSchimbare)
     return () => window.removeEventListener('hashchange', laSchimbare)
   }, [])
-  const { deSunat, setFiltre, loading } = useDosareContext()
+  const { deSunat, setFiltre, loading, dosare } = useDosareContext()
+  const turDeschis = useStareTur().deschis
   const laDosare = useCallback(() => setActive('dosare'), [setActive])
   const { title, subtitle } = TITLURI[active]
 
@@ -132,7 +135,7 @@ function AppContent() {
         <ComingSoonPage label={TITLURI[active].title} icon={NAV_ITEMS.find((i) => i.key === active)!.icon} />
       )}
 
-      <Dialog open={devizDeschis} onOpenChange={setDevizDeschis}>
+      <Dialog open={devizDeschis || turDeschis === 'deviz'} onOpenChange={setDevizDeschis}>
         <DialogContent showCloseButton={false} className="gap-0 overflow-hidden p-0 sm:max-w-[440px]">
           <ScanDevizCard
             onClose={() => setDevizDeschis(false)}
@@ -144,16 +147,28 @@ function AppContent() {
         </DialogContent>
       </Dialog>
 
-      <VerificareTarif open={tarifDeschis} onClose={() => setTarifDeschis(false)} />
-      <CalculatorDate open={dateDeschis} onClose={() => setDateDeschis(false)} />
-      <DocIntrareIesireModal dosar={null} open={docIIDeschis} onClose={() => setDocIIDeschis(false)} />
-      <CreareMail open={mailDeschis} onClose={() => setMailDeschis(false)} />
+      <VerificareTarif
+        open={tarifDeschis || turDeschis === 'tarif'}
+        dosarInitial={turDeschis === 'tarif' ? ID_CONTRACT_TUR : undefined}
+        onClose={() => setTarifDeschis(false)}
+      />
+      <CalculatorDate open={dateDeschis || turDeschis === 'date'} onClose={() => setDateDeschis(false)} />
+      <DocIntrareIesireModal
+        dosar={turDeschis === 'docii' ? (dosare.find((d) => d.id === ID_CONTRACT_TUR) ?? null) : null}
+        open={docIIDeschis || turDeschis === 'docii'}
+        onClose={() => setDocIIDeschis(false)}
+      />
+      <CreareMail
+        open={mailDeschis || turDeschis === 'mail'}
+        dosarInitial={turDeschis === 'mail' ? ID_PANOU_TUR : undefined}
+        onClose={() => setMailDeschis(false)}
+      />
       <Tur gata={!loading} onDosare={laDosare} onPagina={setActive} onNou={() => porneste({ tip: 'nou' })} />
-      <CautareRapida open={cautareDeschisa} onClose={() => setCautareDeschisa(false)} onAlegeDosar={alegeDosar} comenzi={comenzi} />
+      <CautareRapida open={cautareDeschisa || turDeschis === 'cautare'} onClose={() => setCautareDeschisa(false)} onAlegeDosar={alegeDosar} comenzi={comenzi} />
 
-      {pdfIncarcat && (
+      {(pdfIncarcat || turDeschis === 'pdf') && (
         <Suspense fallback={null}>
-          <ModificarPdfModal open={pdfDeschis} onClose={() => setPdfDeschis(false)} />
+          <ModificarPdfModal open={pdfDeschis || turDeschis === 'pdf'} onClose={() => setPdfDeschis(false)} />
         </Suspense>
       )}
     </AppShell>

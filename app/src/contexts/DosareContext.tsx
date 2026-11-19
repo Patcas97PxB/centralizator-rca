@@ -8,6 +8,8 @@ import { inlocuiesteToateServiciile } from '@/lib/servicii-storage'
 import type { BackupPayload } from '@/lib/backup'
 import { useCitireContracteLaptop } from '@/lib/contracte-laptop'
 import type { Dosar, Serviciu } from '@/lib/types'
+import { useStareTur } from '@/lib/tur'
+import { dosareTur, serviciiTur } from '@/lib/tur-demo'
 
 interface DosareContextValue {
   dosare: Dosar[]
@@ -107,5 +109,35 @@ export function DosareProvider({ enabled, children }: { enabled: boolean; childr
 export function useDosareContext() {
   const ctx = useContext(DosareContext)
   if (!ctx) throw new Error('useDosareContext must be used inside DosareProvider')
-  return ctx
+  // Tutorialul: cât rulează, TOATĂ aplicația (pagina Dosare, clopoțelul, uneltele, Rapoartele) vede
+  // dosarele de exemplu în locul celor reale, iar salvările nu fac nimic — ferestrele deschise de tur
+  // arată date completate, dar nu ating baza de date.
+  const tur = useStareTur().activ
+  const exemplu = useMemo<DosareContextValue | null>(() => {
+    if (!tur) return null
+    const dosare = dosareTur()
+    const nimic = async () => {}
+    return {
+      ...ctx,
+      dosare,
+      filtrate: filtreazaSiSorteazaDosare(dosare, filtreImplicite),
+      servicii: serviciiTur(),
+      loading: false,
+      error: null,
+      filtre: filtreImplicite,
+      setFiltre: () => {},
+      arataDoarDepasite: () => {},
+      depasiteCount: dosare.filter((d) => d.status !== 'finalizat' && urgentaDosar(d).depasit).length,
+      deSunat: dosareDeSunat(dosare),
+      salveazaDosar: async (d: Dosar) => d.id,
+      salveazaRapid: nimic,
+      reimprospateaza: nimic,
+      avertizare: '',
+      stergeDosar: nimic,
+      salveazaServiciu: nimic,
+      stergeServiciu: nimic,
+      importaBackup: nimic,
+    }
+  }, [tur, ctx])
+  return exemplu ?? ctx
 }

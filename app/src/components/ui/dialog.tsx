@@ -6,11 +6,16 @@ import { Dialog as DialogPrimitive } from "radix-ui"
 
 import { Button } from "@/components/ui/button"
 import { XIcon } from "lucide-react"
+import { useStareTur } from "@/lib/tur"
 
 function Dialog({
+  modal,
   ...props
 }: React.ComponentProps<typeof DialogPrimitive.Root>) {
-  return <DialogPrimitive.Root data-slot="dialog" {...props} />
+  // În tutorial ferestrele se deschid singure și nu sunt modale: turul întunecă restul și prinde
+  // click-urile, iar butoanele lui (Înainte/Înapoi) trebuie să rămână apăsabile.
+  const tur = useStareTur().activ
+  return <DialogPrimitive.Root data-slot="dialog" modal={modal ?? !tur} {...props} />
 }
 
 function DialogTrigger({
@@ -50,7 +55,7 @@ function DialogOverlay({
 // Calendarul (CampData) și alte liste se deschid într-un strat separat (portal); un click acolo nu
 // înseamnă „în afara ferestrei” — altfel alegerea unei zile închidea toată fereastra.
 const inStratSeparat = (t: EventTarget | null) =>
-  t instanceof Element && !!t.closest('[data-slot=popover-content],[data-slot=select-content]')
+  t instanceof Element && !!t.closest('[data-slot=popover-content],[data-slot=select-content],[data-tur-root]')
 
 function DialogContent({
   className,
@@ -59,6 +64,7 @@ function DialogContent({
   faraInchidereAfara = false,
   onInteractOutside,
   onEscapeKeyDown,
+  onOpenAutoFocus,
   ...props
 }: React.ComponentProps<typeof DialogPrimitive.Content> & {
   showCloseButton?: boolean
@@ -66,6 +72,7 @@ function DialogContent({
    * doar din X / Anulează / Salvează (cererea utilizatorului, 03.11.2026 — pierdea ce scrisese). */
   faraInchidereAfara?: boolean
 }) {
+  const tur = useStareTur().activ
   return (
     <DialogPortal>
       <DialogOverlay />
@@ -82,6 +89,11 @@ function DialogContent({
         onEscapeKeyDown={(e) => {
           if (faraInchidereAfara) e.preventDefault()
           onEscapeKeyDown?.(e)
+        }}
+        onOpenAutoFocus={(e) => {
+          // în tutorial focusul rămâne pe butoanele turului (și pe telefon nu sare tastatura)
+          if (tur) e.preventDefault()
+          onOpenAutoFocus?.(e)
         }}
         {...props}
       >

@@ -1,5 +1,5 @@
 import { addDaysIso } from './rca-calc'
-import { dosarGol, type Dosar, type DocumentDosar } from './types'
+import { dosarGol, type Dosar, type DocumentDosar, type Serviciu } from './types'
 
 // Dosarele de exemplu din tutorial (vezi lib/tur.ts). Datele sunt puse față de ziua de azi, ca fiecare
 // card să iasă mereu pe culoarea lui: roșu (termen depășit), galben, verde, albastru (de predat) și
@@ -10,6 +10,8 @@ const doc = (eticheta: string): DocumentDosar => ({ id: 'tur-' + eticheta, nume:
 const TOATE = ['nc', 'deviz', 'doc_pagubit', 'doc_vinovat', 'amiabila', 'cesiune', 'cerere_despagubire', 'contract', 'pv_predare', 'intrare_iesire']
 
 export const ID_PANOU_TUR = 'tur-1'
+/** dosarul de exemplu cu contract final (Verificare tarif, Doc. intrare/ieșire, Rapoarte) */
+export const ID_CONTRACT_TUR = 'tur-5'
 
 export function dosareTur(): Dosar[] {
   const d = new Date()
@@ -19,7 +21,9 @@ export function dosareTur(): Dosar[] {
   return [
     baza(ID_PANOU_TUR, {
       nrDosar: 'HDR 100001', nrRezervare: 'RBH 30001', asigurator: 'Hellas', nrAutoPagubit: 'BH01EXE', marcaModel: 'DACIA LOGAN',
-      nrAutoInlocuire: 'BH11EXE', marcaModelInlocuire: 'DACIA DUSTER', zileDeviz: '5', start: zi(-9), end: zi(-2), predatBifat: true,
+      nrAutoInlocuire: 'BH11EXE', marcaModelInlocuire: 'DACIA DUSTER', zileDeviz: '5',
+      zileDevizFormula: '12,0 h manoperă + 6,5 h vopsitorie = 18,5 ore ÷ 4 = 4,63 → 5 zile',
+      zileDevizExplicatie: '12,0 ore manoperă + 6,5 ore vopsitorie = 18,5 ore', start: zi(-9), end: zi(-2), predatBifat: true,
       service: 'SERVICE EXEMPLU', telClient: '0700 000 001', proprietarPagubit: 'POPESCU ION',
       notes: 'CLIENT SUNAT — ADUCE MAȘINA MÂINE DIMINEAȚĂ', documente: ['nc', 'deviz', 'doc_pagubit'].map(doc),
     }),
@@ -40,7 +44,16 @@ export function dosareTur(): Dosar[] {
     baza('tur-5', {
       nrDosar: 'HDR 100005', nrRezervare: 'RBH 30005', asigurator: 'Hellas', nrAutoPagubit: 'BH05EXE', marcaModel: 'SKODA SUPERB',
       nrAutoInlocuire: 'BH15EXE', marcaModelInlocuire: 'VW PASSAT', zileDeviz: '6', start: zi(-10), end: zi(-1), predatBifat: true,
+      service: 'SERVICE EXEMPLU', proprietarPagubit: 'IONESCU MARIA', numeClient: 'IONESCU MARIA',
+      valoareContract: '288,00', valoareContractCuTVA: '348,48', zileContractFinal: '9', clasaAuto: 'C',
       preluatBifat: true, preluatLa: zi(-1), documente: TOATE.filter((k) => k !== 'cesiune' && k !== 'cerere_despagubire').map(doc),
     }),
+  ]
+}
+
+export function serviciiTur(): Serviciu[] {
+  return [
+    { id: 'tur-s1', nume: 'SERVICE EXEMPLU', telefon: '0700 000 101' },
+    { id: 'tur-s2', nume: 'SERVICE DEMO NORD', telefon: '0700 000 102' },
   ]
 }

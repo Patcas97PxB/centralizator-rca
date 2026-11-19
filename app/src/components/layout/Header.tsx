@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { Bell, Check, ChevronDown, GraduationCap, Laptop, LogOut, Plus, Search } from 'lucide-react'
-import { pornesteTur } from '@/lib/tur'
+import { pornesteTur, useStareTur } from '@/lib/tur'
 import { useAuth } from '@/hooks/useAuth'
 import { assetUrl } from '@/lib/asset-url'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
@@ -88,6 +88,7 @@ export function Header({
   onCautare: () => void
 }) {
   const [deschis, setDeschis] = useState(false)
+  const turDeschis = useStareTur().deschis
   const [tab, setTabState] = useState<Tab>(tabSalvat)
   const setTab = (t: Tab) => {
     setTabState(t)
@@ -168,7 +169,7 @@ export function Header({
           Dosar nou
         </button>
 
-        <Popover open={deschis} onOpenChange={setDeschis}>
+        <Popover open={deschis || turDeschis === 'clopotel'} onOpenChange={setDeschis}>
           <PopoverTrigger asChild>
             <button data-tur="clopotel"
               type="button"

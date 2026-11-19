@@ -41,7 +41,7 @@ export function DevizRecalculeazaButton({
   const tile = stage === 'idle' ? null : TILE[stage]
 
   return (
-    <div className="space-y-2 sm:col-span-2">
+    <div data-tur="f-deviz" className="space-y-2 sm:col-span-2">
       <div className="flex flex-wrap items-center gap-2">
         <Button type="button" size="sm" variant="outline" disabled={seCalculeaza} onClick={() => inputRef.current?.click()}>
           <Calculator className="size-3.5" aria-hidden="true" />
