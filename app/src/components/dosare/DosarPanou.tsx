@@ -15,6 +15,7 @@ import { DocIntrareIesireModal } from './DocIntrareIesireModal'
 import { VerificareTarif } from '@/components/unelte/VerificareTarif'
 import { CreareMail } from '@/components/unelte/CreareMail'
 import { majuscule } from '@/lib/majuscule'
+import { AdaugaDevizPanou } from './AdaugaDevizPanou'
 
 const ETAPE: Etapa[] = ['rezervat', 'la_client', 'de_trimis', 'finalizat']
 
@@ -315,11 +316,10 @@ export function DosarPanou({
                   </>
                 ) : dosar.dte ? (
                   'DTE — fără deviz'
-                ) : (
-                  <span className="text-tx-3">necompletat</span>
-                )}
+                ) : null}
               </span>
             </div>
+            {!dosar.zileDeviz && !dosar.dte && <AdaugaDevizPanou dosar={dosar} onPatch={onPatch} />}
             {/* Socoteala din deviz (orele ÷ 4), la vedere fără să deschizi Editează (cerut 19.11.2026) */}
             {dosar.zileDeviz &&
               (dosar.zileDevizFormula ? (
